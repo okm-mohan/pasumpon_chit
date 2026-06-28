@@ -1,0 +1,291 @@
+{% extends "base.html" %}
+
+{% block title %}Pasumpon Chit ERP - Login{% endblock %}
+
+{% block content %}
+
+<style>
+
+body{
+    margin:0;
+    padding:0;
+    overflow:hidden;
+}
+
+.login-page{
+    min-height:100vh;
+
+    background:
+    linear-gradient(
+        rgba(8,27,54,0.85),
+        rgba(8,27,54,0.90)
+    ),
+    url('/static/images/login-bg.jpg');
+
+    background-size:cover;
+    background-position:center;
+
+    display:flex;
+    justify-content:center;
+    align-items:center;
+}
+
+.login-card{
+
+    width:430px;
+
+    background:rgba(255,255,255,0.10);
+
+    backdrop-filter:blur(20px);
+
+    border:1px solid rgba(255,255,255,0.15);
+
+    border-radius:30px;
+
+    padding:40px;
+
+    box-shadow:
+    0 20px 60px rgba(0,0,0,0.35);
+
+    color:white;
+}
+
+.logo{
+    width:90px;
+    height:90px;
+    object-fit:contain;
+}
+
+.erp-title{
+    font-size:32px;
+    font-weight:700;
+    margin-top:15px;
+}
+
+.erp-subtitle{
+    color:#d7d7d7;
+    font-size:15px;
+}
+
+.form-label{
+    color:white;
+    font-weight:600;
+}
+
+.form-control{
+
+    height:55px;
+
+    border:none;
+
+    border-radius:14px;
+
+    background:rgba(255,255,255,0.15);
+
+    color:white;
+}
+
+.form-control::placeholder{
+    color:#ddd;
+}
+
+.form-control:focus{
+    background:rgba(255,255,255,0.20);
+    color:white;
+    box-shadow:none;
+}
+
+.input-group-text{
+
+    background:rgba(255,255,255,0.15);
+
+    border:none;
+
+    color:white;
+}
+
+.btn-login{
+
+    height:55px;
+
+    border:none;
+
+    border-radius:14px;
+
+    background:#f4b400;
+
+    color:#000;
+
+    font-weight:700;
+
+    font-size:18px;
+}
+
+.btn-login:hover{
+
+    background:#ffcb2f;
+
+    transform:translateY(-2px);
+
+    transition:.3s;
+}
+
+.remember-row{
+    color:white;
+}
+
+.version{
+    color:#d0d0d0;
+    font-size:13px;
+}
+
+.alert-danger{
+    border-radius:12px;
+}
+
+
+
+</style>
+
+<div class="login-page">
+
+```
+<div class="login-card">
+
+    <div class="text-center">
+
+        <img src="/static/images/logo.png"
+             class="logo">
+
+        <div class="erp-title">
+            Pasumpon Chit ERP
+        </div>
+
+        <div class="erp-subtitle">
+            Secure Money Management Platform
+        </div>
+
+    </div>
+
+    <hr class="text-light">
+
+    {% if error %}
+    <div class="alert alert-danger">
+        {{ error }}
+    </div>
+    {% endif %}
+
+    <form action="/login" method="post">
+
+        <div class="mb-3">
+
+            <label class="form-label">
+                Username
+            </label>
+
+            <input
+                type="text"
+                name="username"
+                class="form-control"
+                placeholder="Enter Username"
+                required>
+
+        </div>
+
+        <div class="mb-3">
+
+            <label class="form-label">
+                Password
+            </label>
+
+            <div class="input-group">
+
+                <input
+                    type="password"
+                    id="password"
+                    name="password"
+                    class="form-control"
+                    placeholder="Enter Password"
+                    required>
+
+                <button
+                    type="button"
+                    class="btn btn-outline-light"
+                    onclick="togglePassword()">
+
+                    👁
+
+                </button>
+
+            </div>
+
+        </div>
+
+        <div class="remember-row mb-4">
+
+            <div class="form-check">
+
+                <input
+                    class="form-check-input"
+                    type="checkbox"
+                    name="remember_me"
+                    id="remember_me">
+
+                <label
+                    class="form-check-label"
+                    for="remember_me">
+
+                    Remember Me
+
+                </label>
+
+            </div>
+
+        </div>
+
+        <button
+            type="submit"
+            class="btn btn-login w-100">
+
+            LOGIN
+
+        </button>
+
+    </form>
+
+    <div class="text-center mt-4">
+
+        <div class="version">
+            Version 1.0.0
+        </div>
+
+        <div class="version mt-1">
+            © 2026 Pasumpon Chit ERP
+        </div>
+
+    </div>
+
+</div>
+```
+
+</div>
+
+<script>
+
+function togglePassword()
+{
+    let pwd = document.getElementById("password");
+
+    if(pwd.type === "password")
+    {
+        pwd.type = "text";
+    }
+    else
+    {
+        pwd.type = "password";
+    }
+}
+
+</script>
+
+{% endblock %}

@@ -1,0 +1,336 @@
+{% extends "pandu_base.html" %}
+
+{% block title %}Collection Summary{% endblock %}
+
+{% block content %}
+
+<link rel="stylesheet" href="/static/css/pandu_collection_summary.css">
+
+<div class="summary-container">
+
+    <div class="page-header">
+
+        <div>
+            <h2 id="reportTitle">
+                <i class="fas fa-chart-line"></i>
+                Collection Summary
+            </h2>
+            <p>
+                Year Wise Collection Analysis
+            </p>
+        </div>
+
+        <div class="header-actions">
+
+            <select id="yearSelect" onchange="loadReport()">
+            </select>
+
+            <button class="btn-print">
+                <i class="fas fa-print"></i>
+                Print
+            </button>
+
+        </div>
+
+    </div>
+
+    <!-- KPI CARDS -->
+
+    <div class="cards-grid">
+
+        <div class="summary-card blue">
+
+            <div class="card-icon">
+                <i class="fas fa-wallet"></i>
+            </div>
+
+            <div class="card-content">
+                <h4>Expected Collection</h4>
+                <h2 id="expectedAmount">₹0</h2>
+            </div>
+
+        </div>
+
+        <div class="summary-card green">
+
+            <div class="card-icon">
+                <i class="fas fa-check-circle"></i>
+            </div>
+
+            <div class="card-content">
+                <h4>Collected Amount</h4>
+                <h2 id="collectedAmount">₹0</h2>
+            </div>
+
+        </div>
+
+        <div class="summary-card red">
+
+            <div class="card-icon">
+                <i class="fas fa-exclamation-circle"></i>
+            </div>
+
+            <div class="card-content">
+                <h4>Pending Amount</h4>
+                <h2 id="pendingAmount">₹0</h2>
+            </div>
+
+        </div>
+
+        <div class="summary-card purple">
+
+            <div class="card-icon">
+                <i class="fas fa-chart-pie"></i>
+            </div>
+
+            <div class="card-content">
+                <h4>Collection %</h4>
+                <h2 id="collectionPercent">0%</h2>
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- PROGRESS -->
+
+    <div class="progress-card">
+
+        <div class="progress-header">
+
+            <h4>
+                <i class="fas fa-bullseye"></i>
+                Collection Progress
+            </h4>
+
+            <span id="progressText">0%</span>
+
+        </div>
+
+        <div class="progress">
+            <div class="progress-bar" id="progressBar" style="width:0%">
+            </div>
+        </div>
+
+    </div>
+
+    <!-- TABLE -->
+
+    <div class="table-card">
+
+        <div class="table-title">
+            <i class="fas fa-calendar-alt"></i>
+            Monthly Collection Report
+        </div>
+
+        <table>
+
+            <thead>
+
+                <tr>
+                    <th>Month</th>
+                    <th>Expected</th>
+                    <th>Collected</th>
+                    <th>Pending</th>
+                    <th>Status</th>
+                </tr>
+
+            </thead>
+
+            <tbody id="reportBody">
+
+            </tbody>
+
+            <tfoot>
+
+                <tr>
+
+                    <td><b>TOTAL</b></td>
+
+                    <td id="totalExpected">₹0</td>
+
+                    <td id="totalCollected">₹0</td>
+
+                    <td id="totalPending">₹0</td>
+
+                    <td id="totalPercentage">0%</td>
+
+                </tr>
+
+            </tfoot>
+
+        </table>
+
+    </div>
+
+</div>
+<script>
+
+// ----------------------------------
+// Load Year Dropdown Dynamically
+// ----------------------------------
+
+const yearSelect =
+    document.getElementById("yearSelect");
+
+const currentYear =
+    new Date().getFullYear();
+
+// Current Year + Previous 5 Years
+
+for(let year = currentYear;
+        year >= currentYear - 5;
+        year--){
+
+    yearSelect.innerHTML += `
+        <option value="${year}">
+            ${year}
+        </option>
+    `;
+}
+
+// Select Current Year
+
+yearSelect.value = currentYear;
+
+
+// ----------------------------------
+// Load Report
+// ----------------------------------
+
+async function loadReport(){
+
+    const year =
+        document.getElementById("yearSelect").value;
+
+    const response =
+        await fetch(`/api/pandu-collection-summary?year=${year}`);
+
+    const data =
+        await response.json();
+
+    let html = "";
+
+    let totalExpected = 0;
+    let totalCollected = 0;
+    let totalPending = 0;
+
+    data.forEach(row => {
+
+        totalExpected += Number(row.expected);
+        totalCollected += Number(row.collected);
+        totalPending += Number(row.pending);
+
+        let percent = 0;
+
+        if(row.expected > 0){
+
+            percent =
+                ((row.collected / row.expected) * 100)
+                .toFixed(0);
+
+        }
+
+        let badge = "danger";
+
+        if(percent >= 100){
+
+            badge = "success";
+
+        }
+        else if(percent >= 75){
+
+            badge = "warning";
+
+        }
+
+        html += `
+
+        <tr>
+
+            <td>${row.month}</td>
+
+            <td>
+                ₹${Number(row.expected).toLocaleString()}
+            </td>
+
+            <td>
+                ₹${Number(row.collected).toLocaleString()}
+            </td>
+
+            <td>
+                ₹${Number(row.pending).toLocaleString()}
+            </td>
+
+            <td>
+
+                <span class="badge ${badge}">
+                    ${percent}%
+                </span>
+
+            </td>
+
+        </tr>
+
+        `;
+    });
+
+    document.getElementById("reportBody").innerHTML =
+        html;
+
+    document.getElementById("totalExpected").innerHTML =
+        "₹" + totalExpected.toLocaleString();
+
+    document.getElementById("totalCollected").innerHTML =
+        "₹" + totalCollected.toLocaleString();
+
+    document.getElementById("totalPending").innerHTML =
+        "₹" + totalPending.toLocaleString();
+
+    document.getElementById("expectedAmount").innerHTML =
+        "₹" + totalExpected.toLocaleString();
+
+    document.getElementById("collectedAmount").innerHTML =
+        "₹" + totalCollected.toLocaleString();
+
+    document.getElementById("pendingAmount").innerHTML =
+        "₹" + totalPending.toLocaleString();
+
+    let overallPercent = 0;
+
+    if(totalExpected > 0){
+
+        overallPercent =
+            ((totalCollected / totalExpected) * 100)
+            .toFixed(2);
+
+    }
+
+    document.getElementById("collectionPercent").innerHTML =
+        overallPercent + "%";
+
+    document.getElementById("totalPercentage").innerHTML =
+        overallPercent + "%";
+
+    document.getElementById("progressText").innerHTML =
+        overallPercent + "%";
+
+    document.getElementById("progressBar").style.width =
+        overallPercent + "%";
+
+
+        document.getElementById("reportTitle").innerHTML =
+    `<i class="fas fa-chart-line"></i>
+     Collection Summary - Year ${year}`;
+}
+
+
+// ----------------------------------
+// Initial Load
+// ----------------------------------
+
+loadReport();
+
+</script>
+
+{% endblock %}

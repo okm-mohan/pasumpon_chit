@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <link rel="stylesheet" href="{{ url_for('static', path='css/style.css') }}">
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>{% block title %}Pasumpon Chit ERP{% endblock %}</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        body {
+            background: #f4f7fb;
+            font-family: 'Segoe UI', sans-serif;
+            overflow-x: hidden;
+        }
+
+
+        .sidebar {
+            background: linear-gradient(180deg,
+                    #0d3b66,
+                    #1d3557);
+
+            min-height: 100vh;
+        }
+
+        .sidebar a {
+            color: white;
+            text-decoration: none;
+            display: block;
+            padding: 12px 15px;
+            margin-bottom: 5px;
+            border-radius: 10px;
+            transition: .3s;
+        }
+
+        .sidebar a:hover {
+            background: rgba(255, 255, 255, .15);
+            transform: translateX(5px);
+        }
+
+        .card {
+            border: none;
+            border-radius: 20px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, .08);
+        }
+
+        .kpi-card {
+            color: white;
+            border-radius: 20px;
+        }
+
+        .clock {
+            font-weight: bold;
+            color: #0d3b66;
+        }
+
+        .scroll-box {
+            height: 250px;
+            overflow: hidden;
+        }
+
+        .sidebar a {
+            display: block;
+            padding: 10px 15px;
+            color: #ffffff;
+            text-decoration: none;
+            border-radius: 8px;
+            margin-bottom: 5px;
+            transition: all 0.3s;
+        }
+
+        .sidebar a:hover {
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .sidebar .active-menu {
+            background: #ffffff;
+            color: #0d6efd !important;
+            font-weight: 600;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+        }
+
+        .sidebar .active-menu i {
+            color: #0d6efd;
+        }
+    </style>
+
+</head>
+
+<body>
+
+    <body>
+
+        <div class="container-fluid">
+
+            <div class="row">
+                <!-- SIDEBAR -->
+                {% if request.url.path != "/login" %}
+                <div class="col-md-2 sidebar p-3">
+
+                    <div class="main-content">
+
+                        <img src="/static/images/logo.png" width="80">
+                        <h5 class="text-white mt-2">
+                            Pasumpon Chit ERP
+                        </h5>
+                    </div>
+
+                    <!-- Dashboard -->
+                    <a href="/dashboard" class="active-menu">
+                        <i class="bi bi-speedometer2"></i>
+                        Dashboard
+                    </a>
+
+                    <!-- MASTER -->
+                    <a class="menu-toggle" data-bs-toggle="collapse" href="#masterMenu">
+                        <i class="bi bi-database"></i>
+                        Master
+                        <span class="float-end">▼</span>
+                    </a>
+
+                    <div class="collapse" id="masterMenu">
+
+                        <a href="/members/list" class="submenu">
+                            <i class="bi bi-people"></i>
+                            Members
+                        </a>
+
+
+                        <a href="/pandu-groups" class="submenu">
+                            <i class="bi bi-diagram-3"></i>
+                            Pandu Groups
+                        </a>
+
+                        <a href="/pandu/assign" class="submenu">
+                            <i class="bi bi-person-plus-fill"></i>
+                            Pandu Assignment
+                        </a>
+
+                        <a href="/pandu-settlement" class="submenu">
+                            <i class="bi bi-cash-coin"></i>
+                            Pandu Settlement
+                        </a>
+
+
+                    </div>
+
+                    <!-- PANDU ENTRY -->
+                    <a href="/pandu">
+                        <i class="bi bi-cash-stack"></i>
+                        Pandu Entry
+                    </a>
+
+                    <!-- KANTHU -->
+                    <a href="/kanthu">
+                        <i class="bi bi-wallet2"></i>
+                        Kanthu
+                    </a>
+
+                    <!-- AYULSANTHA -->
+                    <a href="/ayulsantha">
+                        <i class="bi bi-heart-pulse"></i>
+                        AyulSantha
+                    </a>
+
+                    <!-- CHIT -->
+                    <a href="/chit">
+                        <i class="bi bi-receipt"></i>
+                        Chit
+                    </a>
+
+                    <li class="nav-item">
+                        <a class="nav-link" href="/accounts/credits">
+                            <i class="fas fa-plus-circle"></i>
+                            Credits Entry
+                        </a>
+                    </li>
+
+                    <li class="nav-item">
+                        <a class="nav-link" href="/accounts/expenses">
+                            <i class="fas fa-minus-circle"></i>
+                            Expenses Entry
+                        </a>
+                    </li>
+
+
+                    <!-- REPORTS -->
+                    <a class="menu-toggle" data-bs-toggle="collapse" href="#reportMenu">
+
+                        <i class="bi bi-file-earmark-bar-graph"></i>
+                        Reports
+                        <span class="float-end">▼</span>
+
+                    </a>
+
+                    <div class="collapse" id="reportMenu">
+
+                        <a href="/reports/balance-sheet" class="submenu">
+                            <i class="bi bi-journal-text"></i>
+                            Balance Sheet
+                        </a>
+
+                        <a href="/reports/monthly-summary" class="submenu">
+                            <i class="bi bi-calendar-month"></i>
+                            Monthly Summary
+                        </a>
+
+                    </div>
+
+
+                    <!-- ACCOUNTS REPORTS -->
+
+                    <li class="nav-item">
+
+                        <a class="nav-link collapsed" data-bs-toggle="collapse" href="#accountsReportsMenu"
+                            role="button" aria-expanded="false">
+
+                            <i class="fas fa-chart-line"></i>
+
+                            <span>
+                                Accounts Reports
+                            </span>
+
+                            <i class="fas fa-chevron-down float-end mt-1"></i>
+
+                        </a>
+
+                        <div class="collapse
+        {% if active_page in [
+            'accounts_summary',
+            'credits_report',
+            'expenses_report',
+            'datewise_accounts_report',
+            'categorywise_expense_report',
+            'categorywise_income_report',
+            'monthly_summary',
+            'profit_summary'
+        ] %}
+            show
+        {% endif %}
+    " id="accountsReportsMenu">
+
+                            <ul class="nav flex-column ms-3 mt-2">
+
+                                <!-- Daily Summary -->
+
+                                <li class="nav-item">
+
+                                    <a href="/accounts/summary" class="nav-link
+                   {% if active_page=='accounts_summary' %}
+                   active
+                   {% endif %}">
+
+                                        <i class="fas fa-tachometer-alt"></i>
+
+                                        Daily Summary
+
+                                    </a>
+
+                                </li>
+
+                                <!-- Credits Report -->
+
+                                <li class="nav-item">
+
+                                    <a href="/accounts/credits-report" class="nav-link
+                   {% if active_page=='credits_report' %}
+                   active
+                   {% endif %}">
+
+                                        <i class="fas fa-arrow-circle-down text-success"></i>
+
+                                        Credits Report
+
+                                    </a>
+
+                                </li>
+
+                                <!-- Expenses Report -->
+
+                                <li class="nav-item">
+
+                                    <a href="/accounts/expenses-report" class="nav-link
+                   {% if active_page=='expenses_report' %}
+                   active
+                   {% endif %}">
+
+                                        <i class="fas fa-arrow-circle-up text-danger"></i>
+
+                                        Expenses Report
+
+                                    </a>
+
+                                </li>
+
+                                <!-- Datewise Report -->
+
+                                <li class="nav-item">
+
+                                    <a href="/accounts/datewise-report" class="nav-link
+                   {% if active_page=='datewise_accounts_report' %}
+                   active
+                   {% endif %}">
+
+                                        <i class="fas fa-calendar-alt"></i>
+
+                                        Datewise Accounts Report
+
+                                    </a>
+
+                                </li>
+
+                                <!-- Category Expense -->
+
+                                <li class="nav-item">
+
+                                    <a href="/accounts/categorywise-expense-report" class="nav-link
+                   {% if active_page=='categorywise_expense_report' %}
+                   active
+                   {% endif %}">
+
+                                        <i class="fas fa-tags"></i>
+
+                                        Categorywise Expense Report
+
+                                    </a>
+
+                                </li>
+
+                                <!-- Category Income -->
+
+                                <li class="nav-item">
+
+                                    <a href="/accounts/categorywise-income-report" class="nav-link
+                   {% if active_page=='categorywise_income_report' %}
+                   active
+                   {% endif %}">
+
+                                        <i class="fas fa-coins"></i>
+
+                                        Categorywise Income Report
+
+                                    </a>
+
+                                </li>
+
+                                <!-- Monthly Summary -->
+
+                                <li class="nav-item">
+
+                                    <a href="/accounts/monthly-summary" class="nav-link
+                   {% if active_page=='monthly_summary' %}
+                   active
+                   {% endif %}">
+
+                                        <i class="fas fa-calendar"></i>
+
+                                        Monthly Summary
+
+                                    </a>
+
+                                </li>
+
+                                <!-- Profit Summary -->
+
+                                <li class="nav-item">
+
+                                    <a href="/accounts/profit-summary" class="nav-link
+                   {% if active_page=='profit_summary' %}
+                   active
+                   {% endif %}">
+
+                                        <i class="fas fa-chart-pie"></i>
+
+                                        Profit Summary
+
+                                    </a>
+
+                                </li>
+
+                            </ul>
+
+                        </div>
+
+                    </li>
+
+
+
+                    <!-- SETTINGS -->
+                    <a href="/settings">
+                        <i class="bi bi-gear"></i>
+                        Settings
+                    </a>
+
+                    <!-- EXIT -->
+                    <a href="/logout" onclick="return confirm('Are you sure you want to exit?')">
+                        <i class="bi bi-box-arrow-right"></i>
+                        Exit
+                    </a>
+
+                </div>
+                {% endif %}
+
+                <!-- PAGE CONTENT -->
+                <div class="col-md-10 p-4">
+
+                    {% block content %}
+                    {% endblock %}
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </body>
+
+</body>
+
+</html>

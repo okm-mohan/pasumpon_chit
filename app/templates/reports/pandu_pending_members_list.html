@@ -1,0 +1,570 @@
+{% extends "pandu_base.html" %}
+
+{% block title %}Pending Collection Report{% endblock %}
+
+{% block content %}
+
+<div class="container-fluid py-4">
+
+    ```
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+
+        <div>
+            <h2 class="fw-bold text-danger">
+                <i class="fas fa-exclamation-circle"></i>
+                Pending Members List
+            </h2>
+
+            <p class="text-muted mb-0">
+                All members with pending collections.
+            </p>
+        </div>
+
+        <a href="/dashboard" class="btn btn-outline-primary">
+            <i class="fas fa-arrow-left"></i>
+            Back To Dashboard
+        </a>
+
+    </div>
+
+    <!-- Summary Cards -->
+
+    <div class="row g-4 mb-4">
+
+        <div class="col-md-4">
+
+            <div class="card bg-danger text-white shadow">
+
+                <div class="card-body text-center">
+
+                    <h6>Total Pending Members</h6>
+
+                    <h2 id="pendingMembersCount">0</h2>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <div class="col-md-4">
+
+            <div class="card bg-warning text-dark shadow">
+
+                <div class="card-body text-center">
+
+                    <h6>Total Pending Amount</h6>
+
+                    <h2 id="pendingAmount">₹0</h2>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <div class="col-md-4">
+
+            <div class="card bg-success text-white shadow">
+
+                <div class="card-body text-center">
+
+                    <h6>Displayed Members</h6>
+
+                    <h2 id="displayCount">0</h2>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- Search -->
+
+    <div class="card mb-4 shadow-sm">
+
+        <div class="card-body">
+
+            <div class="row">
+
+                <div class="col-md-6">
+
+                    <label class="form-label fw-bold">
+                        Search Member
+                    </label>
+
+                    <input type="text" id="memberSearch" class="form-control form-control-lg"
+                        placeholder="Type Member Name / Code / Mobile">
+
+                </div>
+
+                <div class="col-md-3 d-flex align-items-end">
+
+                    <a href="/pending-members-print" target="_blank" class="btn btn-success btn-lg">
+
+                        <i class="fas fa-file-pdf"></i>
+                        Print Report
+
+                    </a>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- Table -->
+
+    <div class="card shadow">
+
+        <div class="card-header bg-primary text-white">
+
+            <h5 class="mb-0">
+                Pending Members Report
+            </h5>
+
+        </div>
+
+        <div class="card-body p-0">
+
+            <div class="table-responsive">
+
+                <table class="table table-bordered table-hover mb-0">
+
+                    <thead class="table-dark">
+
+                        <tr>
+
+                            <th>S.No</th>
+                            <th>Member Code</th>
+                            <th>Member Name</th>
+                            <th>Mobile</th>
+                            <th>Group</th>
+                            <th>Monthly Due</th>
+                            <th>Pending Months</th>
+                            <th>Total Pending</th>
+                            <th>View</th>
+
+                        </tr>
+
+                    </thead>
+
+                    <tbody id="pendingReportBody">
+
+                        <tr>
+                            <td colspan="8" class="text-center py-4">
+                                Loading...
+                            </td>
+                        </tr>
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </div>
+
+    </div>
+    ```
+
+
+
+    <div class="modal fade" id="memberDueModal" tabindex="-1">
+
+        ```
+        <div class="modal-dialog modal-xl">
+
+            <div class="modal-content">
+
+                <div class="modal-header bg-primary text-white">
+
+                    <h5 class="modal-title">
+                        Member Collection Details
+                    </h5>
+
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal">
+                    </button>
+
+                </div>
+
+                <div class="modal-body">
+
+                    <div id="memberInfo" class="mb-3 fw-bold">
+                    </div>
+
+                    <table class="table table-bordered">
+
+                        <thead class="table-dark">
+
+                            <tr>
+
+                                <th>Month</th>
+                                <th>Total Due</th>
+                                <th>Paid Amt</th>
+                                <th>Balance Amt</th>
+                                <th>Status</th>
+
+                            </tr>
+
+                        </thead>
+
+                        <tbody id="dueDetailsBody">
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            </div>
+
+        </div>
+        ```
+
+    </div>
+
+
+</div>
+
+<style>
+    .print-header {
+        display: none;
+    }
+
+    @media print {
+
+        .print-header {
+            display: block !important;
+        }
+
+        th:last-child,
+        td:last-child {
+            display: none;
+        }
+
+        @page {
+            size: A4 landscape;
+            margin: 10mm;
+        }
+    }
+
+
+    @media print {
+
+        @page {
+            size: A4 landscape;
+            margin: 12mm;
+        }
+
+        body {
+            background: white !important;
+            font-size: 12px;
+        }
+
+        .sidebar,
+        .top-header,
+        .btn,
+        #memberSearch,
+        .modal,
+        .card.mb-4 {
+            display: none !important;
+        }
+
+        .card {
+            border: none !important;
+            box-shadow: none !important;
+        }
+
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .table th,
+        .table td {
+            border: 1px solid #000 !important;
+            padding: 5px !important;
+            font-size: 11px;
+        }
+
+        .table thead {
+            display: table-header-group;
+        }
+
+        .table tr {
+            page-break-inside: avoid;
+        }
+
+        .print-header {
+            display: block !important;
+        }
+    }
+
+    .print-header {
+        display: none;
+    }
+</style>
+
+
+<div class="print-header">
+
+    <h2 style="text-align:center;">
+        PASUMPON CHIT FUND
+    </h2>
+
+    <h4 style="text-align:center;">
+        Pending Members Report
+    </h4>
+
+    <div style="display:flex;justify-content:space-between;">
+
+        <span>
+            Print Date :
+            <span id="printDate"></span>
+        </span>
+
+        <span>
+            Total Members :
+            <span id="printMemberCount"></span>
+        </span>
+
+        <span>
+            Total Pending :
+            <span id="printPendingAmount"></span>
+        </span>
+
+    </div>
+
+    <hr>
+
+</div>
+
+
+<script>
+
+    document.addEventListener("DOMContentLoaded", () => {
+
+        loadPendingReport();
+
+        document
+            .getElementById("memberSearch")
+            .addEventListener("keyup", loadPendingReport);
+
+    });
+
+
+    async function loadPendingReport() {
+
+        const search =
+            document.getElementById("memberSearch").value;
+
+        const tbody =
+            document.getElementById("pendingReportBody");
+
+        tbody.innerHTML = `
+        <tr>
+            <td colspan="8" class="text-center">
+                Loading...
+            </td>
+        </tr>
+    `;
+
+        try {
+
+            const response =
+                await fetch(
+                    `/api/pending-members-list?search=${encodeURIComponent(search)}`
+                );
+
+            const data =
+                await response.json();
+
+            if (!data.length) {
+
+                tbody.innerHTML = `
+                <tr>
+                    <td colspan="8" class="text-center py-4">
+                        No Records Found
+                    </td>
+                </tr>
+            `;
+
+                document.getElementById(
+                    "pendingMembersCount"
+                ).innerText = 0;
+
+                document.getElementById(
+                    "displayCount"
+                ).innerText = 0;
+
+                document.getElementById(
+                    "pendingAmount"
+                ).innerText = "₹0";
+
+                return;
+            }
+
+            let html = "";
+
+            let totalPending = 0;
+
+            data.forEach((row, index) => {
+
+                totalPending +=
+                    Number(row.total_pending);
+
+                html += `
+
+            <tr>
+
+                <td>${index + 1}</td>
+
+                <td>${row.member_code}</td>
+
+                <td>${row.member_name}</td>
+
+                <td>${row.mobile || ""}</td>
+
+                <td>${row.group_name}</td>
+
+                <td class="text-end">
+                    ₹${Number(row.group_monthly_due).toLocaleString()}
+                </td>
+
+                <td class="text-center">
+                    ${row.pending_months}
+                </td>
+
+                <td class="text-end fw-bold text-danger">
+                    ₹${Number(row.total_pending).toLocaleString()}
+                </td>
+
+                <td class="text-center">
+
+                <button
+                    class="btn btn-sm btn-primary"
+                    onclick="viewMemberDue(${row.id})">
+
+                    <i class="fas fa-eye"></i>
+                    View
+
+                </button>
+
+                </td>
+
+            </tr>
+
+            `;
+            });
+
+            tbody.innerHTML = html;
+
+            document.getElementById(
+                "pendingMembersCount"
+            ).innerText = data.length;
+
+            document.getElementById(
+                "displayCount"
+            ).innerText = data.length;
+
+            document.getElementById(
+                "pendingAmount"
+            ).innerText =
+                "₹" + totalPending.toLocaleString();
+
+        }
+        catch (error) {
+
+            tbody.innerHTML = `
+            <tr>
+                <td colspan="8" class="text-center text-danger">
+                    Error Loading Data
+                </td>
+            </tr>
+        `;
+
+            console.error(error);
+        }
+
+    }
+
+
+
+    async function viewMemberDue(memberId) {
+
+        const response =
+            await fetch(
+                `/api/member-year-due/${memberId}`
+            );
+
+        const data =
+            await response.json();
+
+        let html = "";
+
+        data.forEach(row => {
+
+            html += `
+
+        <tr>
+
+            <td>${row.month}</td>
+
+            <td>₹${row.due}</td>
+
+            <td>₹${row.paid}</td>
+
+            <td>₹${row.balance}</td>
+
+            <td>
+
+                <span class="badge ${row.status == 'Paid'
+                    ? 'bg-success'
+                    : 'bg-danger'
+                }">
+
+                    ${row.status}
+
+                </span>
+
+            </td>
+
+        </tr>
+
+        `;
+        });
+
+        document.getElementById(
+            "dueDetailsBody"
+        ).innerHTML = html;
+
+        new bootstrap.Modal(
+            document.getElementById(
+                "memberDueModal"
+            )
+        ).show();
+    }
+
+
+    function printReport() {
+
+        document.getElementById("printDate").innerText =
+            new Date().toLocaleString();
+
+        document.getElementById("printMemberCount").innerText =
+            document.getElementById("pendingMembersCount").innerText;
+
+        document.getElementById("printPendingAmount").innerText =
+            document.getElementById("pendingAmount").innerText;
+
+        window.print();
+    }
+</script>
+
+{% endblock %}

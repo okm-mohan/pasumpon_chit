@@ -1,0 +1,249 @@
+{% extends "base.html" %}
+
+{% block title %}
+Member Profile
+{% endblock %}
+
+{% block content %}
+
+<link rel="stylesheet"
+href="{{ url_for('static',
+path='css/member_view.css') }}">
+
+<div class="container-fluid">
+
+<div class="row">
+
+    <!-- SIDEBAR -->
+
+    <div class="col-md-2 sidebar p-3">
+
+        <div class="text-center mb-4">
+
+            <h4 class="text-white">
+                Pasumpon Chit ERP
+            </h4>
+
+        </div>
+
+        <a href="/dashboard">
+            Dashboard
+        </a>
+
+        <a href="/members/add">
+            Add Member
+        </a>
+
+        <a href="/members/list"
+           class="active-menu">
+            Member List
+        </a>
+
+    </div>
+
+    <!-- MAIN -->
+
+    <div class="col-md-10 p-4">
+
+        <div class="profile-header">
+
+            <h2>
+                Member Profile
+            </h2>
+
+            <a href="/members/list"
+               class="btn btn-primary">
+
+               Back
+
+            </a>
+
+        </div>
+
+        <div class="row">
+
+            <!-- LEFT -->
+
+            <div class="col-md-4">
+
+                <div class="card profile-card">
+
+                    {% if member.photo %}
+
+                    <img
+                        src="{{ member.photo }}"
+                        class="profile-photo">
+
+                    {% else %}
+
+                    <img
+                        src="/static/images/user.png"
+                        class="profile-photo">
+
+                    {% endif %}
+
+                    <h4>
+                        {{ member.member_name }}
+                    </h4>
+
+                    <p>
+                        {{ member.member_code }}
+                    </p>
+
+                    <span class="badge bg-success">
+                        {{ member.status }}
+                    </span>
+
+                </div>
+
+            </div>
+
+            <!-- RIGHT -->
+
+            <div class="col-md-8">
+
+                <div class="card p-4 mb-4">
+
+                    <h5>
+                        Basic Information
+                    </h5>
+
+                    <div class="row">
+
+                        <div class="col-md-6">
+
+                            <label>Name</label>
+
+                            <div>
+                                {{ member.member_name }}
+                            </div>
+
+                        </div>
+
+                        <div class="col-md-6">
+
+                            <label>Aadhaar</label>
+
+                            <div>
+                                {{ member.aadhaar_no }}
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <div class="card p-4 mb-4">
+
+                    <h5>
+                        Contact Information
+                    </h5>
+
+                    <div class="row">
+
+                        <div class="col-md-6">
+
+                            <label>Mobile</label>
+
+                            <div>
+                                {{ member.mobile }}
+                            </div>
+
+                        </div>
+
+                        <div class="col-md-6">
+
+                            <label>WhatsApp</label>
+
+                            <div>
+                                {{ member.whatsapp_no }}
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <div class="card p-4 mb-4">
+
+                    <h5>
+                        Address
+                    </h5>
+
+                    <p>
+                        {{ member.address }}
+                    </p>
+
+                    <p>
+                        {{ member.area }}
+                        -
+                        {{ member.village }}
+                    </p>
+
+                </div>
+
+                <div class="card p-4">
+
+                    <h5>
+                        Membership Details
+                    </h5>
+
+                    <div class="row">
+
+                        <div class="col-md-4">
+
+                            <strong>
+                                Pandu Count
+                            </strong>
+
+                            <br>
+
+                            {{ member.pandu_count }}
+
+                        </div>
+
+                        <div class="col-md-4">
+
+                            <strong>
+                                Joining Amount
+                            </strong>
+
+                            <br>
+
+                            ₹ {{ member.joining_amount }}
+
+                        </div>
+
+                        <div class="col-md-4">
+
+                            <strong>
+                                Occupation
+                            </strong>
+
+                            <br>
+
+                            {{ member.occupation }}
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+</div>
+
+<script src="{{ url_for('static',
+path='js/member_view.js') }}">
+</script>
+
+{% endblock %}

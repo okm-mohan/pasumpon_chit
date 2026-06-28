@@ -1,0 +1,187 @@
+{% extends "base.html" %}
+
+{% block title %}Member List{% endblock %}
+
+{% block content %}
+
+<link rel="stylesheet" href="{{ url_for('static', path='css/members_list.css') }}">
+
+<div class="container-fluid">
+
+    <div class="row">
+
+        
+        <!-- Main -->
+
+        <div class="main-content">
+
+            <div class="d-flex justify-content-between align-items-center mb-4">
+
+                <div>
+                    <h2 class="fw-bold">
+                        Member Management
+                    </h2>
+
+                    <small class="text-muted">
+                        Manage all members
+                    </small>
+                </div>
+
+                <a href="/members/add" class="btn btn-primary">
+
+                    + Add Member
+
+                </a>
+
+            </div>
+
+            <!-- KPI CARDS -->
+
+            <div class="row mb-4">
+
+                <div class="col-md-3">
+                    <div class="kpi-box total-card">
+                        <h6>Total Members</h6>
+                        <h2 id="totalMembers">
+                            {{ members|length }}
+                        </h2>
+                    </div>
+                </div>
+
+                <div class="col-md-3">
+                    <div class="kpi-box active-card">
+                        <h6>Active Members</h6>
+                        <h2>
+                            {{ members|selectattr("status","equalto","ACTIVE")|list|length }}
+                        </h2>
+                    </div>
+                </div>
+
+                <div class="col-md-3">
+                    <div class="kpi-box pending-card">
+                        <h6>Pandu Members</h6>
+                        <h2>
+                            {{ members|length }}
+                        </h2>
+                    </div>
+                </div>
+
+                <div class="col-md-3">
+                    <div class="kpi-box inactive-card">
+                        <h6>Inactive</h6>
+                        <h2>0</h2>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- SEARCH -->
+
+            <div class="card p-3 mb-4">
+
+                <input type="text" id="searchBox" class="form-control" placeholder="Search by Name, Mobile, Aadhaar">
+
+            </div>
+
+            <!-- MEMBERS TABLE -->
+
+            <div class="card p-3 fade-card">
+
+                <div class="table-responsive">
+
+                    <table class="table table-hover align-middle" id="memberTable">
+
+                        <thead>
+
+                            <tr>
+
+                                <th>Photo</th>
+                                <th>Code</th>
+                                <th>Name</th>
+                                <th>Mobile</th>
+                                <th>Aadhaar</th>
+                                <th>Pandu</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+
+                            </tr>
+
+                        </thead>
+
+                        <tbody>
+
+                            {% for m in members %}
+
+                            <tr>
+
+                                <td>
+
+                                    {% if m.photo %}
+
+                                    <img src="{{ m.photo }}" class="member-photo">
+
+                                    {% else %}
+
+                                    <img src="/static/images/user.png" class="member-photo">
+
+                                    {% endif %}
+
+                                </td>
+
+                                <td>{{ m.member_code }}</td>
+
+                                <td>{{ m.member_name }}</td>
+
+                                <td>{{ m.mobile }}</td>
+
+                                <td>{{ m.aadhaar_no }}</td>
+
+                                <td>{{ m.pandu_count }}</td>
+
+                                <td>
+
+                                    <span class="badge bg-success">
+                                        {{ m.status }}
+                                    </span>
+
+                                </td>
+
+                                <td>
+
+                                    <a href="/members/view/{{ m.id }}" class="btn btn-sm btn-info">
+
+                                        View
+
+                                    </a>
+
+                                    <button class="btn btn-sm btn-warning">
+
+                                        Edit
+
+                                    </button>
+
+                                </td>
+
+                            </tr>
+
+                            {% endfor %}
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<script src="{{ url_for('static',
+path='js/members_list.js') }}">
+</script>
+
+{% endblock %}

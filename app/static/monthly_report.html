@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>
+        Monthly Collection Report
+    </title>
+
+    <link rel="stylesheet" href="/static/css/monthly_report.css">
+
+</head>
+
+<body>
+    <div class="container" id="reportContainer">
+        <!-- HEADER -->
+
+        <div class="report-header">
+
+            <div class="header-content">
+
+                <h1>
+                    Monthly Collection Report
+                </h1>
+
+                <p>
+                    Pasumpon Chit Fund Management System
+                </p>
+
+            </div>
+
+        </div>
+
+        <!-- REPORT INFO -->
+
+        <div class="report-info">
+
+            <div>
+
+                <strong>
+                    Report Date :
+                </strong>
+
+                <span id="reportDate"></span>
+
+            </div>
+
+            <div>
+
+                <strong>
+                    Generated At :
+                </strong>
+
+                <span id="reportTime"></span>
+
+            </div>
+
+        </div>
+
+
+        <div class="filter-panel">
+
+            <label>Month</label>
+
+            <select id="monthFilter">
+
+                <option value="1">January</option>
+                <option value="2">February</option>
+                <option value="3">March</option>
+                <option value="4">April</option>
+                <option value="5">May</option>
+                <option value="6">June</option>
+                <option value="7">July</option>
+                <option value="8">August</option>
+                <option value="9">September</option>
+                <option value="10">October</option>
+                <option value="11">November</option>
+                <option value="12">December</option>
+
+            </select>
+
+            <label>Year</label>
+
+            <select id="yearFilter">
+
+                <option>2025</option>
+                <option selected>2026</option>
+                <option>2027</option>
+                <option>2028</option>
+                <option>2029</option>
+                <option>2030</option>
+
+            </select>
+
+            <button onclick="loadMonthlyCollections()">
+
+                Search
+
+            </button>
+
+        </div>
+
+        <!-- SUMMARY CARD -->
+
+                <!-- TOOLBAR -->
+
+        <div class="toolbar">
+
+            <button class="print-btn" onclick="printReport()">
+
+                🖨 Print
+
+            </button>
+
+            <button class="pdf-btn" onclick="exportPDF()">
+
+                📄 PDF
+
+            </button>
+
+            <button class="excel-btn" onclick="exportExcel()">
+
+                📊 Excel
+
+            </button>
+
+            <button class="share-btn" onclick="shareReport()">
+
+                🔗 Share
+
+            </button>
+
+        </div>
+
+        <!-- TABLE -->
+
+        <div class="table-wrapper">
+
+            <table>
+
+                <thead>
+
+                    <tr>
+
+                        <th>#</th>
+
+                        <th>Receipt No</th>
+
+                        <th>Date</th>
+
+                        <th>Member Code</th>
+
+                        <th>Member Name</th>
+
+                        <th>Amount</th>
+
+                        <th>Payment Mode</th>
+
+                    </tr>
+
+                </thead>
+
+                <tbody id="reportBody">
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+
+    
+
+        <div class="summary-card">
+
+            <h3>
+                Total Receipts
+            </h3>
+
+            <p id="totalReceipts">
+                0
+            </p>
+
+        </div>
+
+        <!-- FOOTER TOTAL -->
+
+        <div class="footer-total">
+
+            Grand Total :
+
+            <span id="totalAmount">
+
+                ₹0
+
+            </span>
+
+        </div>
+
+    </div>
+
+    <script>
+
+        function loadDateTime() {
+
+            const now = new Date();
+
+            document.getElementById(
+                "reportDate"
+            ).innerText =
+                now.toLocaleDateString(
+                    "en-IN"
+                );
+
+            document.getElementById(
+                "reportTime"
+            ).innerText =
+                now.toLocaleTimeString(
+                    "en-IN"
+                );
+        }
+
+        loadDateTime();
+
+    </script>
+
+    <script src="/static/js/monthly_report.js"></script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+
+</body>
+
+</html>

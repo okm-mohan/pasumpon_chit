@@ -1,0 +1,201 @@
+{% extends "base.html" %}
+
+{% block title %}Pandu Settlement{% endblock %}
+
+{% block content %}
+
+<link rel="stylesheet" href="/static/css/pandu_settlement.css">
+
+<div class="container-fluid">
+
+
+
+    <!-- HEADER -->
+
+    <div class="settlement-hero">
+
+            <div class="mb-3">
+
+        <a href="/dashboard" class="btn btn-outline-primary back-btn">
+
+            <i class="bi bi-arrow-left-circle-fill"></i>
+            Back to Dashboard
+
+        </a>
+
+    </div>
+    
+        <div>
+
+            <h1>
+                Pandu Settlement Center
+            </h1>
+
+            <p>
+                Process Final Settlement & Closure
+            </p>
+
+        </div>
+
+        <div class="hero-badge">
+
+            Settlement Module
+
+        </div>
+
+    </div>
+
+    <!-- SEARCH -->
+
+    <div class="card settlement-card mt-4">
+
+        <div class="card-body">
+
+            <div class="row">
+
+                <div class="col-md-10">
+
+                    <input type="text" id="searchMember" class="form-control form-control-lg"
+                        placeholder="Search Member Name">
+
+                </div>
+
+                <div class="col-md-2">
+
+                    <button class="btn btn-primary btn-lg w-100" onclick="searchMembers()">
+
+                        Search
+
+                    </button>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- SEARCH RESULTS -->
+
+    <div id="memberResults" class="mt-4">
+
+    </div>
+
+    <!-- MEMBER DETAILS -->
+
+    <div id="settlementSection" style="display:none;">
+
+        <div class="row mt-4">
+
+            <div class="col-lg-4">
+
+                <div class="profile-card">
+
+                    <img src="/static/images/user.png" class="member-photo">
+
+                    <h3 id="memberName"></h3>
+
+                    <p id="memberMobile"></p>
+
+                    <p id="memberVillage"></p>
+
+                    <span class="ready-badge">
+                        READY FOR SETTLEMENT
+                    </span>
+
+                </div>
+
+            </div>
+
+            <div class="col-lg-8">
+
+                <div class="calculation-card">
+
+                    <h3>
+                        Settlement Calculation
+                    </h3>
+
+                    <div class="calc-row">
+
+                        <span>Total Amount</span>
+
+                        <strong id="totalAmount"></strong>
+
+                    </div>
+
+                    <div class="calc-row">
+
+                        <span>Paid Amount</span>
+
+                        <strong id="paidAmount"></strong>
+
+                    </div>
+
+                    <div class="calc-row">
+
+                        <span>Monthly Due</span>
+
+                        <strong id="monthlyDue"></strong>
+
+                    </div>
+
+                    <div class="calc-row">
+
+                        <span>Settlement Bonus</span>
+
+                        <strong id="bonusAmount"></strong>
+
+                    </div>
+
+                    <hr>
+
+                    <div class="settlement-total">
+
+                        <label>
+                            Settlement Amount
+                        </label>
+
+                        <h1 id="settlementAmount">
+
+                        </h1>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <!-- REMARKS -->
+
+        <div class="card settlement-card mt-4">
+
+            <div class="card-body">
+
+                <h4>
+                    Settlement Remarks
+                </h4>
+
+                <textarea id="remarks" class="form-control" rows="4">
+
+                </textarea>
+
+                <button class="btn btn-success btn-lg mt-4" onclick="processSettlement()">
+
+                    Process Settlement
+
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<script src="/static/js/pandu_settlement.js"></script>
+
+{% endblock %}

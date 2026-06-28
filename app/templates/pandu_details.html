@@ -1,0 +1,363 @@
+{% extends "base.html" %}
+
+{% block title %}Pandu Dashboard{% endblock %}
+
+{% block content %}
+
+<link rel="stylesheet" href="/static/css/pandu_details.css">
+
+<div class="container-fluid">
+
+    <!-- HERO SECTION -->
+
+    <div class="executive-card">
+
+        <div class="executive-left">
+
+            <a href="/dashboard">
+                <i class="bi bi-arrow-left-circle-fill"></i>
+                Back to Dashboard
+            </a>
+
+            <h1 id="dashboardTitle">
+    Pandu Collection Dashboard
+</h1>
+
+<script>
+document.getElementById("dashboardTitle").innerText =
+    "Pandu Collection Dashboard - " + new Date().getFullYear();
+</script>
+            <p>
+                Real-time monitoring of collections, pending dues,
+                member performance and financial progress.
+            </p>
+
+        </div>
+
+        <div class="executive-right">
+
+            <div class="amount-block">
+
+                <small>Total Pandu Value</small>
+
+                <h2 id="totalAmount">
+                    ₹0
+                </h2>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- KPI CARDS -->
+
+    <div class="kpi-grid">
+
+
+        <div class="kpi-card members">
+
+            <div class="card-icon">
+                👥
+            </div>
+
+            <div>
+                <span>Total Pandu Amount</span>
+                <h2 id="totalAmountCard">
+                    ₹0
+                </h2>
+            </div>
+
+        </div>
+
+
+
+        <div class="kpi-card collected">
+
+            <div class="card-icon">
+                💰
+            </div>
+
+
+            <div>
+                <span>Collected Amount</span>
+                <h2 id="collectedAmount">
+                    ₹0
+                </h2>
+            </div>
+
+        </div>
+
+        <div class="kpi-card balance">
+
+            <div class="card-icon">
+                ⚠️
+            </div>
+
+            <div>
+                <span>Balance Amount</span>
+                <h2 id="balanceAmount">
+                    ₹0
+                </h2>
+            </div>
+
+        </div>
+
+
+        <div class="kpi-card percent">
+
+            <div class="card-icon">
+                📈
+            </div>
+
+            <div>
+                <span>Collection %</span>
+                <h2 id="percentage">
+                    0%
+                </h2>
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- MEMBER STATUS -->
+
+    <div class="row mt-4">
+
+        <div class="col-lg-4">
+
+            <div class="status-card">
+
+                <h5>
+                    Paid Members
+                </h5>
+
+                <h2 id="paidMembers">
+                    0
+                </h2>
+
+            </div>
+
+        </div>
+
+        <div class="col-lg-4">
+
+            <div class="status-card">
+
+                <h5>
+                    Pending Members
+                </h5>
+
+                <h2 id="pendingMembers">
+                    0
+                </h2>
+
+            </div>
+
+        </div>
+
+        <div class="col-lg-4">
+
+            <div class="status-card">
+
+                <h5>
+                    Today's Collection
+                </h5>
+
+                <h2 id="todayCollection">
+                    ₹0
+                </h2>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- COLLECTION PROGRESS -->
+
+    <div class="premium-panel mt-4">
+
+        <div class="d-flex justify-content-between">
+
+            <h4>
+                Collection Progress
+            </h4>
+
+            <span id="progressLabel">
+                0%
+            </span>
+
+        </div>
+
+        <div class="progress premium-progress mt-3">
+
+            <div id="progressBar" class="progress-bar">
+
+                0%
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- CHARTS -->
+
+    <div class="row mt-4">
+
+        <div class="col-lg-8">
+
+            <div class="premium-panel">
+
+                <div class="panel-title">
+
+                    Monthly Collection Trend
+
+                </div>
+
+                <canvas id="collectionChart" height="120">
+
+                </canvas>
+
+            </div>
+
+        </div>
+
+        <div class="col-lg-4">
+
+            <div class="premium-panel">
+
+                <div class="panel-title">
+
+                    Collection Breakdown
+
+                </div>
+
+                <canvas id="donutChart" height="220">
+
+                </canvas>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- BOTTOM WIDGETS -->
+
+    <div class="row mt-4">
+
+        <div class="col-lg-6">
+
+            <div class="premium-panel">
+
+                <div class="panel-title">
+
+                    Current Month Collection
+
+                </div>
+
+                <h1 class="money-highlight" id="monthCollection">
+
+                    ₹0
+
+                </h1>
+
+            </div>
+
+        </div>
+
+        <div class="col-lg-6">
+
+            <div class="premium-panel">
+
+                <div class="panel-title">
+
+                    System Overview
+
+                </div>
+
+                <div class="overview-item">
+
+                    <span>Total Members</span>
+                    <strong id="overviewMembers">
+                        0
+                    </strong>
+
+                </div>
+
+                <div class="overview-item">
+
+                    <span>Paid Members</span>
+                    <strong id="overviewPaid">
+                        0
+                    </strong>
+
+                </div>
+
+                <div class="overview-item">
+
+                    <span>Pending Members</span>
+                    <strong id="overviewPending">
+                        0
+                    </strong>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- RECENT COLLECTIONS -->
+
+    <div class="premium-panel mt-4">
+
+        <div class="panel-title">
+
+            Recent Collections
+
+        </div>
+
+        <table class="table table-hover">
+
+            <thead>
+
+                <tr>
+
+                    <th>Receipt No</th>
+                    <th>Member</th>
+                    <th>Amount</th>
+                    <th>Date</th>
+
+                </tr>
+
+            </thead>
+
+            <tbody id="recentCollections">
+
+                <tr>
+
+                    <td colspan="4" class="text-center">
+
+                        Loading...
+
+                    </td>
+
+                </tr>
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="/static/js/pandu_details.js"></script>
+
+{% endblock %}

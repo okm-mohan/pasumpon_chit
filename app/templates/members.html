@@ -1,0 +1,478 @@
+{% extends "base.html" %}
+
+{% block title %}Add New Member{% endblock %}
+
+{% block content %}
+
+<link rel="stylesheet"
+      href="{{ url_for('static', path='css/members.css') }}">
+
+<div class="container-fluid">
+
+    <div class="row">
+
+        <!-- Sidebar -->
+        
+
+        <!-- Main Content -->
+
+        <div class="">
+
+            <!-- Header -->
+
+            <div class="member-header mb-4">
+
+                <div>
+                    <h2 class="fw-bold">
+                        Add New Member
+                    </h2>
+
+                    <small class="text-muted">
+                        Create new member profile
+                    </small>
+                </div>
+
+            </div>
+
+            <!-- Form -->
+
+            <form id="memberForm"
+                  method="post"
+                  action="/members/save"
+                  enctype="multipart/form-data">
+
+                <div class="row">
+
+                    <!-- BASIC -->
+
+                    <div class="col-md-6">
+
+                        <div class="card p-4 mb-4">
+
+                            <h5 class="section-title">
+                                1. Basic Information
+                            </h5>
+
+                            <div class="row">
+
+                                <div class="col-md-6 mb-3">
+
+                                    <label>
+                                        Member ID
+                                    </label>
+
+                                    <input type="text"
+                                           class="form-control"
+                                           readonly
+                                           value="AUTO">
+
+                                </div>
+
+                                <div class="col-md-6 mb-3">
+
+                                    <label>
+                                        Aadhaar Number
+                                    </label>
+
+                                    <input type="text"
+                                           name="aadhaar_no"
+                                           class="form-control">
+
+                                </div>
+
+                            </div>
+
+                            <div class="row">
+
+                                <div class="col-md-6 mb-3">
+
+                                    <label>
+                                        Member Name
+                                    </label>
+
+                                    <input type="text"
+                                           name="member_name"
+                                           class="form-control">
+
+                                </div>
+
+                                <div class="col-md-6 mb-3">
+
+                                    <label>
+                                        Name Description
+                                    </label>
+
+                                    <input type="text"
+                                           name="name_description"
+                                           class="form-control">
+
+                                </div>
+
+                            </div>
+
+                            <label>
+                                Photo
+                            </label>
+
+                            <div class="photo-box">
+
+                                <img id="preview"
+                                     src="/static/images/user.png">
+
+                            </div>
+
+                            <input type="file"
+                                   id="photo"
+                                   name="photo"
+                                   class="form-control mt-2">
+
+                        </div>
+
+                    </div>
+
+                    <!-- CONTACT -->
+
+                    <div class="col-md-6">
+
+                        <div class="card p-4 mb-4">
+
+                            <h5 class="section-title">
+                                2. Contact Information
+                            </h5>
+
+                            <div class="row">
+
+                                <div class="col-md-6 mb-3">
+
+                                    <label>
+                                        Mobile Number
+                                    </label>
+
+                                    <input type="text"
+                                           name="mobile"
+                                           id="mobile"
+                                           class="form-control">
+
+                                </div>
+
+                                <div class="col-md-6 mb-3">
+
+                                    <label>
+                                        WhatsApp Number
+                                    </label>
+
+                                    <input type="text"
+                                           name="whatsapp_no"
+                                           id="whatsapp"
+                                           class="form-control">
+
+                                </div>
+
+                            </div>
+
+                            <div class="form-check">
+
+                                <input
+                                    class="form-check-input"
+                                    type="checkbox"
+                                    id="sameMobile">
+
+                                <label
+                                    class="form-check-label">
+
+                                    Same as Mobile Number
+
+                                </label>
+
+                            </div>
+
+                        </div>
+
+                        <!-- ADDRESS -->
+
+                        <div class="card p-4">
+
+                            <h5 class="section-title">
+                                3. Address Information
+                            </h5>
+
+                            <div class="mb-3">
+
+                                <label>
+                                    Address
+                                </label>
+
+                                <textarea
+                                    name="address"
+                                    class="form-control">
+                                </textarea>
+
+                            </div>
+
+                            <div class="row">
+
+                                <div class="col-md-4">
+
+                                    <input
+                                        type="text"
+                                        name="area"
+                                        placeholder="Area"
+                                        class="form-control">
+
+                                </div>
+
+                                <div class="col-md-4">
+
+                                    <input
+                                        type="text"
+                                        name="village"
+                                        placeholder="Village"
+                                        class="form-control">
+
+                                </div>
+
+                                <div class="col-md-4">
+
+                                    <input
+                                        type="text"
+                                        name="pincode"
+                                        placeholder="Pincode"
+                                        class="form-control">
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <!-- MEMBERSHIP -->
+
+                <div class="card p-4 mt-4">
+
+                    <h5 class="section-title">
+                        4. Membership Information
+                    </h5>
+
+                    <div class="row">
+
+                        <div class="col-md-3">
+
+                            <div class="membership-card">
+
+                                <input
+                                    type="checkbox"
+                                    id="is_pandu">
+
+                                <label>
+                                    Pandu Member
+                                </label>
+
+                            </div>
+
+                        </div>
+
+                        <div class="col-md-3">
+
+                            <div class="membership-card">
+
+                                <input type="checkbox">
+
+                                <label>
+                                    Kanthu Member
+                                </label>
+
+                            </div>
+
+                        </div>
+
+                        <div class="col-md-3">
+
+                            <div class="membership-card">
+
+                                <input type="checkbox">
+
+                                <label>
+                                    Ayulsantha Member
+                                </label>
+
+                            </div>
+
+                        </div>
+
+                        <div class="col-md-3">
+
+                            <div class="membership-card">
+
+                                <input type="checkbox">
+
+                                <label>
+                                    Chit Fund Member
+                                </label>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                    <div id="panduSection"
+                         class="mt-4">
+
+                        <div class="row">
+
+                            <div class="col-md-4">
+
+                                <label>
+                                    Pandu Count
+                                </label>
+
+                                <input
+                                    type="number"
+                                    name="pandu_count"
+                                    value="1"
+                                    class="form-control">
+
+                            </div>
+
+                            <div class="col-md-4">
+
+                                <label>
+                                    Joining Amount
+                                </label>
+
+                                <input
+                                    type="number"
+                                    name="joining_amount"
+                                    class="form-control">
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <!-- NOMINEE -->
+
+                <div class="row mt-4">
+
+                    <div class="col-md-6">
+
+                        <div class="card p-4">
+
+                            <h5 class="section-title">
+                                5. Nominee Information
+                            </h5>
+
+                          <input
+                                type="text"
+                                name="relationship"
+                                placeholder="Relationship"
+                                class="form-control mb-3">
+
+                            <input
+                                type="text"
+                                name="nominee_mobile"
+                                placeholder="Nominee Mobile"
+                                class="form-control">
+
+                        </div>
+
+                    </div>
+
+                    <div class="col-md-6">
+
+                        <div class="card p-4">
+
+                            <h5 class="section-title">
+                                6. Additional Information
+                            </h5>
+
+                            <input
+                                type="text"
+                                name="reference_name"
+                                placeholder="Reference Name"
+                                class="form-control mb-3">
+
+                            <input
+                                type="text"
+                                name="occupation"
+                                placeholder="Occupation"
+                                class="form-control">
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <!-- STATUS -->
+
+                <div class="card p-4 mt-4">
+
+                    <h5 class="section-title">
+                        7. Status
+                    </h5>
+
+                    <select
+                        name="status"
+                        class="form-select">
+
+                        <option value="ACTIVE">
+                            Active
+                        </option>
+
+                        <option value="INACTIVE">
+                            Inactive
+                        </option>
+
+                    </select>
+
+                </div>
+
+                <!-- BUTTONS -->
+
+                <div class="text-center mt-4 mb-5">
+
+                    <button
+                        class="btn btn-success btn-lg">
+
+                        Save Member
+
+                    </button>
+
+                    <button
+                        type="reset"
+                        class="btn btn-primary btn-lg">
+
+                        Clear
+
+                    </button>
+
+                    <a href="/dashboard"
+                       class="btn btn-light btn-lg">
+
+                        Cancel
+
+                    </a>
+
+                </div>
+
+            </form>
+
+        </div>
+
+    </div>
+
+</div>
+
+<script src="{{ url_for('static',
+path='js/members.js') }}">
+</script>
+
+{% endblock %}

@@ -1,0 +1,202 @@
+{% extends "base.html" %}
+
+{% block title %}Kanthu Reports{% endblock %}
+
+{% block content %}
+
+<link rel="stylesheet"
+      href="/static/css/kanthu_reports.css">
+
+<div class="kanthu-reports-page">
+
+    <!-- HEADER -->
+
+    <div class="reports-header">
+
+        <div>
+
+            <h2>
+                <i class="bi bi-bar-chart-fill"></i>
+                Kanthu Reports Dashboard
+            </h2>
+
+            <p>
+                Monitor Kanthu Performance, Collections & Outstanding
+            </p>
+
+        </div>
+
+    </div>
+
+    <!-- KPI CARDS -->
+
+    <div class="kpi-grid">
+
+        <div class="kpi-card blue">
+
+            <h6>Total Kanthu Given</h6>
+
+            <h2 id="totalGiven">
+                ₹0
+            </h2>
+
+        </div>
+
+        <div class="kpi-card green">
+
+            <h6>Total Collection</h6>
+
+            <h2 id="totalCollected">
+                ₹0
+            </h2>
+
+        </div>
+
+        <div class="kpi-card red">
+
+            <h6>Outstanding Amount</h6>
+
+            <h2 id="outstanding">
+                ₹0
+            </h2>
+
+        </div>
+
+        <div class="kpi-card orange">
+
+            <h6>Interest Earned</h6>
+
+            <h2 id="interestEarned">
+                ₹0
+            </h2>
+
+        </div>
+
+    </div>
+
+    <!-- CHART + REPORTS -->
+
+    <div class="chart-report-grid">
+
+        <div class="chart-card">
+
+            <div class="card-title">
+                Monthly Collection Summary
+            </div>
+
+            <canvas id="monthlyChart"></canvas>
+
+        </div>
+
+        <div class="quick-report-card">
+
+            <div class="card-title">
+                Quick Reports
+            </div>
+
+            <div class="report-buttons">
+
+                <button>Daily Report</button>
+                <button>Monthly Report</button>
+                <button>Outstanding Report</button>
+                <button>Member Wise</button>
+                <button>Interest Report</button>
+                <button>Closed Kanthus</button>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- TABLES -->
+
+    <div class="table-grid">
+
+        <div class="table-card">
+
+            <div class="card-title red-title">
+                Outstanding Members
+            </div>
+
+            <table class="table table-hover">
+
+                <thead>
+
+                    <tr>
+
+                        <th>Member</th>
+                        <th>Kanthu No</th>
+                        <th>Balance</th>
+
+                    </tr>
+
+                </thead>
+
+                <tbody id="outstandingTable">
+
+                    <tr>
+
+                        <td colspan="3"
+                            class="text-center">
+
+                            No Data
+
+                        </td>
+
+                    </tr>
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+        <div class="table-card">
+
+            <div class="card-title green-title">
+                Recent Collections
+            </div>
+
+            <table class="table table-hover">
+
+                <thead>
+
+                    <tr>
+
+                        <th>Date</th>
+                        <th>Member</th>
+                        <th>Amount</th>
+
+                    </tr>
+
+                </thead>
+
+                <tbody id="recentCollectionTable">
+
+                    <tr>
+
+                        <td colspan="3"
+                            class="text-center">
+
+                            No Data
+
+                        </td>
+
+                    </tr>
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script src="/static/js/kanthu_reports.js"></script>
+
+{% endblock %}

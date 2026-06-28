@@ -1,0 +1,280 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+
+<div class="container-fluid">
+
+    <div class="row">
+
+      
+        <!-- MAIN -->
+
+        <div class="col-md-10 p-4">
+
+            <nav class="navbar bg-white rounded shadow-sm mb-3">
+
+                <div class="container-fluid">
+
+                    <h4 class="fw-bold">
+                        Dashboard
+                    </h4>
+
+                    <div>
+
+                        <span class="clock me-3" id="clock"></span>
+
+                        <a href="/logout" class="btn btn-danger">
+                            Logout
+                        </a>
+
+                    </div>
+
+                </div>
+
+            </nav>
+
+            <!-- SCROLLING NEWS -->
+
+            <div class="alert alert-warning">
+
+                <marquee>
+
+                    🔔 Today's Collection ₹1,25,000 |
+                    🔔 Pending Dues ₹75,000 |
+                    🔔 5 Auctions Scheduled Today |
+                    🔔 New Member Registrations 3 |
+                    🔔 Backup Completed Successfully
+
+                </marquee>
+
+            </div>
+
+            <!-- QUICK ACTIONS -->
+
+            <div class="mb-3">
+
+                <button class="btn btn-primary">
+                    ➕ Add Member
+                </button>
+
+                <button class="btn btn-success">
+                    💰 Collection
+                </button>
+
+                <button class="btn btn-warning">
+                    🏆 Auction
+                </button>
+
+                <button class="btn btn-info">
+                    📄 Reports
+                </button>
+
+            </div>
+
+            <!-- KPI -->
+
+            <div class="row">
+
+                <div class="col-md-3 mb-3">
+                    <div class="card kpi-card bg-primary p-3">
+                        <h6>Total Members</h6>
+                        <h2>1250</h2>
+                    </div>
+                </div>
+
+                <div class="col-md-3 mb-3">
+                    <div class="card kpi-card bg-success p-3">
+                        <h6>Active Chits</h6>
+                        <h2>85</h2>
+                    </div>
+                </div>
+
+                <div class="col-md-3 mb-3">
+                    <div class="card kpi-card bg-warning p-3">
+                        <h6>Collection</h6>
+                        <h2>₹25L</h2>
+                    </div>
+                </div>
+
+                <div class="col-md-3 mb-3">
+                    <div class="card kpi-card bg-danger p-3">
+                        <h6>Pending Dues</h6>
+                        <h2>₹1.2L</h2>
+                    </div>
+                </div>
+
+                <div class="col-md-3 mb-3">
+                    <div class="card kpi-card bg-info p-3">
+                        <h6>Today's Receipts</h6>
+                        <h2>35</h2>
+                    </div>
+                </div>
+
+                <div class="col-md-3 mb-3">
+                    <div class="card kpi-card bg-secondary p-3">
+                        <h6>Bank Balance</h6>
+                        <h2>₹8.5L</h2>
+                    </div>
+                </div>
+
+                <div class="col-md-3 mb-3">
+                    <div class="card kpi-card bg-dark p-3">
+                        <h6>Auctions</h6>
+                        <h2>5</h2>
+                    </div>
+                </div>
+
+                <div class="col-md-3 mb-3">
+                    <div class="card kpi-card bg-primary p-3">
+                        <h6>Profit</h6>
+                        <h2>₹4L</h2>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- CHARTS -->
+
+            <div class="row">
+
+                <div class="col-md-8">
+
+                    <div class="card p-4">
+
+                        <h5>Monthly Collection</h5>
+
+                        <canvas id="collectionChart"></canvas>
+
+                    </div>
+
+                </div>
+
+                <div class="col-md-4">
+
+                    <div class="card p-4">
+
+                        <h5>Member Growth</h5>
+
+                        <canvas id="memberChart"></canvas>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+            <!-- TABLE + ANNOUNCEMENT -->
+
+            <div class="row mt-4">
+
+                <div class="col-md-8">
+
+                    <div class="card p-4">
+
+                        <h5>Recent Collections</h5>
+
+                        <table class="table">
+
+                            <tr>
+                                <th>Receipt</th>
+                                <th>Member</th>
+                                <th>Amount</th>
+                            </tr>
+
+                            <tr>
+                                <td>101</td>
+                                <td>Kumar</td>
+                                <td>₹5000</td>
+                            </tr>
+
+                            <tr>
+                                <td>102</td>
+                                <td>Ravi</td>
+                                <td>₹2500</td>
+                            </tr>
+
+                            <tr>
+                                <td>103</td>
+                                <td>Mani</td>
+                                <td>₹3000</td>
+                            </tr>
+
+                        </table>
+
+                    </div>
+
+                </div>
+
+                <div class="col-md-4">
+
+                    <div class="card p-4">
+
+                        <h5>Announcements</h5>
+
+                        <marquee direction="up" height="200">
+
+                            ✔ Backup Completed<br><br>
+
+                            ✔ WhatsApp Sent<br><br>
+
+                            ✔ New Chit Created<br><br>
+
+                            ✔ Monthly Report Generated<br><br>
+
+                            ✔ Due Reminder Sent<br><br>
+
+                        </marquee>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<script>
+
+    setInterval(function () {
+
+        document.getElementById("clock")
+            .innerHTML =
+            new Date().toLocaleString();
+
+    }, 1000);
+
+    new Chart(
+        document.getElementById('collectionChart'),
+        {
+            type: 'bar',
+            data: {
+                labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+                datasets: [{
+                    label: 'Collection',
+                    data: [10, 15, 12, 18, 22, 25]
+                }]
+            }
+        });
+
+    new Chart(
+        document.getElementById('memberChart'),
+        {
+            type: 'line',
+            data: {
+                labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+                datasets: [{
+                    label: 'Members',
+                    data: [100, 150, 180, 220, 300, 350]
+                }]
+            }
+        });
+
+</script>
+
+{% endblock %}

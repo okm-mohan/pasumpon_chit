@@ -1,0 +1,167 @@
+/* ====================================
+   MEMBERS PAGE
+==================================== */
+
+.member-header{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+}
+
+.section-title{
+    color:#2563eb;
+    font-weight:700;
+    margin-bottom:20px;
+    border-left:4px solid #2563eb;
+    padding-left:12px;
+}
+
+/* Cards */
+
+.card{
+    border:none;
+    border-radius:18px;
+    background:#ffffff;
+    box-shadow:0 8px 25px rgba(0,0,0,.06);
+    transition:.3s;
+}
+
+.card:hover{
+    transform:translateY(-3px);
+    box-shadow:0 15px 35px rgba(0,0,0,.08);
+}
+
+/* Inputs */
+
+.form-control,
+.form-select{
+    border-radius:12px;
+    height:48px;
+    border:1px solid #dbe3ee;
+}
+
+textarea.form-control{
+    height:100px !important;
+}
+
+.form-control:focus,
+.form-select:focus{
+    border-color:#2563eb;
+    box-shadow:0 0 0 .2rem rgba(37,99,235,.15);
+}
+
+/* Labels */
+
+label{
+    font-weight:600;
+    margin-bottom:6px;
+    color:#334155;
+}
+
+/* Photo Upload */
+
+.photo-box{
+    width:140px;
+    height:140px;
+    border-radius:50%;
+    overflow:hidden;
+    margin:auto;
+    border:4px solid #e5e7eb;
+    background:#f8fafc;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+}
+
+.photo-box img{
+    width:100%;
+    height:100%;
+    object-fit:cover;
+}
+
+/* Membership Cards */
+
+.membership-card{
+    border:2px solid #e5e7eb;
+    border-radius:15px;
+    padding:15px;
+    text-align:center;
+    cursor:pointer;
+    transition:.3s;
+    background:white;
+}
+
+.membership-card:hover{
+    border-color:#2563eb;
+    background:#f0f7ff;
+}
+
+.membership-card input{
+    width:20px;
+    height:20px;
+    margin-bottom:10px;
+}
+
+.membership-card label{
+    display:block;
+    margin-bottom:0;
+    cursor:pointer;
+}
+
+/* Pandu Section */
+
+#panduSection{
+    padding:20px;
+    background:#f8fffb;
+    border:1px solid #d1fae5;
+    border-radius:15px;
+}
+
+/* Buttons */
+
+.btn-success{
+    background:#16a34a;
+    border:none;
+    border-radius:12px;
+    padding:12px 30px;
+}
+
+.btn-primary{
+    background:#2563eb;
+    border:none;
+    border-radius:12px;
+    padding:12px 30px;
+}
+
+.btn-light{
+    border-radius:12px;
+    padding:12px 30px;
+}
+
+/* Active Menu */
+
+.active-menu{
+    background:rgba(255,255,255,.18);
+    border-left:4px solid #ffffff;
+}
+
+/* Page Spacing */
+
+.container-fluid{
+    padding-bottom:50px;
+}
+
+/* Responsive */
+
+@media(max-width:768px){
+
+    .membership-card{
+        margin-bottom:15px;
+    }
+
+    .photo-box{
+        width:100px;
+        height:100px;
+    }
+
+}

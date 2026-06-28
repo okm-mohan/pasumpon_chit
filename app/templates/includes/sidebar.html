@@ -1,0 +1,120 @@
+<!-- SIDEBAR -->
+<div class="col-md-2 sidebar p-3">
+
+    <!-- ALL MENU CODE HERE -->
+    <!-- SIDEBAR -->
+    <div class="col-md-2 sidebar p-3">
+
+        <div class="text-center mb-4">
+            <img src="/static/images/logo.png" width="80">
+            <h5 class="text-white mt-2">
+                Pasumpon Chit ERP
+            </h5>
+        </div>
+
+        <!-- Dashboard -->
+        <a href="/dashboard" class="active-menu">
+            <i class="bi bi-speedometer2"></i>
+            Dashboard
+        </a>
+        <!-- MASTER -->
+        <a class="menu-toggle" data-bs-toggle="collapse" href="#masterMenu">
+            <i class="bi bi-database"></i>
+            Master
+            <span class="float-end">▼</span>
+        </a>
+
+        <div class="collapse" id="masterMenu">
+
+            <a href="/members/list" class="submenu">
+                <i class="bi bi-people"></i>
+                Members
+            </a>
+
+            <a href="/pandu-groups" class="submenu">
+                <i class="bi bi-diagram-3"></i>
+                Pandu Groups
+            </a>
+
+            <a href="/pandu/assign" class="submenu">
+                <i class="bi bi-person-plus-fill"></i>
+                Pandu Assignment
+            </a>
+
+            <a href="/pandu-settlement" class="submenu">
+                <i class="bi bi-cash-coin"></i>
+                Pandu Settlement
+            </a>
+
+
+        </div>
+
+        <!-- PANDU ENTRY -->
+        <a href="/pandu">
+            <i class="bi bi-cash-stack"></i>
+            Pandu Entry
+        </a>
+
+        <!-- KANTHU -->
+        <a href="/kanthu">
+            <i class="bi bi-wallet2"></i>
+            Kanthu
+        </a>
+
+        <!-- AYULSANTHA -->
+        <a href="/ayulsantha">
+            <i class="bi bi-heart-pulse"></i>
+            AyulSantha
+        </a>
+
+        <!-- CHIT -->
+        <a href="/chit">
+            <i class="bi bi-receipt"></i>
+            Chit
+        </a>
+
+        <!-- EXPENSES -->
+        <a href="/expenses">
+            <i class="bi bi-cash-coin"></i>
+            Expenses
+        </a>
+
+        <!-- REPORTS -->
+        <a class="menu-toggle" data-bs-toggle="collapse" href="#reportMenu">
+
+            <i class="bi bi-file-earmark-bar-graph"></i>
+            Reports
+            <span class="float-end">▼</span>
+
+        </a>
+
+        <div class="collapse" id="reportMenu">
+
+            <a href="/reports/balance-sheet" class="submenu">
+                <i class="bi bi-journal-text"></i>
+                Balance Sheet
+            </a>
+
+            <a href="/reports/monthly-summary" class="submenu">
+                <i class="bi bi-calendar-month"></i>
+                Monthly Summary
+            </a>
+
+        </div>
+
+        <!-- SETTINGS -->
+        <a href="/settings">
+            <i class="bi bi-gear"></i>
+            Settings
+        </a>
+
+        <!-- EXIT -->
+        <a href="/logout" onclick="return confirm('Are you sure you want to exit?')">
+            <i class="bi bi-box-arrow-right"></i>
+            Exit
+        </a>
+
+    </div>
+
+
+</div>

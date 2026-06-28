@@ -1,0 +1,85 @@
+body{
+    background:#f4f7fb;
+}
+
+.card{
+    border:none;
+    border-radius:18px;
+}
+
+.card-header{
+    font-weight:700;
+    font-size:15px;
+}
+
+.form-control,
+.form-select{
+
+    height:50px;
+
+    border-radius:12px;
+
+    border:1px solid #dbe3ec;
+}
+
+.form-control:focus,
+.form-select:focus{
+
+    box-shadow:none;
+
+    border-color:#198754;
+}
+
+#memberSearchResults{
+
+    max-height:250px;
+
+    overflow-y:auto;
+}
+
+.search-item{
+
+    padding:12px;
+
+    border-bottom:1px solid #eee;
+
+    cursor:pointer;
+}
+
+.search-item:hover{
+
+    background:#f8f9fa;
+}
+
+.search-name{
+
+    font-weight:600;
+}
+
+.search-mobile{
+
+    color:#666;
+
+    font-size:13px;
+}
+
+#saveKanthuBtn{
+
+    height:60px;
+
+    font-size:20px;
+
+    font-weight:700;
+
+    border-radius:15px;
+}
+
+#interest_amount{
+
+    font-weight:700;
+}
+
+#net_paid_amount{
+
+    font-weight:900;
+}

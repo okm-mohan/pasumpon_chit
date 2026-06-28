@@ -1,0 +1,291 @@
+{% extends "pandu_base.html" %}
+
+{% block title %}Expenses Entry{% endblock %}
+
+{% block content %}
+
+<div class="container-fluid py-4">
+
+    <!-- Header -->
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+
+        <div>
+            <h2 class="fw-bold text-danger">
+                <i class="fas fa-wallet"></i>
+                Expenses Entry
+            </h2>
+
+            <p class="text-muted mb-0">
+                Record and manage all expense transactions.
+            </p>
+        </div>
+
+    </div>
+
+    <!-- Entry Form -->
+
+    <div class="card shadow border-0 mb-4">
+
+        <div class="card-header bg-danger text-white">
+
+            <h5 class="mb-0">
+                <i class="fas fa-plus-circle"></i>
+                Add Expense
+            </h5>
+
+        </div>
+
+        <div class="card-body">
+
+            <form method="post"
+                  action="/accounts/expenses/save">
+
+                <div class="row g-3">
+
+                    <div class="col-md-2">
+
+                        <label class="form-label fw-bold">
+                            Date
+                        </label>
+
+                        <input type="date"
+                               name="transaction_date"
+                               class="form-control"
+                               value="{{ today if today else '' }}"
+                               required>
+
+                    </div>
+
+                    <div class="col-md-3">
+
+                        <label class="form-label fw-bold">
+                            Category
+                        </label>
+
+                        <select name="category"
+                                class="form-select"
+                                required>
+
+                            <option value="">
+                                Select Category
+                            </option>
+
+                            {% for c in categories %}
+
+                            <option value="{{ c.category_name }}">
+                                {{ c.category_name }}
+                            </option>
+
+                            {% endfor %}
+
+                        </select>
+
+                    </div>
+
+                    <div class="col-md-2">
+
+                        <label class="form-label fw-bold">
+                            Amount
+                        </label>
+
+                        <input type="number"
+                               step="0.01"
+                               min="0"
+                               name="amount"
+                               class="form-control"
+                               placeholder="0.00"
+                               required>
+
+                    </div>
+
+                    <div class="col-md-2">
+
+                        <label class="form-label fw-bold">
+                            Payment Mode
+                        </label>
+
+                        <select name="payment_mode"
+                                class="form-select">
+
+                            <option value="CASH">
+                                CASH
+                            </option>
+
+                            <option value="GPAY">
+                                GPAY
+                            </option>
+
+                            <option value="BANK">
+                                BANK
+                            </option>
+
+                        </select>
+
+                    </div>
+
+                    <div class="col-md-3">
+
+                        <label class="form-label fw-bold">
+                            Remarks
+                        </label>
+
+                        <input type="text"
+                               name="remarks"
+                               class="form-control"
+                               placeholder="Enter Remarks">
+
+                    </div>
+
+                </div>
+
+                <div class="mt-4">
+
+                    <button type="submit"
+                            class="btn btn-danger">
+
+                        <i class="fas fa-save"></i>
+                        Save Expense
+
+                    </button>
+
+                    <button type="reset"
+                            class="btn btn-secondary">
+
+                        <i class="fas fa-undo"></i>
+                        Reset
+
+                    </button>
+
+                </div>
+
+            </form>
+
+        </div>
+
+    </div>
+
+    <!-- Expense List -->
+
+    <div class="card shadow border-0">
+
+        <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
+
+            <h5 class="mb-0">
+                <i class="fas fa-list"></i>
+                Recent Expenses
+            </h5>
+
+            <span class="badge bg-warning text-dark">
+                {{ transactions|length }} Records
+            </span>
+
+        </div>
+
+        <div class="card-body p-0">
+
+            <div class="table-responsive">
+
+                <table class="table table-hover table-bordered mb-0">
+
+                    <thead class="table-dark">
+
+                        <tr>
+
+                            <th width="60">#</th>
+                            <th>Date</th>
+                            <th>Category</th>
+                            <th>Amount</th>
+                            <th>Mode</th>
+                            <th>Remarks</th>
+
+                        </tr>
+
+                    </thead>
+
+                    <tbody>
+
+                        {% if transactions %}
+
+                            {% for row in transactions %}
+
+                            <tr>
+
+                                <td>
+                                    {{ loop.index }}
+                                </td>
+
+                                <td>
+                                    {{ row.transaction_date }}
+                                </td>
+
+                                <td>
+                                    {{ row.category }}
+                                </td>
+
+                                <td class="text-end fw-bold text-danger">
+
+                                    ₹{{ "{:,.2f}".format(row.amount|float) }}
+
+                                </td>
+
+                                <td>
+
+                                    {% if row.payment_mode == 'CASH' %}
+
+                                        <span class="badge bg-success">
+                                            CASH
+                                        </span>
+
+                                    {% elif row.payment_mode == 'GPAY' %}
+
+                                        <span class="badge bg-primary">
+                                            GPAY
+                                        </span>
+
+                                    {% else %}
+
+                                        <span class="badge bg-secondary">
+                                            BANK
+                                        </span>
+
+                                    {% endif %}
+
+                                </td>
+
+                                <td>
+                                    {{ row.remarks or '' }}
+                                </td>
+
+                            </tr>
+
+                            {% endfor %}
+
+                        {% else %}
+
+                            <tr>
+
+                                <td colspan="6"
+                                    class="text-center py-4 text-muted">
+
+                                    No Expense Records Found
+
+                                </td>
+
+                            </tr>
+
+                        {% endif %}
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}

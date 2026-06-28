@@ -1,0 +1,357 @@
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+}
+
+body{
+
+    background:#f1f5f9;
+
+    font-family:
+        "Segoe UI",
+        Tahoma,
+        Geneva,
+        Verdana,
+        sans-serif;
+
+    padding:20px;
+}
+
+.container{
+
+    max-width:1400px;
+
+    margin:auto;
+
+    padding:35px;
+
+    background:white;
+
+    border-radius:20px;
+}
+
+
+
+/* =========================
+   HEADER
+========================= */
+
+.report-header{
+
+    display:flex;
+
+    align-items:center;
+
+    gap:20px;
+
+    padding:25px;
+
+    border-radius:16px;
+
+    background:
+        linear-gradient(
+            135deg,
+            #2563eb,
+            #1d4ed8
+        );
+
+    color:white;
+
+    box-shadow:
+        0 8px 25px
+        rgba(37,99,235,.25);
+
+    margin-bottom:20px;
+}
+
+.back-btn{
+
+    background:white;
+
+    color:#2563eb;
+
+    border:none;
+
+    padding:12px 20px;
+
+    border-radius:10px;
+
+    cursor:pointer;
+
+    font-size:15px;
+
+    font-weight:700;
+
+    transition:.2s;
+}
+
+.back-btn:hover{
+
+    transform:translateX(-3px);
+
+    background:#eff6ff;
+}
+
+.header-content h1{
+
+    font-size:30px;
+
+    margin-bottom:5px;
+}
+
+.header-content p{
+
+    opacity:.9;
+}
+
+/* =========================
+   REPORT INFO
+========================= */
+
+.report-info{
+
+    display:flex;
+
+    justify-content:space-between;
+
+    margin-bottom:20px;
+
+    padding:15px 20px;
+
+    background:white;
+
+    border-radius:12px;
+
+    box-shadow:
+        0 3px 10px
+        rgba(0,0,0,.05);
+}
+
+/* =========================
+   SUMMARY CARD
+========================= */
+
+.summary-card{
+
+    background:
+        linear-gradient(
+            135deg,
+            #10b981,
+            #059669
+        );
+
+    color:white;
+
+    border-radius:16px;
+
+    padding:25px;
+
+    margin-bottom:20px;
+
+    box-shadow:
+        0 10px 25px
+        rgba(16,185,129,.25);
+}
+
+.summary-card h3{
+
+    font-size:18px;
+}
+
+.summary-card p{
+
+    font-size:42px;
+
+    font-weight:700;
+
+    margin-top:10px;
+}
+
+/* =========================
+   TOOLBAR
+========================= */
+
+.toolbar{
+
+    display:flex;
+
+    gap:10px;
+
+    margin-bottom:20px;
+}
+
+.toolbar button{
+
+    border:none;
+
+    padding:12px 20px;
+
+    border-radius:10px;
+
+    color:white;
+
+    cursor:pointer;
+
+    font-weight:600;
+
+    transition:.2s;
+}
+
+.toolbar button:hover{
+
+    transform:translateY(-2px);
+}
+
+.print-btn{
+    background:#2563eb;
+}
+
+.pdf-btn{
+    background:#dc2626;
+}
+
+.excel-btn{
+    background:#16a34a;
+}
+
+.share-btn{
+    background:#7c3aed;
+}
+
+/* =========================
+   TABLE
+========================= */
+
+.table-wrapper{
+
+    background:white;
+
+    border-radius:15px;
+
+    overflow:hidden;
+
+    box-shadow:
+        0 4px 15px
+        rgba(0,0,0,.08);
+}
+
+table{
+
+    width:100%;
+
+    border-collapse:collapse;
+}
+
+thead{
+
+    background:
+        linear-gradient(
+            135deg,
+            #1e293b,
+            #334155
+        );
+
+    color:white;
+}
+
+th{
+
+    padding:15px;
+
+    font-size:15px;
+
+    letter-spacing:.5px;
+
+    text-align:left;
+}
+
+td{
+
+    padding:14px;
+
+    border-bottom:
+        1px solid #e5e7eb;
+}
+
+tbody tr{
+
+    transition:.2s;
+}
+
+tbody tr:nth-child(even){
+
+    background:#f8fafc;
+}
+
+tbody tr:hover{
+
+    background:#dbeafe;
+}
+
+.amount{
+
+    text-align:right;
+
+    color:#16a34a;
+
+    font-weight:700;
+}
+
+/* =========================
+   TOTAL
+========================= */
+
+.footer-total{
+
+    margin-top:20px;
+
+    text-align:right;
+
+    font-size:28px;
+
+    font-weight:700;
+
+    color:#16a34a;
+}
+
+/* =========================
+   PRINT
+========================= */
+
+@media print{
+
+    .toolbar,
+    .back-btn{
+
+        display:none;
+    }
+
+    body{
+
+        background:white;
+    }
+
+    .report-header{
+
+        color:black;
+
+        background:white;
+
+        box-shadow:none;
+    }
+}
+
+@media print {
+
+    body {
+
+        background: white;
+    }
+
+    .toolbar,
+    .back-btn {
+
+        display: none;
+    }
+}

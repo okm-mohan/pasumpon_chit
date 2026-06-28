@@ -1,0 +1,135 @@
+/* ==========================================
+   MEMBER LIST PREMIUM UI
+========================================== */
+
+.kpi-box{
+    padding:25px;
+    border-radius:20px;
+    color:white;
+    transition:.3s;
+    cursor:pointer;
+    box-shadow:0 10px 25px rgba(0,0,0,.08);
+}
+
+.kpi-box:hover{
+    transform:translateY(-6px);
+}
+
+.total-card{
+    background:linear-gradient(135deg,#2563eb,#1d4ed8);
+}
+
+.active-card{
+    background:linear-gradient(135deg,#10b981,#059669);
+}
+
+.pending-card{
+    background:linear-gradient(135deg,#f59e0b,#d97706);
+}
+
+.inactive-card{
+    background:linear-gradient(135deg,#ef4444,#dc2626);
+}
+
+.kpi-box h6{
+    opacity:.9;
+    margin-bottom:10px;
+}
+
+.kpi-box h2{
+    font-weight:700;
+}
+
+/* Search */
+
+#searchBox{
+    height:55px;
+    border-radius:15px;
+    border:1px solid #dbe3ee;
+    font-size:16px;
+}
+
+#searchBox:focus{
+    border-color:#2563eb;
+    box-shadow:0 0 0 .2rem rgba(37,99,235,.15);
+}
+
+/* Member Table */
+
+#memberTable{
+    background:white;
+}
+
+#memberTable thead{
+    background:#f8fafc;
+}
+
+#memberTable th{
+    font-weight:700;
+    color:#334155;
+    border:none;
+}
+
+#memberTable td{
+    vertical-align:middle;
+}
+
+/* Member Photo */
+
+.member-photo{
+    width:55px;
+    height:55px;
+    border-radius:50%;
+    object-fit:cover;
+    border:3px solid #e5e7eb;
+}
+
+/* Table Row Animation */
+
+#memberTable tbody tr{
+    transition:.25s;
+}
+
+#memberTable tbody tr:hover{
+    transform:scale(1.01);
+    background:#f8fbff;
+}
+
+/* Buttons */
+
+.btn-info{
+    background:#2563eb;
+    border:none;
+    color:white;
+}
+
+.btn-warning{
+    color:white;
+}
+
+/* Active Menu */
+
+.active-menu{
+    background:rgba(255,255,255,.15);
+    border-left:4px solid white;
+}
+
+/* Fade Animation */
+
+.fade-card{
+    animation:fadeIn .5s ease-in-out;
+}
+
+@keyframes fadeIn{
+
+    from{
+        opacity:0;
+        transform:translateY(15px);
+    }
+
+    to{
+        opacity:1;
+        transform:translateY(0);
+    }
+
+}

@@ -1,0 +1,158 @@
+{% extends "pandu_base.html" %}
+
+{% block title %}
+Accounts Summary
+{% endblock %}
+
+{% block content %}
+
+<div class="container-fluid py-4">
+
+    <h2 class="fw-bold mb-4">
+
+        <i class="fas fa-chart-line"></i>
+
+        Accounts Daily Summary
+
+    </h2>
+
+    <div class="row g-4">
+
+        <div class="col-md-4">
+
+            <div class="card bg-success text-white shadow">
+
+                <div class="card-body text-center">
+
+                    <h6>Today's Credits</h6>
+
+                    <h2 id="credits">₹0</h2>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <div class="col-md-4">
+
+            <div class="card bg-danger text-white shadow">
+
+                <div class="card-body text-center">
+
+                    <h6>Today's Expenses</h6>
+
+                    <h2 id="expenses">₹0</h2>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <div class="col-md-4">
+
+            <div class="card bg-primary text-white shadow">
+
+                <div class="card-body text-center">
+
+                    <h6>Net Profit</h6>
+
+                    <h2 id="profit">₹0</h2>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <div class="row g-4 mt-2">
+
+        <div class="col-md-4">
+
+            <div class="card shadow">
+
+                <div class="card-body text-center">
+
+                    <h6>Cash Credits</h6>
+
+                    <h3 id="cashCredits">₹0</h3>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <div class="col-md-4">
+
+            <div class="card shadow">
+
+                <div class="card-body text-center">
+
+                    <h6>GPay Credits</h6>
+
+                    <h3 id="gpayCredits">₹0</h3>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <div class="col-md-4">
+
+            <div class="card shadow">
+
+                <div class="card-body text-center">
+
+                    <h6>Bank Credits</h6>
+
+                    <h3 id="bankCredits">₹0</h3>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<script>
+
+async function loadSummary() {
+
+    const response =
+        await fetch("/api/accounts/summary");
+
+    const data =
+        await response.json();
+
+    document.getElementById("credits").innerText =
+        "₹" + data.credits.toLocaleString();
+
+    document.getElementById("expenses").innerText =
+        "₹" + data.expenses.toLocaleString();
+
+    document.getElementById("profit").innerText =
+        "₹" + data.profit.toLocaleString();
+
+    document.getElementById("cashCredits").innerText =
+        "₹" + data.cash_credits.toLocaleString();
+
+    document.getElementById("gpayCredits").innerText =
+        "₹" + data.gpay_credits.toLocaleString();
+
+    document.getElementById("bankCredits").innerText =
+        "₹" + data.bank_credits.toLocaleString();
+}
+
+loadSummary();
+
+</script>
+
+{% endblock %}

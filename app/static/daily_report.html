@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>
+        Daily Collection Report
+    </title>
+
+    <link
+        rel="stylesheet"
+        href="/static/css/daily_report.css">
+
+</head>
+
+<body>
+    <div class="container" id="reportContainer">
+        <!-- HEADER -->
+
+        <div class="report-header">
+
+            <div class="header-content">
+
+                <h1>
+                    Today's Collection Report
+                </h1>
+
+                <p>
+                    Pasumpon Chit Fund Management System
+                </p>
+
+            </div>
+
+        </div>
+
+        <!-- REPORT INFO -->
+
+        <div class="report-info">
+
+            <div>
+
+                <strong>
+                    Report Date :
+                </strong>
+
+                <span id="reportDate"></span>
+
+            </div>
+
+            <div>
+
+                <strong>
+                    Generated At :
+                </strong>
+
+                <span id="reportTime"></span>
+
+            </div>
+
+        </div>
+
+
+        <div class="filter-panel">
+
+            <label>
+
+                Collection Date
+
+            </label>
+
+            <input type="date" id="reportDateFilter">
+
+            <button onclick="loadDailyCollections()">
+
+                Search
+
+            </button>
+
+        </div>
+
+        <!-- SUMMARY CARD -->
+
+        <div class="summary-card">
+
+            <h3>
+                Today's Total Collection
+            </h3>
+
+            <p id="totalAmount">
+                ₹0
+            </p>
+
+        </div>
+
+        <!-- TOOLBAR -->
+
+        <div class="toolbar">
+
+            <button class="print-btn" onclick="printReport()">
+
+                🖨 Print
+
+            </button>
+
+            <button class="pdf-btn" onclick="exportPDF()">
+
+                📄 PDF
+
+            </button>
+
+            <button class="excel-btn" onclick="exportExcel()">
+
+                📊 Excel
+
+            </button>
+
+            <button class="share-btn" onclick="shareReport()">
+
+                🔗 Share
+
+            </button>
+
+        </div>
+
+        <!-- TABLE -->
+
+        <div class="table-wrapper">
+
+            <table>
+
+                <thead>
+
+                    <tr>
+
+                        <th>#</th>
+
+                        <th>Receipt No</th>
+
+                        <th>Date</th>
+
+                        <th>Member Code</th>
+
+                        <th>Member Name</th>
+
+                        <th>Amount</th>
+
+                        <th>Payment Mode</th>
+
+                    </tr>
+
+                </thead>
+
+                <tbody id="reportBody">
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+        <!-- FOOTER TOTAL -->
+
+        <div class="footer-total">
+
+            Grand Total :
+
+            <span id="footerTotal">
+
+                ₹0
+
+            </span>
+
+        </div>
+
+    </div>
+
+    <script>
+
+        function loadDateTime() {
+
+            const now = new Date();
+
+            document.getElementById(
+                "reportDate"
+            ).innerText =
+                now.toLocaleDateString(
+                    "en-IN"
+                );
+
+            document.getElementById(
+                "reportTime"
+            ).innerText =
+                now.toLocaleTimeString(
+                    "en-IN"
+                );
+        }
+
+        loadDateTime();
+
+    </script>
+
+    <script src="/static/js/daily_report.js"></script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+
+</body>
+
+</html>

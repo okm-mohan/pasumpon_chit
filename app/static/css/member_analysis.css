@@ -1,0 +1,15 @@
+.total{
+    background:linear-gradient(135deg,#2563eb,#1d4ed8);
+}
+
+.paid{
+    background:linear-gradient(135deg,#10b981,#059669);
+}
+
+.pending{
+    background:linear-gradient(135deg,#ef4444,#dc2626);
+}
+
+.recovery{
+    background:linear-gradient(135deg,#f59e0b,#d97706);
+}

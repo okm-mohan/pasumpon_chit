@@ -1,0 +1,153 @@
+{% extends "pandu_base.html" %}
+
+{% block title %}
+Monthly Summary
+{% endblock %}
+
+{% block content %}
+
+<div class="container-fluid py-4">
+
+    <h2 class="fw-bold mb-4">
+        Monthly Summary
+    </h2>
+
+    <div class="row g-3 mb-4">
+
+        <div class="col-md-3">
+
+            <div class="card bg-success text-white">
+
+                <div class="card-body text-center">
+
+                    <h6>Total Credits</h6>
+
+                    <h3>
+                        ₹{{"{:,.2f}".format(total_credits)}}
+                    </h3>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <div class="col-md-3">
+
+            <div class="card bg-danger text-white">
+
+                <div class="card-body text-center">
+
+                    <h6>Total Expenses</h6>
+
+                    <h3>
+                        ₹{{"{:,.2f}".format(total_expenses)}}
+                    </h3>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <div class="col-md-3">
+
+            <div class="card bg-primary text-white">
+
+                <div class="card-body text-center">
+
+                    <h6>Net Profit</h6>
+
+                    <h3>
+                        ₹{{"{:,.2f}".format(total_profit)}}
+                    </h3>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <div class="col-md-3">
+
+            <div class="card bg-warning">
+
+                <div class="card-body text-center">
+
+                    <h6>Best Month</h6>
+
+                    <h3>
+                        {{best_month}}
+                    </h3>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <div class="card shadow">
+
+        <div class="card-body p-0">
+
+            <table class="table table-bordered table-hover mb-0">
+
+                <thead class="table-dark">
+
+                    <tr>
+
+                        <th>Month</th>
+
+                        <th class="text-end">
+                            Credits
+                        </th>
+
+                        <th class="text-end">
+                            Expenses
+                        </th>
+
+                        <th class="text-end">
+                            Profit
+                        </th>
+
+                    </tr>
+
+                </thead>
+
+                <tbody>
+
+                    {% for row in rows %}
+
+                    <tr>
+
+                        <td>{{row.month}}</td>
+
+                        <td class="text-end text-success fw-bold">
+                            ₹{{"{:,.2f}".format(row.credits)}}
+                        </td>
+
+                        <td class="text-end text-danger fw-bold">
+                            ₹{{"{:,.2f}".format(row.expenses)}}
+                        </td>
+
+                        <td class="text-end fw-bold">
+                            ₹{{"{:,.2f}".format(row.profit)}}
+                        </td>
+
+                    </tr>
+
+                    {% endfor %}
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}

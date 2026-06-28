@@ -1,0 +1,142 @@
+{% extends "pandu_base.html" %}
+
+{% block title %}Date Wise Collection Report{% endblock %}
+
+{% block content %}
+
+<link rel="stylesheet"
+      href="/static/css/datewise_collection_list.css">
+
+<div class="report-container">
+
+    <div class="page-header">
+
+        <div>
+            <h2>
+                <i class="fas fa-calendar-check"></i>
+                Date Wise Collection Report
+            </h2>
+            <p>
+                Collection Details Between Two Dates
+            </p>
+        </div>
+
+    </div>
+
+    <!-- FILTER SECTION -->
+
+    <div class="filter-card">
+
+        <div class="filter-row">
+
+            <div class="form-group">
+                <label>From Date</label>
+                <input type="date"
+                       id="fromDate">
+            </div>
+
+            <div class="form-group">
+                <label>To Date</label>
+                <input type="date"
+                       id="toDate">
+            </div>
+
+            <div class="form-group button-group">
+
+                <button onclick="loadReport()"
+                        class="btn-search">
+
+                    <i class="fas fa-search"></i>
+                    Search
+
+                </button>
+
+                <button onclick="window.print()"
+                        class="btn-print">
+
+                    <i class="fas fa-print"></i>
+                    Print
+
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- SUMMARY CARDS -->
+
+    <div class="cards-grid">
+
+        <div class="summary-card total">
+            <h4>Total Collection</h4>
+            <h2 id="totalCollection">₹0</h2>
+        </div>
+
+        <div class="summary-card members">
+            <h4>Total Members</h4>
+            <h2 id="totalMembers">0</h2>
+        </div>
+
+        <div class="summary-card cash">
+            <h4>Cash Collection</h4>
+            <h2 id="cashCollection">₹0</h2>
+        </div>
+
+        <div class="summary-card upi">
+            <h4>UPI Collection</h4>
+            <h2 id="upiCollection">₹0</h2>
+        </div>
+
+    </div>
+
+    <!-- TABLE -->
+
+    <div class="table-card">
+
+        <div class="table-title">
+
+            <i class="fas fa-list"></i>
+            Collection Details
+
+        </div>
+
+        <table>
+
+            <thead>
+
+                <tr>
+
+                    <th>S.No</th>
+                    <th>Date</th>
+                    <th>Receipt No</th>
+                    <th>Member Code</th>
+                    <th>Member Name</th>
+                    <th>Group</th>
+                    <th>Amount</th>
+                    <th>Mode</th>
+
+                </tr>
+
+            </thead>
+
+            <tbody id="reportBody">
+
+                <tr>
+                    <td colspan="8">
+                        Select Dates and Click Search
+                    </td>
+                </tr>
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+</div>
+
+<script src="/static/js/datewise_collection_list.js"></script>
+
+{% endblock %}

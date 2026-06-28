@@ -1,0 +1,148 @@
+{% extends "pandu_base.html" %}
+
+{% block title %}Expenses Report{% endblock %}
+
+{% block content %}
+
+<div class="container-fluid py-4">
+
+    <div class="card shadow mb-4">
+
+        <div class="card-header bg-danger text-white">
+
+            <h4 class="mb-0">
+                Expenses Report
+            </h4>
+
+        </div>
+
+        <div class="card-body">
+
+            <form method="get">
+
+                <div class="row">
+
+                    <div class="col-md-3">
+
+                        <label>From Date</label>
+
+                        <input
+                            type="date"
+                            name="from_date"
+                            value="{{from_date}}"
+                            class="form-control">
+
+                    </div>
+
+                    <div class="col-md-3">
+
+                        <label>To Date</label>
+
+                        <input
+                            type="date"
+                            name="to_date"
+                            value="{{to_date}}"
+                            class="form-control">
+
+                    </div>
+
+                    <div class="col-md-2 d-flex align-items-end">
+
+                        <button
+                            class="btn btn-primary">
+
+                            Load Report
+
+                        </button>
+
+                    </div>
+
+                </div>
+
+            </form>
+
+        </div>
+
+    </div>
+
+    <div class="card shadow">
+
+        <div class="card-body p-0">
+
+            <div class="table-responsive">
+
+                <table class="table table-bordered table-hover mb-0">
+
+                    <thead class="table-dark">
+
+                        <tr>
+
+                            <th>Date</th>
+                            <th>Category</th>
+                            <th>Amount</th>
+                            <th>Mode</th>
+                            <th>Remarks</th>
+
+                        </tr>
+
+                    </thead>
+
+                    <tbody>
+
+                        {% for row in rows %}
+
+                        <tr>
+
+                            <td>{{row.transaction_date}}</td>
+
+                            <td>{{row.category}}</td>
+
+                            <td class="text-end text-danger fw-bold">
+
+                                ₹{{"{:,.2f}".format(row.amount|float)}}
+
+                            </td>
+
+                            <td>{{row.payment_mode}}</td>
+
+                            <td>{{row.remarks}}</td>
+
+                        </tr>
+
+                        {% endfor %}
+
+                    </tbody>
+
+                    <tfoot>
+
+                        <tr class="table-danger">
+
+                            <th colspan="2">
+
+                                Total Expenses
+
+                            </th>
+
+                            <th class="text-end">
+
+                                ₹{{"{:,.2f}".format(total_amount)}}
+
+                            </th>
+
+                            <th colspan="2"></th>
+
+                        </tr>
+
+                    </tfoot>
+
+                </table>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}

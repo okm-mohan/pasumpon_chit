@@ -1,0 +1,210 @@
+{% extends "base.html" %}
+
+{% block title %}Kanthu Members{% endblock %}
+
+{% block content %}
+
+<link rel="stylesheet"
+      href="/static/css/kanthu_members.css">
+
+<div class="kanthu-members-page">
+
+    <div class="page-header">
+
+        <div>
+            <h2>
+                <i class="bi bi-people-fill"></i>
+                Kanthu Members
+            </h2>
+
+            <p>
+                View Active Kanthu & Collection Details
+            </p>
+        </div>
+
+    </div>
+
+    <!-- SEARCH -->
+
+    <div class="member-search-card">
+
+        <label>Select Member</label>
+
+        <input type="text"
+               id="memberSearch"
+               placeholder="Search Member Name / Mobile">
+
+        <div id="searchResults"
+             class="search-results"></div>
+
+    </div>
+
+    <!-- MEMBER PROFILE -->
+
+    <div class="member-profile">
+
+        <div class="profile-avatar">
+            <span id="memberInitial">M</span>
+        </div>
+
+        <div class="profile-details">
+
+            <h3 id="memberName">
+                Select Member
+            </h3>
+
+            <div class="profile-info">
+
+                <span id="memberCode"></span>
+
+                <span id="memberMobile"></span>
+
+                <span id="memberVillage"></span>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- KPI -->
+
+    <div class="summary-grid">
+
+        <div class="summary-card blue">
+
+            <h6>Active Kanthu Amount</h6>
+
+            <h2 id="totalGiven">₹0</h2>
+
+        </div>
+
+        <div class="summary-card green">
+
+            <h6>Total Collection</h6>
+
+            <h2 id="totalCollection">₹0</h2>
+
+        </div>
+
+        <div class="summary-card orange">
+
+            <h6>Active Kanthus</h6>
+
+            <h2 id="activeKanthus">0</h2>
+
+        </div>
+
+        <div class="summary-card red">
+
+            <h6>Outstanding</h6>
+
+            <h2 id="outstanding">₹0</h2>
+
+        </div>
+
+    </div>
+
+    <!-- MAIN GRID -->
+
+    <div class="main-grid">
+
+        <!-- ISSUE -->
+
+        <div class="card-panel issue-panel">
+
+            <div class="panel-title">
+                Kanthu Issue Details
+            </div>
+
+            <table class="table">
+
+                <thead>
+
+                    <tr>
+
+                        <th>No</th>
+                        <th>Issue Date</th>
+                        <th>Amount</th>
+                        <th>Balance</th>
+
+                    </tr>
+
+                </thead>
+
+                <tbody id="issueTable"></tbody>
+
+            </table>
+
+        </div>
+
+        <!-- COLLECTION -->
+
+        <div class="card-panel collection-panel">
+
+            <div class="panel-title green-title">
+                Collection Details
+            </div>
+
+            <table class="table">
+
+                <thead>
+
+                    <tr>
+
+                        <th>Date</th>
+                        <th>Kanthu</th>
+                        <th>Amount</th>
+
+                    </tr>
+
+                </thead>
+
+                <tbody id="collectionTable"></tbody>
+
+            </table>
+
+        </div>
+
+        <!-- PROGRESS -->
+
+        <div class="progress-card">
+
+            <div class="circle">
+
+                <div id="progressValue">
+                    0%
+                </div>
+
+            </div>
+
+            <div class="progress-info">
+
+                <h5>Collection Progress</h5>
+
+                <p>
+                    Expected :
+                    <span id="expectedAmt">₹0</span>
+                </p>
+
+                <p>
+                    Collected :
+                    <span id="collectedAmt">₹0</span>
+                </p>
+
+                <p>
+                    Outstanding :
+                    <span id="balanceAmt">₹0</span>
+                </p>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<script src="/static/js/kanthu_members.js"></script>
+
+{% endblock %}
