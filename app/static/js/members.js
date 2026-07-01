@@ -1,100 +1,137 @@
-// ================================
-// PHOTO PREVIEW
-// ================================
+// ======================================================
+// MEMBERS PAGE
+// Premium UI JavaScript
+// ======================================================
 
 document.addEventListener("DOMContentLoaded", function () {
 
-    const photoInput = document.getElementById("photo");
+    // ============================================
+    // ELEMENTS
+    // ============================================
+
+    const form = document.getElementById("memberForm");
+
+    const memberName = document.getElementById("member_name");
+    const mobile = document.getElementById("mobile");
+    const whatsapp = document.getElementById("whatsapp");
+    const aadhaar = document.getElementById("aadhaar_no");
+    const address = document.getElementById("address");
+
+    const previewName = document.getElementById("previewName");
+    const previewMobile = document.getElementById("previewMobile");
+    const previewWhatsapp = document.getElementById("previewWhatsapp");
+    const previewAddress = document.getElementById("previewAddress");
+
+    const photo = document.getElementById("photo");
     const preview = document.getElementById("preview");
 
-    if (photoInput) {
+    const sameMobile = document.getElementById("sameMobile");
 
-        photoInput.addEventListener("change", function () {
+    // ============================================
+    // PHOTO PREVIEW
+    // ============================================
 
-            const file = this.files[0];
+    if (photo) {
 
-            if (file) {
+        photo.addEventListener("change", function () {
 
-                const reader = new FileReader();
+            if (!this.files.length) return;
 
-                reader.onload = function (e) {
-                    preview.src = e.target.result;
-                };
+            const reader = new FileReader();
 
-                reader.readAsDataURL(file);
+            reader.onload = function (e) {
+
+                preview.src = e.target.result;
+
+            };
+
+            reader.readAsDataURL(this.files[0]);
+
+        });
+
+    }
+
+    // ============================================
+    // LIVE MEMBER NAME
+    // ============================================
+
+    if (memberName) {
+
+        memberName.addEventListener("input", function () {
+
+            const value = this.value.trim();
+
+            previewName.textContent =
+                value === "" ? "Member Name" : value;
+
+        });
+
+    }
+
+    // ============================================
+    // LIVE MOBILE
+    // ============================================
+
+    if (mobile) {
+
+        mobile.addEventListener("input", function () {
+
+            this.value = this.value.replace(/\D/g, "");
+
+            previewMobile.textContent =
+                this.value || "----------";
+
+            if (sameMobile.checked) {
+
+                whatsapp.value = this.value;
+
+                previewWhatsapp.textContent =
+                    this.value || "----------";
+
             }
 
         });
 
     }
 
-});
+    // ============================================
+    // LIVE WHATSAPP
+    // ============================================
 
+    if (whatsapp) {
 
-// ================================
-// SAME MOBILE -> WHATSAPP
-// ================================
+        whatsapp.addEventListener("input", function () {
 
-document.addEventListener("DOMContentLoaded", function () {
+            this.value = this.value.replace(/\D/g, "");
 
-    const checkbox = document.getElementById("sameMobile");
+            previewWhatsapp.textContent =
+                this.value || "----------";
 
-    if (checkbox) {
+        });
 
-        checkbox.addEventListener("change", function () {
+    }
 
-            const mobile =
-                document.getElementById("mobile").value;
+    // ============================================
+    // SAME AS MOBILE
+    // ============================================
 
-            const whatsapp =
-                document.getElementById("whatsapp");
+    if (sameMobile) {
+
+        sameMobile.addEventListener("change", function () {
 
             if (this.checked) {
 
-                whatsapp.value = mobile;
+                whatsapp.value = mobile.value;
+
+                previewWhatsapp.textContent =
+                    mobile.value || "----------";
 
             } else {
 
                 whatsapp.value = "";
 
-            }
-
-        });
-
-    }
-
-});
-
-
-// ================================
-// PANDU SHOW / HIDE
-// ================================
-
-document.addEventListener("DOMContentLoaded", function () {
-
-    const panduCheck =
-        document.getElementById("is_pandu");
-
-    const panduSection =
-        document.getElementById("panduSection");
-
-    if (panduSection) {
-
-        panduSection.style.display = "none";
-
-    }
-
-    if (panduCheck) {
-
-        panduCheck.addEventListener("change", function () {
-
-            if (this.checked) {
-
-                panduSection.style.display = "block";
-
-            } else {
-
-                panduSection.style.display = "none";
+                previewWhatsapp.textContent =
+                    "----------";
 
             }
 
@@ -102,71 +139,155 @@ document.addEventListener("DOMContentLoaded", function () {
 
     }
 
-});
+    // ============================================
+    // ADDRESS PREVIEW
+    // ============================================
 
+    if (address) {
 
-// ================================
-// BASIC VALIDATION
-// ================================
+        address.addEventListener("input", function () {
 
-document.addEventListener("DOMContentLoaded", function () {
+            const value = this.value.trim();
 
-    const form =
-        document.getElementById("memberForm");
+            previewAddress.textContent =
+                value === "" ? "Not Entered" : value;
 
-    if (!form) return;
+        });
 
-    form.addEventListener("submit", function (e) {
+    }
 
-        const name =
-            document.querySelector(
-                'input[name="member_name"]'
-            ).value.trim();
+    // ============================================
+    // AADHAAR ONLY NUMBERS
+    // ============================================
 
-        const mobile =
-            document.querySelector(
-                'input[name="mobile"]'
-            ).value.trim();
+    if (aadhaar) {
 
-        const aadhaar =
-            document.querySelector(
-                'input[name="aadhaar_no"]'
-            ).value.trim();
+        aadhaar.addEventListener("input", function () {
 
-        if (name === "") {
+            this.value =
+                this.value.replace(/\D/g, "").slice(0, 12);
 
-            alert("Member Name Required");
+        });
 
-            e.preventDefault();
+    }
 
-            return;
+    // ============================================
+    // MOBILE ONLY NUMBERS
+    // ============================================
 
-        }
+    if (mobile) {
 
-        if (mobile.length < 10) {
+        mobile.addEventListener("keypress", function (e) {
 
-            alert("Enter Valid Mobile Number");
+            if (!/[0-9]/.test(e.key)) {
 
-            e.preventDefault();
+                e.preventDefault();
 
-            return;
+            }
 
-        }
+        });
 
-        if (
-            aadhaar !== "" &&
-            aadhaar.length !== 12
-        ) {
+    }
 
-            alert(
-                "Aadhaar must be 12 digits"
-            );
+    if (whatsapp) {
 
-            e.preventDefault();
+        whatsapp.addEventListener("keypress", function (e) {
 
-            return;
+            if (!/[0-9]/.test(e.key)) {
 
-        }
+                e.preventDefault();
+
+            }
+
+        });
+
+    }
+
+    // ============================================
+    // FORM VALIDATION
+    // ============================================
+
+    if (form) {
+
+        form.addEventListener("submit", function (e) {
+
+            if (memberName.value.trim() === "") {
+
+                alert("Please Enter Member Name");
+
+                memberName.focus();
+
+                e.preventDefault();
+
+                return;
+
+            }
+
+            if (mobile.value.trim().length !== 10) {
+
+                alert("Mobile Number must be 10 digits");
+
+                mobile.focus();
+
+                e.preventDefault();
+
+                return;
+
+            }
+
+            if (
+                whatsapp.value !== "" &&
+                whatsapp.value.length !== 10
+            ) {
+
+                alert("WhatsApp Number must be 10 digits");
+
+                whatsapp.focus();
+
+                e.preventDefault();
+
+                return;
+
+            }
+
+            if (
+                aadhaar.value !== "" &&
+                aadhaar.value.length !== 12
+            ) {
+
+                alert("Aadhaar Number must be 12 digits");
+
+                aadhaar.focus();
+
+                e.preventDefault();
+
+                return;
+
+            }
+
+        });
+
+    }
+
+    // ============================================
+    // RESET PREVIEW
+    // ============================================
+
+    form.addEventListener("reset", function () {
+
+        setTimeout(function () {
+
+            preview.src = "/static/images/user.png";
+
+            previewName.textContent = "Member Name";
+
+            previewMobile.textContent = "----------";
+
+            previewWhatsapp.textContent = "----------";
+
+            previewAddress.textContent = "Not Entered";
+
+        }, 100);
 
     });
 

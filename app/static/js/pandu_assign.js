@@ -1,195 +1,999 @@
-// ======================================
-// MEMBER SEARCH
-// ======================================
+//======================================================
+//          PANDU ASSIGNMENT CENTER
+//              PART - 1
+//======================================================
 
-const searchBox =
-document.getElementById("memberSearch");
+//------------------------------------------------------
+// ELEMENTS
+//------------------------------------------------------
 
-const resultBox =
-document.getElementById("searchResults");
+const memberModal =
+    document.getElementById("memberModal");
 
-if(searchBox){
+const memberSearch =
+    document.getElementById("memberSearch");
 
-searchBox.addEventListener("keyup", async ()=>{
+const searchResults =
+    document.getElementById("searchResults");
 
-    const q = searchBox.value;
+const assignButton =
+    document.getElementById("assignButton");
 
-    if(q.length < 2){
+const memberId =
+    document.getElementById("member_id");
 
-        resultBox.innerHTML = "";
-        return;
+const memberName =
+    document.getElementById("memberName");
+
+const memberCode =
+    document.getElementById("memberCode");
+
+const memberMobile =
+    document.getElementById("memberMobile");
+
+const memberAadhaar =
+    document.getElementById("memberAadhaar");
+
+const memberPhoto =
+    document.getElementById("memberPhoto");
+
+let searchTimer = null;
+
+let memberModalInstance = null;
+
+
+//------------------------------------------------------
+// INITIALIZE
+//------------------------------------------------------
+
+window.addEventListener("DOMContentLoaded", () => {
+
+    calculate();
+
+    if (memberModal) {
+
+        memberModalInstance =
+            bootstrap.Modal.getOrCreateInstance(memberModal);
+
     }
 
-    const response =
-    await fetch(
-        `/api/assign-member-search?q=${q}`
-    );
+});
 
-    const data =
-    await response.json();
 
-    let html = "";
+//------------------------------------------------------
+// OPEN MODAL
+//------------------------------------------------------
 
-    data.forEach(member=>{
+memberModal?.addEventListener("shown.bs.modal", () => {
 
-        html += `
-        <div
-        class="member-item"
-        onclick="selectMember(
-            ${member.id},
-            '${member.member_code}',
-            '${member.member_name}',
-            '${member.mobile}',
-            '${member.aadhaar_no || ""}',
-            '${member.photo || "/static/images/user.png"}'
-        )">
+    memberSearch.focus();
 
-            <strong>
-                ${member.member_name}
-            </strong><br>
+    memberSearch.select();
 
-            ${member.mobile}
+});
+
+
+//------------------------------------------------------
+// LIVE SEARCH
+//------------------------------------------------------
+
+memberSearch?.addEventListener("input", function () {
+
+    clearTimeout(searchTimer);
+
+    const keyword = this.value.trim();
+
+    if (keyword.length < 2) {
+
+        searchResults.innerHTML =
+
+            `
+        <div class="empty-search">
+
+            <i class="bi bi-search"></i>
+
+            <h5>
+
+                Type at least 2 characters
+
+            </h5>
 
         </div>
         `;
 
-    });
+        return;
 
-    resultBox.innerHTML = html;
+    }
+
+    searchResults.innerHTML =
+
+        `
+    <div class="search-loading">
+
+        <div class="spinner-border text-primary">
+
+        </div>
+
+        <div class="mt-3">
+
+            Searching Members...
+
+        </div>
+
+    </div>
+    `;
+
+    searchTimer =
+
+        setTimeout(() => {
+
+            loadMembers(keyword);
+
+        }, 300);
 
 });
+
+
+//------------------------------------------------------
+// LOAD MEMBERS
+//------------------------------------------------------
+
+async function loadMembers(keyword) {
+
+    try {
+
+        const groupId = document.getElementById("group_id").value;
+
+        fetch(
+            `/api/assign-member-search?q=${encodeURIComponent(keyword)}&group_id=${groupId}`
+        )
+
+        if (!response.ok) {
+
+            throw new Error();
+
+        }
+
+        const members =
+            await response.json();
+
+        renderMembers(members);
+
+    }
+
+    catch (e) {
+
+        searchResults.innerHTML =
+
+            `
+        <div class="empty-search">
+
+            <i class="bi bi-wifi-off"></i>
+
+            <h5>
+
+                Unable to load members
+
+            </h5>
+
+        </div>
+        `;
+
+    }
 
 }
 
 
-// ======================================
-// MEMBER SELECT
-// ======================================
+//------------------------------------------------------
+// RENDER MEMBERS
+//------------------------------------------------------
+
+function renderMembers(members) {
+
+    if (!members.length) {
+
+        searchResults.innerHTML =
+
+            `
+        <div class="empty-search">
+
+            <i class="bi bi-person-x"></i>
+
+            <h5>
+
+                No Members Found
+
+            </h5>
+
+        </div>
+        `;
+
+        return;
+
+    }
+
+    let html = "";
+
+    members.forEach(member => {
+
+        const photo =
+
+            member.photo ||
+
+            "/static/images/user.png";
+
+        //--------------------------------------------------
+        // MEMBER AVAILABLE
+        //--------------------------------------------------
+
+        if (!member.already_assigned) {
+
+            html +=
+
+                `
+            <div
+                class="member-item fade-up"
+
+                onclick="selectMember(
+
+                    ${member.id},
+
+                    '${member.member_code}',
+
+                    '${member.member_name.replace(/'/g, "\\'")}',
+
+                    '${member.mobile}',
+
+                    '${member.aadhaar_no || ""}',
+
+                    '${photo}'
+
+                )">
+
+                <div class="member-left">
+
+                    <img src="${photo}">
+
+                    <div class="member-details">
+
+                        <h5>
+
+                            ${member.member_name}
+
+                        </h5>
+
+                        <small>
+
+                            ${member.member_code}
+
+                        </small>
+
+                        <small>
+
+                            ${member.mobile}
+
+                        </small>
+
+                    </div>
+
+                </div>
+
+                <div class="member-right">
+
+                    <span class="badge bg-success">
+
+    <i class="bi bi-check-circle-fill"></i>
+
+    Available
+
+</span>
+
+                </div>
+
+            </div>
+
+            `;
+
+        }
+
+        //--------------------------------------------------
+        // ALREADY ASSIGNED
+        //--------------------------------------------------
+
+        else {
+
+            html +=
+
+                `
+            <div
+                class="member-item disabled">
+
+                <div class="member-left">
+
+                    <img src="${photo}">
+
+                    <div class="member-details">
+
+                        <h5>
+
+                            ${member.member_name}
+
+                        </h5>
+
+                        <small>
+
+                            ${member.member_code}
+
+                        </small>
+
+                        <small>
+
+                            ${member.mobile}
+
+                        </small>
+
+                    </div>
+
+                </div>
+
+                <div class="member-right">
+
+                    <span class="badge bg-danger">
+
+    <i class="bi bi-lock-fill"></i>
+
+    Already Assigned
+
+</span>
+
+                </div>
+
+            </div>
+
+            `;
+
+        }
+
+    });
+
+    searchResults.innerHTML = html;
+
+}
+//======================================================
+//          MEMBER SELECTION
+//              PART - 2
+//======================================================
+
+//------------------------------------------------------
+// SELECT MEMBER
+//------------------------------------------------------
 
 function selectMember(
+
     id,
     code,
     name,
     mobile,
     aadhaar,
     photo
-){
 
-document.getElementById(
-"member_id"
-).value=id;
+) {
 
-document.getElementById(
-"memberCode"
-).innerText=code;
+    memberId.value = id;
 
-document.getElementById(
-"memberName"
-).innerText=name;
+    memberName.innerText = name;
 
-document.getElementById(
-"memberMobile"
-).innerText=mobile;
+    memberCode.innerText = code;
 
-document.getElementById(
-"memberAadhaar"
-).innerText=aadhaar;
+    memberMobile.innerText = mobile || "-";
 
-document.getElementById(
-"memberPhoto"
-).src=photo;
+    memberAadhaar.innerText = aadhaar || "-";
+
+    memberPhoto.src = photo;
+
+    //--------------------------------------------------
+    // ENABLE ASSIGN BUTTON
+    //--------------------------------------------------
+
+    assignButton.disabled = false;
+
+    assignButton.innerHTML =
+
+        `
+    <i class="bi bi-check-circle-fill"></i>
+
+    Assign Member
+    `;
+
+    //--------------------------------------------------
+    // CLOSE POPUP
+    //--------------------------------------------------
+
+    if (memberModalInstance) {
+
+        memberModalInstance.hide();
+
+    }
+
+    //--------------------------------------------------
+    // CLEAR SEARCH
+    //--------------------------------------------------
+
+    memberSearch.value = "";
+
+    searchResults.innerHTML =
+
+        `
+    <div class="empty-search">
+
+        <i class="bi bi-search"></i>
+
+        <h5>
+
+            Start typing to search members
+
+        </h5>
+
+    </div>
+    `;
 
 }
 
 
-// ======================================
-// CALCULATIONS
-// ======================================
 
-const groupSelect =
-document.getElementById("groupSelect");
+//------------------------------------------------------
+// IMAGE FALLBACK
+//------------------------------------------------------
+
+memberPhoto.onerror = function () {
+
+    this.src = "/static/images/user.png";
+
+};
+
+document.querySelectorAll("img").forEach(img => {
+
+    img.onerror = function () {
+
+        this.src = "/static/images/user.png";
+
+    };
+
+});
+
+
+
+//------------------------------------------------------
+// RESET MODAL EVERY OPEN
+//------------------------------------------------------
+
+memberModal?.addEventListener(
+
+    "show.bs.modal",
+
+    () => {
+
+        memberSearch.value = "";
+
+        searchResults.innerHTML =
+
+            `
+        <div class="empty-search">
+
+            <i class="bi bi-search"></i>
+
+            <h5>
+
+                Search Member
+
+            </h5>
+
+            <p>
+
+                Type Name, Code or Mobile Number
+
+            </p>
+
+        </div>
+        `;
+
+    }
+
+);
+
+
+
+//------------------------------------------------------
+// ENTER KEY SEARCH
+//------------------------------------------------------
+
+memberSearch?.addEventListener(
+
+    "keydown",
+
+    function (e) {
+
+        if (e.key === "Enter") {
+
+            e.preventDefault();
+
+        }
+
+    }
+
+);
+
+
+
+//------------------------------------------------------
+// ESC KEY CLOSE
+//------------------------------------------------------
+
+memberSearch?.addEventListener(
+
+    "keyup",
+
+    function (e) {
+
+        if (e.key === "Escape") {
+
+            memberModalInstance.hide();
+
+        }
+
+    }
+
+);
+
+
+
+//------------------------------------------------------
+// PREVENT MULTIPLE SUBMIT
+//------------------------------------------------------
+
+document.querySelector("form")?.addEventListener(
+
+    "submit",
+
+    function (e) {
+
+        if (memberId.value === "") {
+
+            e.preventDefault();
+
+            alert("Please select a member.");
+
+            return;
+
+        }
+
+        assignButton.disabled = true;
+
+        assignButton.innerHTML =
+
+            `
+        <span class="spinner-border spinner-border-sm"></span>
+
+        Assigning...
+        `;
+
+    }
+
+);
+
+
+
+//------------------------------------------------------
+// MEMBER PROFILE ANIMATION
+//------------------------------------------------------
+
+function animateMemberCard() {
+
+    const card = document.querySelector(".member-profile");
+
+    if (!card) return;
+
+    card.classList.remove("fade-up");
+
+    void card.offsetWidth;
+
+    card.classList.add("fade-up");
+
+}
+
+const originalSelectMember = selectMember;
+
+selectMember = function (
+
+    id,
+    code,
+    name,
+    mobile,
+    aadhaar,
+    photo
+
+) {
+
+    originalSelectMember(
+
+        id,
+        code,
+        name,
+        mobile,
+        aadhaar,
+        photo
+
+    );
+
+    animateMemberCard();
+
+};
+
+
+
+//------------------------------------------------------
+// CLEAR MEMBER
+//------------------------------------------------------
+
+function clearSelectedMember() {
+
+    memberId.value = "";
+
+    memberName.innerText = "No Member Selected";
+
+    memberCode.innerText = "----";
+
+    memberMobile.innerText = "-";
+
+    memberAadhaar.innerText = "-";
+
+    memberPhoto.src = "/static/images/user.png";
+
+    assignButton.disabled = true;
+
+    assignButton.innerHTML =
+
+        `
+    <i class="bi bi-check-circle-fill"></i>
+
+    Select Member First
+    `;
+
+}
+
+
+
+//------------------------------------------------------
+// OPTIONAL RESET BUTTON SUPPORT
+//------------------------------------------------------
+
+document.getElementById("resetMember")?.addEventListener(
+
+    "click",
+
+    clearSelectedMember
+
+);
+
+//======================================================
+//          PANDU ASSIGNMENT CENTER
+//              PART - 3
+//======================================================
+
+//------------------------------------------------------
+// ELEMENTS
+//------------------------------------------------------
+
+const plusBtn =
+    document.getElementById("plusCount");
+
+const minusBtn =
+    document.getElementById("minusCount");
 
 const panduCount =
-document.getElementById("panduCount");
+    document.getElementById("panduCount");
 
-function calculate(){
 
-const option =
-groupSelect.options[
-groupSelect.selectedIndex
-];
+//------------------------------------------------------
+// GROUP VALUES
+//------------------------------------------------------
 
-const monthly =
-Number(
-option.dataset.monthly
+const monthlyDueValue =
+    Number(
+        document.getElementById("monthlyDue")?.innerText
+            .replace(/,/g, "")
+    ) || 0;
+
+const chitAmountValue =
+    Number(
+        document.getElementById("chitAmount")?.innerText
+            .replace(/,/g, "")
+    ) || 0;
+
+const durationValue =
+    Number(
+        document.getElementById("durationMonths")?.innerText
+    ) || 0;
+
+
+//------------------------------------------------------
+// PLUS BUTTON
+//------------------------------------------------------
+
+plusBtn?.addEventListener("click", () => {
+
+    panduCount.value =
+        Number(panduCount.value || 1) + 1;
+
+    calculate();
+
+});
+
+
+//------------------------------------------------------
+// MINUS BUTTON
+//------------------------------------------------------
+
+minusBtn?.addEventListener("click", () => {
+
+    let value =
+        Number(panduCount.value || 1);
+
+    if (value > 1) {
+
+        panduCount.value = value - 1;
+
+        calculate();
+
+    }
+
+});
+
+
+//------------------------------------------------------
+// NUMBER CHANGE
+//------------------------------------------------------
+
+panduCount?.addEventListener(
+
+    "input",
+
+    calculate
+
 );
 
-const chit =
-Number(
-option.dataset.chit
+panduCount?.addEventListener(
+
+    "change",
+
+    calculate
+
 );
 
-const duration =
-Number(
-option.dataset.duration
-);
 
-const count =
-Number(
-panduCount.value || 1
-);
+//------------------------------------------------------
+// CALCULATE
+//------------------------------------------------------
 
-document.getElementById(
-"monthlyDue"
-).innerText =
-(monthly * count).toFixed(2);
+function calculate() {
 
-document.getElementById(
-"chitAmount"
-).innerText =
-(chit * count).toFixed(2);
+    const count =
 
-document.getElementById(
-"durationMonths"
-).innerText =
-duration;
+        Math.max(
 
-document.getElementById(
-"totalAmount"
-).innerText =
-(chit * count).toFixed(2);
+            1,
+
+            Number(panduCount.value || 1)
+
+        );
+
+    panduCount.value = count;
+
+    const monthlyTotal =
+        monthlyDueValue * count;
+
+    const totalLiability =
+        chitAmountValue * count;
+
+    //--------------------------------------------------
+    // SUMMARY
+    //--------------------------------------------------
+
+    document.getElementById("summaryCount").innerText =
+        count;
+
+    document.getElementById("monthlyDue").innerText =
+        monthlyTotal.toLocaleString();
+
+    document.getElementById("totalAmount").innerText =
+        totalLiability.toLocaleString();
+
+    //--------------------------------------------------
+    // ANALYTICS
+    //--------------------------------------------------
+
+    document.getElementById("analyticsCount").innerText =
+        count;
+
+    document.getElementById("analyticsMonthly").innerText =
+        monthlyTotal.toLocaleString();
+
+    document.getElementById("analyticsChit").innerText =
+        chitAmountValue.toLocaleString();
+
+    document.getElementById("analyticsDuration").innerText =
+        durationValue;
 
 }
 
-if(groupSelect){
 
-groupSelect.addEventListener(
-"change",
-calculate
+//------------------------------------------------------
+// ONLY NUMBER
+//------------------------------------------------------
+
+panduCount?.addEventListener(
+
+    "keypress",
+
+    function (e) {
+
+        if (
+
+            e.key < "0" ||
+
+            e.key > "9"
+
+        ) {
+
+            e.preventDefault();
+
+        }
+
+    }
+
 );
+
+
+//------------------------------------------------------
+// TABLE SEARCH
+//------------------------------------------------------
+
+const assignmentSearch =
+    document.getElementById("assignmentSearch");
+
+assignmentSearch?.addEventListener(
+
+    "keyup",
+
+    function () {
+
+        const keyword =
+
+            this.value.toLowerCase();
+
+        document
+
+            .querySelectorAll(
+
+                "#assignmentTable tr"
+
+            )
+
+            .forEach(row => {
+
+                row.style.display =
+
+                    row.innerText
+                        .toLowerCase()
+                        .includes(keyword)
+
+                        ? ""
+
+                        : "none";
+
+            });
+
+    }
+
+);
+
+
+//------------------------------------------------------
+// AUTO SELECT TEXT
+//------------------------------------------------------
+
+panduCount?.addEventListener(
+
+    "focus",
+
+    function () {
+
+        this.select();
+
+    }
+
+);
+
+
+//------------------------------------------------------
+// IMAGE FALLBACK
+//------------------------------------------------------
+
+document
+
+    .querySelectorAll("img")
+
+    .forEach(img => {
+
+        img.onerror = function () {
+
+            this.src = "/static/images/user.png";
+
+        };
+
+    });
+
+
+//------------------------------------------------------
+// PAGE INITIALIZE
+//------------------------------------------------------
+
+window.addEventListener(
+
+    "load",
+
+    () => {
+
+        calculate();
+
+    }
+
+);
+
+
+//------------------------------------------------------
+// HELPER
+//------------------------------------------------------
+
+function formatCurrency(value) {
+
+    return Number(value)
+
+        .toLocaleString(
+
+            "en-IN",
+
+            {
+
+                minimumFractionDigits: 0,
+
+                maximumFractionDigits: 0
+
+            }
+
+        );
 
 }
 
-if(panduCount){
 
-panduCount.addEventListener(
-"keyup",
-calculate
-);
+//------------------------------------------------------
+// REFRESH SUMMARY
+//------------------------------------------------------
 
-panduCount.addEventListener(
-"change",
-calculate
-);
+function refreshSummary() {
+
+    calculate();
 
 }
 
-calculate();
 
-const settlementAmount =
-    (monthly * count) + monthly;
+//------------------------------------------------------
+// DEBUG
+//------------------------------------------------------
 
-document.getElementById(
-    "settlementAmount"
-).innerText =
-    settlementAmount.toFixed(2);
+console.log(
+
+    "Pandu Assignment Loaded Successfully."
+
+);
+

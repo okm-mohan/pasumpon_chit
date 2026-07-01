@@ -1,23 +1,98 @@
-document.addEventListener(
-    "DOMContentLoaded",
-    function(){
+// ======================================================
+// MEMBER VIEW - PREMIUM ERP
+// member_view.js
+// ======================================================
 
-        const cards =
-            document.querySelectorAll(".card");
+document.addEventListener("DOMContentLoaded", function () {
 
-        cards.forEach((card,index)=>{
+    console.log("Member View Loaded");
 
-            card.style.opacity="0";
+    // ==========================================
+    // Animate cards on page load
+    // ==========================================
 
-            setTimeout(()=>{
+    const cards = document.querySelectorAll(
+        ".profile-card, .info-card, .stat-box"
+    );
 
-                card.style.transition=".5s";
+    cards.forEach((card, index) => {
 
-                card.style.opacity="1";
+        card.style.opacity = "0";
+        card.style.transform = "translateY(25px)";
 
-            },index*150);
+        setTimeout(() => {
+
+            card.style.transition =
+                "all 0.5s ease";
+
+            card.style.opacity = "1";
+            card.style.transform =
+                "translateY(0px)";
+
+        }, index * 120);
+
+    });
+
+
+    // ==========================================
+    // Button Ripple Effect
+    // ==========================================
+
+    document.querySelectorAll(".btn-custom").forEach(btn => {
+
+        btn.addEventListener("click", function () {
+
+            this.classList.add("clicked");
+
+            setTimeout(() => {
+
+                this.classList.remove("clicked");
+
+            }, 250);
+
+        });
+
+    });
+
+
+    // ==========================================
+    // Profile Image Hover
+    // ==========================================
+
+    const profile = document.querySelector(".profile-image");
+
+    if(profile){
+
+        profile.addEventListener("mouseenter", function(){
+
+            this.style.transform = "scale(1.08)";
+            this.style.transition = ".3s";
+
+        });
+
+        profile.addEventListener("mouseleave", function(){
+
+            this.style.transform = "scale(1)";
 
         });
 
     }
-);
+
+
+    // ==========================================
+    // Print Button
+    // ==========================================
+
+    const printBtn = document.querySelector(".btn-primary");
+
+    if(printBtn){
+
+        printBtn.addEventListener("click", function(){
+
+            window.print();
+
+        });
+
+    }
+
+});

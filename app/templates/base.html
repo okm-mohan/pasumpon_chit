@@ -21,79 +21,176 @@
 
     <style>
         body {
-            background: #f4f7fb;
+            margin: 0;
+            background: #eef2f7;
             font-family: 'Segoe UI', sans-serif;
             overflow-x: hidden;
         }
 
-
         .sidebar {
-            background: linear-gradient(180deg,
-                    #0d3b66,
-                    #1d3557);
-
             min-height: 100vh;
+            background: linear-gradient(180deg, #0B1F3A 0%, #123A6B 55%, #1E5AA8 100%);
+            padding: 18px 14px;
+            box-shadow: 6px 0 25px rgba(0, 0, 0, .25);
+        }
+
+        .sidebar .main-content {
+            background: rgba(255, 255, 255, .08);
+            border: 1px solid rgba(255, 255, 255, .08);
+            border-radius: 18px;
+            text-align: center;
+            padding: 18px 10px;
+            margin-bottom: 22px;
+        }
+
+        .sidebar .main-content img {
+            width: 72px;
+            background: #fff;
+            border-radius: 16px;
+            padding: 6px;
+        }
+
+        .sidebar .main-content h5 {
+            color: #fff;
+            margin-top: 12px;
+            font-size: 20px;
+            font-weight: 700;
         }
 
         .sidebar a {
-            color: white;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: #d9e8ff;
             text-decoration: none;
-            display: block;
-            padding: 12px 15px;
-            margin-bottom: 5px;
+            padding: 8px 14px;
+            /* Reduced from 13px */
+            margin: 2px 0;
+            /* Reduced from 6px */
             border-radius: 10px;
-            transition: .3s;
+            font-size: 15px;
+            font-weight: 600;
+            transition: .25s ease;
+        }
+
+        .sidebar a i {
+            width: 24px;
+            text-align: center;
+            color: #7fc6ff;
+            font-size: 18px;
         }
 
         .sidebar a:hover {
-            background: rgba(255, 255, 255, .15);
+            background: rgba(255, 255, 255, .12);
+            color: #fff;
             transform: translateX(5px);
+        }
+
+        .sidebar a:hover i {
+            color: #fff;
+        }
+
+        .sidebar .active-menu {
+            background: linear-gradient(90deg, #2F80ED, #56CCF2);
+            color: #fff !important;
+            box-shadow: 0 8px 18px rgba(47, 128, 237, .35);
+        }
+
+        .sidebar .active-menu i {
+            color: #fff;
+        }
+
+        .submenu {
+            padding: 6px 14px 6px 42px !important;
+            margin: 1px 0 !important;
+            font-size: 14px !important;
+
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            /* Space between icon and text */
         }
 
         .card {
             border: none;
-            border-radius: 20px;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, .08);
+            border-radius: 18px;
+            box-shadow: 0 10px 24px rgba(0, 0, 0, .08);
         }
 
-        .kpi-card {
-            color: white;
-            border-radius: 20px;
+        /* ==========================
+   LOGO SECTION
+========================== */
+
+        .logo-box {
+
+            display: flex;
+
+            align-items: center;
+
+            gap: 15px;
+
+            padding: 16px;
+
+            margin-bottom: 25px;
+
+            border-radius: 18px;
+
+            background: rgba(255, 255, 255, .08);
+
+            border: 1px solid rgba(255, 255, 255, .08);
+
         }
 
-        .clock {
-            font-weight: bold;
-            color: #0d3b66;
+        .logo-img {
+
+            width: 62px;
+
+            height: 62px;
+
+            border-radius: 14px;
+
+            background: #fff;
+
+            padding: 6px;
+
+            flex-shrink: 0;
+
         }
 
-        .scroll-box {
-            height: 250px;
-            overflow: hidden;
+        .logo-text {
+
+            display: flex;
+
+            flex-direction: column;
+
+            justify-content: center;
+
         }
 
-        .sidebar a {
-            display: block;
-            padding: 10px 15px;
-            color: #ffffff;
-            text-decoration: none;
-            border-radius: 8px;
-            margin-bottom: 5px;
-            transition: all 0.3s;
+        .logo-text h4 {
+
+            margin: 0;
+
+            color: #fff;
+
+            font-size: 24px;
+
+            font-weight: 700;
+
+            line-height: 1.1;
+
         }
 
-        .sidebar a:hover {
-            background: rgba(255, 255, 255, 0.15);
-        }
+        .logo-text span {
 
-        .sidebar .active-menu {
-            background: #ffffff;
-            color: #0d6efd !important;
-            font-weight: 600;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-        }
+            color: #C7D2FE;
 
-        .sidebar .active-menu i {
-            color: #0d6efd;
+            font-size: 15px;
+
+            font-weight: 500;
+
+            margin-top: 3px;
+
         }
     </style>
 
@@ -110,12 +207,19 @@
                 {% if request.url.path != "/login" %}
                 <div class="col-md-2 sidebar p-3">
 
-                    <div class="main-content">
+                    <!-- Logo -->
+                    <div class="logo-box">
 
-                        <img src="/static/images/logo.png" width="80">
-                        <h5 class="text-white mt-2">
-                            Pasumpon Chit ERP
-                        </h5>
+                        <img src="/static/images/logo.png" class="logo-img">
+
+                        <div class="logo-text">
+
+                            <h4>Pasumpon</h4>
+
+                            <span>Chit ERP</span>
+
+                        </div>
+
                     </div>
 
                     <!-- Dashboard -->
@@ -133,11 +237,10 @@
 
                     <div class="collapse" id="masterMenu">
 
-                        <a href="/members/list" class="submenu">
+                        <a href="/members/list" class="submenu {% if active_page=='members' %}active-menu{% endif %}">
                             <i class="bi bi-people"></i>
                             Members
                         </a>
-
 
                         <a href="/pandu-groups" class="submenu">
                             <i class="bi bi-diagram-3"></i>

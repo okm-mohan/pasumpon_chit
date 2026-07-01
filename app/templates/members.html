@@ -4,181 +4,291 @@
 
 {% block content %}
 
-<link rel="stylesheet"
-      href="{{ url_for('static', path='css/members.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', path='css/members.css') }}">
 
-<div class="container-fluid">
+<div class="container-fluid member-page">
 
-    <div class="row">
+    <!-- ===========================
+            PAGE HEADER
+    ============================ -->
 
-        <!-- Sidebar -->
-        
+    <div class="page-header shadow-sm">
 
-        <!-- Main Content -->
+        <div>
 
-        <div class="">
+            <h2>
+                <i class="bi bi-person-plus-fill"></i>
+                Add New Member
+            </h2>
 
-            <!-- Header -->
+            <p>
+                Create a new member profile for Pasumpon Chit ERP
+            </p>
 
-            <div class="member-header mb-4">
+        </div>
 
-                <div>
-                    <h2 class="fw-bold">
-                        Add New Member
-                    </h2>
+        <div class="header-buttons">
 
-                    <small class="text-muted">
-                        Create new member profile
-                    </small>
-                </div>
+            <a href="/members/list" class="btn btn-light">
+                <i class="bi bi-arrow-left"></i>
+                Back
+            </a>
 
-            </div>
+            <button type="reset" form="memberForm" class="btn btn-warning">
 
-            <!-- Form -->
+                <i class="bi bi-arrow-clockwise"></i>
 
-            <form id="memberForm"
-                  method="post"
-                  action="/members/save"
-                  enctype="multipart/form-data">
+                Clear
 
-                <div class="row">
+            </button>
 
-                    <!-- BASIC -->
+            <button type="submit" form="memberForm" class="btn btn-primary">
 
-                    <div class="col-md-6">
+                <i class="bi bi-check-circle-fill"></i>
 
-                        <div class="card p-4 mb-4">
+                Save Member
 
-                            <h5 class="section-title">
-                                1. Basic Information
-                            </h5>
+            </button>
 
-                            <div class="row">
+        </div>
 
-                                <div class="col-md-6 mb-3">
+    </div>
 
-                                    <label>
-                                        Member ID
-                                    </label>
 
-                                    <input type="text"
-                                           class="form-control"
-                                           readonly
-                                           value="AUTO">
+    <!-- ===========================
+            FORM START
+    ============================ -->
 
-                                </div>
+    <form id="memberForm" method="POST" action="/members/save" enctype="multipart/form-data">
 
-                                <div class="col-md-6 mb-3">
+        <div class="row g-4">
 
-                                    <label>
-                                        Aadhaar Number
-                                    </label>
+            <!-- ======================================
+                    LEFT PROFILE CARD
+            ======================================= -->
 
-                                    <input type="text"
-                                           name="aadhaar_no"
-                                           class="form-control">
+            <div class="col-lg-4">
 
-                                </div>
+                <div class="profile-card">
 
-                            </div>
+                    <div class="profile-cover">
 
-                            <div class="row">
+                    </div>
 
-                                <div class="col-md-6 mb-3">
+                    <div class="profile-body">
 
-                                    <label>
-                                        Member Name
-                                    </label>
+                        <div class="photo-wrapper">
 
-                                    <input type="text"
-                                           name="member_name"
-                                           class="form-control">
+                            <img id="preview" src="/static/images/user.png" alt="Member">
 
-                                </div>
+                            <label for="photo" class="upload-btn">
 
-                                <div class="col-md-6 mb-3">
+                                <i class="bi bi-camera-fill"></i>
 
-                                    <label>
-                                        Name Description
-                                    </label>
-
-                                    <input type="text"
-                                           name="name_description"
-                                           class="form-control">
-
-                                </div>
-
-                            </div>
-
-                            <label>
-                                Photo
                             </label>
 
-                            <div class="photo-box">
+                            <input type="file" id="photo" name="photo" accept="image/*" hidden>
 
-                                <img id="preview"
-                                     src="/static/images/user.png">
+                        </div>
+
+                        <h3 id="previewName">
+
+                            Member Name
+
+                        </h3>
+
+                        <span class="member-badge">
+
+                            New Member
+
+                        </span>
+
+                        <hr>
+
+                        <div class="info-box">
+
+                            <div class="info-icon">
+
+                                <i class="bi bi-phone-fill"></i>
 
                             </div>
 
-                            <input type="file"
-                                   id="photo"
-                                   name="photo"
-                                   class="form-control mt-2">
+                            <div>
+
+                                <small>
+
+                                    Mobile Number
+
+                                </small>
+
+                                <h6 id="previewMobile">
+
+                                    ----------
+
+                                </h6>
+
+                            </div>
+
+                        </div>
+
+                        <div class="info-box">
+
+                            <div class="info-icon whatsapp">
+
+                                <i class="bi bi-whatsapp"></i>
+
+                            </div>
+
+                            <div>
+
+                                <small>
+
+                                    WhatsApp
+
+                                </small>
+
+                                <h6 id="previewWhatsapp">
+
+                                    ----------
+
+                                </h6>
+
+                            </div>
+
+                        </div>
+
+                        <div class="info-box">
+
+                            <div class="info-icon location">
+
+                                <i class="bi bi-geo-alt-fill"></i>
+
+                            </div>
+
+                            <div>
+
+                                <small>
+
+                                    Address
+
+                                </small>
+
+                                <h6 id="previewAddress">
+
+                                    Not Entered
+
+                                </h6>
+
+                            </div>
 
                         </div>
 
                     </div>
 
-                    <!-- CONTACT -->
+                </div>
 
-                    <div class="col-md-6">
+            </div>
 
-                        <div class="card p-4 mb-4">
 
-                            <h5 class="section-title">
-                                2. Contact Information
-                            </h5>
+            <!-- ======================================
+                    RIGHT CONTENT
+            ======================================= -->
 
-                            <div class="row">
+            <div class="col-lg-8">
 
-                                <div class="col-md-6 mb-3">
+                <!-- ===================
+                    BASIC INFO
+                ==================== -->
 
-                                    <label>
-                                        Mobile Number
-                                    </label>
+                <div class="member-card">
 
-                                    <input type="text"
-                                           name="mobile"
-                                           id="mobile"
-                                           class="form-control">
+                    <div class="card-title">
 
-                                </div>
+                        <i class="bi bi-person-vcard-fill"></i>
 
-                                <div class="col-md-6 mb-3">
+                        Basic Information
 
-                                    <label>
-                                        WhatsApp Number
-                                    </label>
+                    </div>
 
-                                    <input type="text"
-                                           name="whatsapp_no"
-                                           id="whatsapp"
-                                           class="form-control">
+                    <div class="row">
 
-                                </div>
+                        <div class="col-md-6 mb-4">
 
-                            </div>
+                            <label>
 
-                            <div class="form-check">
+                                Member Name
+                                <span class="text-danger">*</span>
 
-                                <input
-                                    class="form-check-input"
-                                    type="checkbox"
-                                    id="sameMobile">
+                            </label>
 
-                                <label
-                                    class="form-check-label">
+                            <input type="text" id="member_name" name="member_name" class="form-control"
+                                placeholder="Enter Member Name" required>
+
+                        </div>
+
+                        <div class="col-md-6 mb-4">
+
+                            <label>
+
+                                Aadhaar Number
+
+                            </label>
+
+                            <input type="text" id="aadhaar_no" name="aadhaar_no" maxlength="12" class="form-control"
+                                placeholder="Enter Aadhaar Number">
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <!-- ===================
+                    CONTACT INFORMATION
+                ==================== -->
+
+                <div class="col-md-6 field">
+
+                    <div class="card-title">
+
+                        <i class="bi bi-telephone-fill"></i>
+
+                        Contact Information
+
+                    </div>
+
+                    <div class="row">
+
+                        <div class="col-md-6 mb-4">
+
+                            <label>
+
+                                Mobile Number
+                                <span class="text-danger">*</span>
+
+                            </label>
+
+                            <input type="text" id="mobile" name="mobile" maxlength="10" class="form-control"
+                                placeholder="Enter Mobile Number" required>
+
+                        </div>
+
+                        <div class="col-md-6 mb-4">
+
+                            <label>
+
+                                WhatsApp Number
+
+                            </label>
+
+                            <input type="text" id="whatsapp" name="whatsapp_no" maxlength="10" class="form-control"
+                                placeholder="Enter WhatsApp Number">
+
+                            <div class="form-check mt-2">
+
+                                <input class="form-check-input" type="checkbox" id="sameMobile">
+
+                                <label class="form-check-label" for="sameMobile">
 
                                     Same as Mobile Number
 
@@ -188,168 +298,82 @@
 
                         </div>
 
-                        <!-- ADDRESS -->
+                    </div>
 
-                        <div class="card p-4">
+                </div>
 
-                            <h5 class="section-title">
-                                3. Address Information
-                            </h5>
 
-                            <div class="mb-3">
 
-                                <label>
-                                    Address
-                                </label>
+                <!-- ===================
+                    ADDRESS
+                ==================== -->
 
-                                <textarea
-                                    name="address"
-                                    class="form-control">
-                                </textarea>
+               <div class="col-md-6 field">
 
-                            </div>
+                    <div class="card-title">
 
-                            <div class="row">
+                        <i class="bi bi-geo-alt-fill"></i>
 
-                                <div class="col-md-4">
+                        Address Information
 
-                                    <input
-                                        type="text"
-                                        name="area"
-                                        placeholder="Area"
-                                        class="form-control">
+                    </div>
 
-                                </div>
+                    <div class="mb-3">
 
-                                <div class="col-md-4">
+                        <label>
 
-                                    <input
-                                        type="text"
-                                        name="village"
-                                        placeholder="Village"
-                                        class="form-control">
+                            Address
 
-                                </div>
+                        </label>
 
-                                <div class="col-md-4">
-
-                                    <input
-                                        type="text"
-                                        name="pincode"
-                                        placeholder="Pincode"
-                                        class="form-control">
-
-                                </div>
-
-                            </div>
-
-                        </div>
+                        <textarea id="address" name="address" class="form-control" rows="5"
+                            placeholder="Enter Complete Address"></textarea>
 
                     </div>
 
                 </div>
 
-                <!-- MEMBERSHIP -->
 
-                <div class="card p-4 mt-4">
 
-                    <h5 class="section-title">
-                        4. Membership Information
-                    </h5>
+                <!-- ===================
+                    STATUS
+                ==================== -->
+
+                <div class="col-md-6 field">
+
+                    <div class="card-title">
+
+                        <i class="bi bi-check-circle-fill"></i>
+
+                        Member Status
+
+                    </div>
 
                     <div class="row">
 
-                        <div class="col-md-3">
+                        <div class="col-md-4">
 
-                            <div class="membership-card">
+                            <label>
 
-                                <input
-                                    type="checkbox"
-                                    id="is_pandu">
+                                Status
 
-                                <label>
-                                    Pandu Member
-                                </label>
+                            </label>
 
-                            </div>
+                            <select class="form-select" name="status">
 
-                        </div>
+                                <option value="ACTIVE" selected>
 
-                        <div class="col-md-3">
+                                    Active
 
-                            <div class="membership-card">
+                                </option>
 
-                                <input type="checkbox">
+                                <option value="INACTIVE">
 
-                                <label>
-                                    Kanthu Member
-                                </label>
+                                    Inactive
 
-                            </div>
+                                </option>
 
-                        </div>
-
-                        <div class="col-md-3">
-
-                            <div class="membership-card">
-
-                                <input type="checkbox">
-
-                                <label>
-                                    Ayulsantha Member
-                                </label>
-
-                            </div>
-
-                        </div>
-
-                        <div class="col-md-3">
-
-                            <div class="membership-card">
-
-                                <input type="checkbox">
-
-                                <label>
-                                    Chit Fund Member
-                                </label>
-
-                            </div>
-
-                        </div>
-
-                    </div>
-
-                    <div id="panduSection"
-                         class="mt-4">
-
-                        <div class="row">
-
-                            <div class="col-md-4">
-
-                                <label>
-                                    Pandu Count
-                                </label>
-
-                                <input
-                                    type="number"
-                                    name="pandu_count"
-                                    value="1"
-                                    class="form-control">
-
-                            </div>
-
-                            <div class="col-md-4">
-
-                                <label>
-                                    Joining Amount
-                                </label>
-
-                                <input
-                                    type="number"
-                                    name="joining_amount"
-                                    class="form-control">
-
-                            </div>
+                            </select>
 
                         </div>
 
@@ -357,122 +381,60 @@
 
                 </div>
 
-                <!-- NOMINEE -->
 
-                <div class="row mt-4">
 
-                    <div class="col-md-6">
+                <!-- ===================
+                    SAVE PANEL
+                ==================== -->
 
-                        <div class="card p-4">
+                <div class="save-panel mt-4">
 
-                            <h5 class="section-title">
-                                5. Nominee Information
-                            </h5>
+                    <div>
 
-                          <input
-                                type="text"
-                                name="relationship"
-                                placeholder="Relationship"
-                                class="form-control mb-3">
+                        <h5>
 
-                            <input
-                                type="text"
-                                name="nominee_mobile"
-                                placeholder="Nominee Mobile"
-                                class="form-control">
+                            Ready to Save?
 
-                        </div>
+                        </h5>
+
+                        <p>
+
+                            Verify the entered member details before saving.
+
+                        </p>
 
                     </div>
 
-                    <div class="col-md-6">
+                    <div class="save-buttons">
 
-                        <div class="card p-4">
+                        <button type="submit" class="btn btn-primary btn-lg">
 
-                            <h5 class="section-title">
-                                6. Additional Information
-                            </h5>
+                            <i class="bi bi-check-circle-fill"></i>
 
-                            <input
-                                type="text"
-                                name="reference_name"
-                                placeholder="Reference Name"
-                                class="form-control mb-3">
+                            Save Member
 
-                            <input
-                                type="text"
-                                name="occupation"
-                                placeholder="Occupation"
-                                class="form-control">
+                        </button>
 
-                        </div>
+                        <button type="reset" class="btn btn-outline-secondary btn-lg">
+
+                            <i class="bi bi-arrow-clockwise"></i>
+
+                            Reset
+
+                        </button>
 
                     </div>
 
                 </div>
 
-                <!-- STATUS -->
-
-                <div class="card p-4 mt-4">
-
-                    <h5 class="section-title">
-                        7. Status
-                    </h5>
-
-                    <select
-                        name="status"
-                        class="form-select">
-
-                        <option value="ACTIVE">
-                            Active
-                        </option>
-
-                        <option value="INACTIVE">
-                            Inactive
-                        </option>
-
-                    </select>
-
-                </div>
-
-                <!-- BUTTONS -->
-
-                <div class="text-center mt-4 mb-5">
-
-                    <button
-                        class="btn btn-success btn-lg">
-
-                        Save Member
-
-                    </button>
-
-                    <button
-                        type="reset"
-                        class="btn btn-primary btn-lg">
-
-                        Clear
-
-                    </button>
-
-                    <a href="/dashboard"
-                       class="btn btn-light btn-lg">
-
-                        Cancel
-
-                    </a>
-
-                </div>
-
-            </form>
+            </div>
 
         </div>
 
-    </div>
+    </form>
 
 </div>
 
-<script src="{{ url_for('static',
-path='js/members.js') }}">
-</script>
+<script src="{{ url_for('static', path='js/members.js') }}"></script>
 
 {% endblock %}

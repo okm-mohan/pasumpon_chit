@@ -1,0 +1,572 @@
+{% extends "base.html" %}
+
+{% block title %}Edit Member{% endblock %}
+
+{% block content %}
+
+<link rel="stylesheet"
+      href="{{ url_for('static', path='css/members_edit.css') }}">
+
+<link rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+<div class="container-fluid member-page">
+
+    <!-- ===========================================
+                    PAGE HEADER
+    ============================================ -->
+
+    <div class="page-header">
+
+        <div>
+
+            <h2 class="page-title">
+
+                <i class="bi bi-pencil-square"></i>
+
+                Edit Member
+
+            </h2>
+
+            <p class="page-subtitle">
+
+                Update member information
+
+            </p>
+
+        </div>
+
+        <div class="header-buttons">
+
+            <a href="/members/view/{{ member.id }}"
+               class="btn btn-light btn-custom">
+
+                <i class="bi bi-arrow-left"></i>
+
+                Back
+
+            </a>
+
+            <button
+                type="submit"
+                form="memberForm"
+                class="btn btn-success btn-custom">
+
+                <i class="bi bi-check-circle-fill"></i>
+
+                Update Member
+
+            </button>
+
+            <button
+                type="reset"
+                form="memberForm"
+                class="btn btn-warning btn-custom">
+
+                <i class="bi bi-arrow-clockwise"></i>
+
+                Reset
+
+            </button>
+
+        </div>
+
+    </div>
+
+
+
+<form
+    id="memberForm"
+    method="POST"
+    action="/members/update/{{ member.id }}"
+    enctype="multipart/form-data">
+
+<div class="row g-4">
+
+
+
+
+<!-- ==================================================
+                    LEFT PROFILE
+=================================================== -->
+
+<div class="col-lg-4">
+
+<div class="profile-card">
+
+<div class="profile-cover"></div>
+
+<div class="profile-body">
+
+{% if member.photo %}
+
+<img
+    id="preview"
+    src="{{ member.photo }}"
+    class="profile-image">
+
+{% else %}
+
+<img
+    id="preview"
+    src="/static/images/user.png"
+    class="profile-image">
+
+{% endif %}
+
+
+
+<div class="mt-3">
+
+<label
+    class="btn btn-outline-primary w-100">
+
+<i class="bi bi-camera-fill"></i>
+
+Change Photo
+
+<input
+    type="file"
+    id="photo"
+    name="photo"
+    accept="image/*"
+    hidden>
+
+</label>
+
+</div>
+
+
+
+<h3
+    class="mt-4"
+    id="previewName">
+
+{{ member.member_name }}
+
+</h3>
+
+
+
+<div class="member-id">
+
+{{ member.member_code }}
+
+</div>
+
+
+
+<span class="status-badge">
+
+{{ member.status }}
+
+</span>
+
+<hr>
+
+
+
+<div class="quick-info">
+
+<div class="info-item">
+
+<i class="bi bi-telephone-fill"></i>
+
+<span id="previewMobile">
+
+{{ member.mobile }}
+
+</span>
+
+</div>
+
+
+
+<div class="info-item">
+
+<i class="bi bi-whatsapp"></i>
+
+<span id="previewWhatsapp">
+
+{{ member.whatsapp_no }}
+
+</span>
+
+</div>
+
+
+
+<div class="info-item">
+
+<i class="bi bi-geo-alt-fill"></i>
+
+<span id="previewAddress">
+
+{{ member.address }}
+
+</span>
+
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+
+
+<!-- ==================================================
+                RIGHT SIDE STARTS
+=================================================== -->
+
+<div class="col-lg-8">
+    <!-- ==========================================
+            BASIC INFORMATION
+========================================== -->
+
+<div class="info-card">
+
+    <div class="card-title">
+
+        <i class="bi bi-person-fill"></i>
+
+        Basic Information
+
+    </div>
+
+    <div class="row">
+
+        <div class="col-md-6 field">
+
+            <label>Member Name</label>
+
+            <input
+                type="text"
+                id="member_name"
+                name="member_name"
+                class="form-control"
+                value="{{ member.member_name }}"
+                required>
+
+        </div>
+
+        <div class="col-md-6 field">
+
+            <label>Aadhaar Number</label>
+
+            <input
+                type="text"
+                name="aadhaar_no"
+                class="form-control"
+                maxlength="12"
+                value="{{ member.aadhaar_no or '' }}">
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- ==========================================
+            CONTACT INFORMATION
+========================================== -->
+
+<div class="info-card">
+
+    <div class="card-title">
+
+        <i class="bi bi-telephone-fill"></i>
+
+        Contact Information
+
+    </div>
+
+    <div class="row">
+
+        <div class="col-md-6 field">
+
+            <label>Mobile Number</label>
+
+            <input
+                type="text"
+                id="mobile"
+                name="mobile"
+                class="form-control"
+                maxlength="10"
+                value="{{ member.mobile or '' }}">
+
+        </div>
+
+        <div class="col-md-6 field">
+
+            <label>WhatsApp Number</label>
+
+            <input
+                type="text"
+                id="whatsapp"
+                name="whatsapp_no"
+                class="form-control"
+                maxlength="10"
+                value="{{ member.whatsapp_no or '' }}">
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- ==========================================
+                ADDRESS
+========================================== -->
+
+<div class="info-card">
+
+    <div class="card-title">
+
+        <i class="bi bi-geo-alt-fill"></i>
+
+        Address Information
+
+    </div>
+
+    <div class="row">
+
+        <div class="col-md-12 field">
+
+            <label>Address</label>
+
+            <textarea
+                id="address"
+                name="address"
+                class="form-control"
+                rows="4">{{ member.address or '' }}</textarea>
+
+        </div>
+
+        <div class="col-md-4 field">
+
+            <label>Area</label>
+
+            <input
+                type="text"
+                name="area"
+                class="form-control"
+                value="{{ member.area or '' }}">
+
+        </div>
+
+        <div class="col-md-4 field">
+
+            <label>Village</label>
+
+            <input
+                type="text"
+                name="village"
+                class="form-control"
+                value="{{ member.village or '' }}">
+
+        </div>
+
+        <div class="col-md-4 field">
+
+            <label>Pincode</label>
+
+            <input
+                type="text"
+                name="pincode"
+                class="form-control"
+                maxlength="6"
+                value="{{ member.pincode or '' }}">
+
+        </div>
+
+    </div>
+
+</div>
+<!-- ==========================================
+        CURRENT YEAR MEMBERSHIP
+========================================== -->
+
+<div class="info-card">
+
+    <div class="card-title">
+
+        <i class="bi bi-table"></i>
+
+        Current Year Membership Details
+
+    </div>
+
+    <div class="table-responsive">
+
+        <table class="table table-hover align-middle membership-table">
+
+            <thead>
+
+                <tr>
+
+                    <th>Membership</th>
+
+                    <th>Scheme</th>
+
+                    <th>Monthly Amount</th>
+
+                    <th>Paid</th>
+
+                    <th>Pending</th>
+
+                    <th>Status</th>
+
+                </tr>
+
+            </thead>
+
+            <tbody>
+
+            {% if memberships %}
+
+                {% for item in memberships %}
+
+                <tr>
+
+                    <td>{{ item.membership_type }}</td>
+
+                    <td>{{ item.scheme_name }}</td>
+
+                    <td>₹ {{ item.monthly_amount }}</td>
+
+                    <td>{{ item.paid_months }}/12</td>
+
+                    <td>{{ item.pending_months }}</td>
+
+                    <td>
+
+                        {% if item.status=="ACTIVE" %}
+
+                        <span class="badge bg-success">
+
+                            ACTIVE
+
+                        </span>
+
+                        {% elif item.status=="COMPLETED" %}
+
+                        <span class="badge bg-primary">
+
+                            COMPLETED
+
+                        </span>
+
+                        {% else %}
+
+                        <span class="badge bg-warning text-dark">
+
+                            {{ item.status }}
+
+                        </span>
+
+                        {% endif %}
+
+                    </td>
+
+                </tr>
+
+                {% endfor %}
+
+            {% else %}
+
+                <tr>
+
+                    <td colspan="6" class="text-center text-muted py-4">
+
+                        No Active Membership Found
+
+                    </td>
+
+                </tr>
+
+            {% endif %}
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+</div>
+
+
+<!-- ==========================================
+            SAVE PANEL
+========================================== -->
+
+<div class="info-card">
+
+    <div class="row align-items-center">
+
+        <div class="col-md-8">
+
+            <h4 class="mb-2">
+
+                <i class="bi bi-info-circle-fill text-primary"></i>
+
+                Save Changes
+
+            </h4>
+
+            <p class="text-muted mb-0">
+
+                Verify the member details before updating.
+                Membership information is read-only.
+
+            </p>
+
+        </div>
+
+        <div class="col-md-4 text-end">
+
+            <a
+                href="/members/view/{{ member.id }}"
+                class="btn btn-secondary btn-lg">
+
+                <i class="bi bi-x-circle"></i>
+
+                Cancel
+
+            </a>
+
+            <button
+                type="submit"
+                class="btn btn-success btn-lg">
+
+                <i class="bi bi-check-circle-fill"></i>
+
+                Update
+
+            </button>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+</div>
+<!-- END RIGHT -->
+
+</div>
+<!-- END ROW -->
+
+</form>
+
+</div>
+
+<script src="{{ url_for('static', path='js/members_edit.js') }}"></script>
+
+{% endblock %}

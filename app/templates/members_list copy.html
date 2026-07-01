@@ -169,7 +169,6 @@
                         <th>Mobile</th>
                         <th>Aadhaar No</th>
                         <th>Status</th>
-                        <th>Pandu</th>
                         <th>Actions</th>
 
                     </tr>
@@ -263,45 +262,41 @@
 
                         </td>
 
-                        <!-- Pandu -->
-                        <td class="text-center">
-
-                            {% if m.is_current_year_pandu_joined == 1 %}
-
-                            <span class="badge bg-primary px-3 py-2">
-                                <i class="bi bi-check-circle-fill"></i>
-                                Pandu Joined
-                            </span>
-
-                            {% else %}
-
-                            <button
-    class="btn btn-success btn-sm join-pandu-btn"
-    data-member-id="{{ m.id }}"
-    data-member-name="{{ m.member_name }}"
->
-    <i class="bi bi-person-plus-fill"></i>
-    Join Pandu
-</button>
-                            {% endif %}
-
-                        </td>
-
                         <!-- Actions -->
                         <td>
+
                             <div class="d-flex gap-2">
 
                                 <a href="/members/view/{{ m.id }}" class="btn btn-sm btn-view">
+
                                     <i class="bi bi-eye"></i>
+
                                     View
+
                                 </a>
 
                                 <a href="/members/edit/{{ m.id }}" class="btn btn-sm btn-edit">
+
                                     <i class="bi bi-pencil-square"></i>
+
                                     Edit
+
                                 </a>
 
+
+                                <button class="btn btn-sm btn-success join-pandu-btn" data-member-id="{{ m.id }}"
+                                    data-member-name="{{ m.member_name }}" data-bs-toggle="modal"
+                                    data-bs-target="#joinPanduModal">
+
+                                    <i class="bi bi-person-plus-fill"></i>
+                                    Join Pandu
+
+                                </button>
+
+
+
                             </div>
+
                         </td>
 
                     </tr>
@@ -377,14 +372,13 @@
 
             <div class="modal-header bg-primary text-white">
 
-                <h4 class="modal-title fw-bold" id="joinPanduTitle">
+                <h4 class="modal-title">
                     <i class="bi bi-person-plus-fill"></i>
                     Join Pandu
                 </h4>
 
-                <small id="joinPanduSubTitle" class="text-white-50">
-                    Current Year Pandu
-                </small>
+                <button class="btn-close btn-close-white" data-bs-dismiss="modal">
+                </button>
 
             </div>
 
@@ -406,7 +400,22 @@
 
                 <!-- Pandu -->
 
+                <div class="mb-4">
 
+                    <label class="form-label fw-bold">
+                        Current Pandu Group
+                    </label>
+
+                    <div class="form-control form-control-lg bg-light fw-bold text-primary" id="currentPandu">
+
+                        Loading...
+
+                    </div>
+
+                    <!-- Hidden Group ID -->
+                    <input type="hidden" id="groupId">
+
+                </div>
 
                 <!-- Count -->
 
@@ -439,97 +448,57 @@
 
                 <!-- Summary -->
 
-                <div class="card shadow-sm border-0 mt-4">
+                <div class="card border-0 shadow-sm">
 
                     <div class="card-header bg-light">
 
                         <h5 class="mb-0">
-                            <i class="bi bi-calculator-fill text-primary"></i>
+
                             Assignment Summary
+
                         </h5>
 
                     </div>
 
-                    <div class="card-body p-4">
+                    <div class="row mb-4">
 
-                        <div class="d-flex justify-content-between py-2 border-bottom">
+                        <div class="col-md-4">
 
-                            <span class="text-muted">
-                                Monthly Due
-                            </span>
+                            <div class="info-card">
 
-                            <strong id="monthlyDue">
-                                ₹0
-                            </strong>
+                                <small>Monthly Due</small>
 
-                        </div>
+                                <h4 id="monthlyCard">₹100</h4>
 
-                        <div class="d-flex justify-content-between py-2 border-bottom">
-
-                            <span class="text-muted">
-                                Yearly Due
-                            </span>
-
-                            <strong id="yearlyDue">
-                                ₹0
-                            </strong>
+                            </div>
 
                         </div>
 
-                        <div class="d-flex justify-content-between py-2 border-bottom">
+                        <div class="col-md-4">
 
-                            <span class="text-muted">
-                                Duration
-                            </span>
+                            <div class="info-card">
 
-                            <strong id="durationValue">
-                                12 Months
-                            </strong>
+                                <small>Chit Amount</small>
 
-                        </div>
+                                <h4 id="chitCard">₹1200</h4>
 
-                        <div class="d-flex justify-content-between py-2 border-bottom">
-
-                            <span class="text-muted">
-                                Pandu Count
-                            </span>
-
-                            <strong id="summaryCount">
-                                1
-                            </strong>
+                            </div>
 
                         </div>
 
-                        <div class="d-flex justify-content-between py-2 border-bottom">
+                        <div class="col-md-4">
 
-                            <span class="text-muted">
-                                Total Liability
-                            </span>
+                            <div class="info-card">
 
-                            <strong id="totalLiability">
-                                ₹0
-                            </strong>
+                                <small>Duration</small>
 
-                        </div>
+                                <h4 id="durationCard">12 M</h4>
 
-                        <div class="mt-4 text-center">
-
-                            <small class="text-muted">
-
-                                Estimated Settlement
-
-                            </small>
-
-                            <h2 class="fw-bold text-success mt-2" id="settlementAmount">
-
-                                ₹0
-
-                            </h2>
+                            </div>
 
                         </div>
 
                     </div>
-
                 </div>
 
             </div>

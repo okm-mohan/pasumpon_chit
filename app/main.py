@@ -16,8 +16,26 @@ from datetime import datetime
 
 app = FastAPI()
 
+from pydantic import BaseModel
+
+
+class JoinPanduRequest(BaseModel):
+
+    member_id: int
+
+    group_id: int
+
+    pandu_count: int
+
+    monthly_due: float
+
+    chit_amount: float
+
+    duration_months: int
+
 
 from pydantic import BaseModel
+
 
 class KanthuSaveRequest(BaseModel):
     member_id: int
@@ -25,8 +43,8 @@ class KanthuSaveRequest(BaseModel):
     principal_amount: float
     interest_percent: float
     remarks: str = ""
-    
-    
+
+
 # Static Files
 app.mount("/static", StaticFiles(directory="app/static"), name="static")
 
@@ -430,8 +448,6 @@ def save_collection(
                 {"assignment_id": assignment["id"]},
             )
 
-
-
             db.execute(
                 text("""
                     INSERT INTO accounts_transactions
@@ -457,14 +473,13 @@ def save_collection(
                         :remarks
                     )
                 """),
-               {
-    "amount": amount,
-    "payment_mode": payment_mode.upper(),
-    "collection_id": assignment["id"],
-    "remarks": f"Receipt No : {receipt_no}"
-}
+                {
+                    "amount": amount,
+                    "payment_mode": payment_mode.upper(),
+                    "collection_id": assignment["id"],
+                    "remarks": f"Receipt No : {receipt_no}",
+                },
             )
-
 
         db.commit()
 
@@ -1004,7 +1019,6 @@ async def save_member(
 
         db.close()
 
-
 @app.get("/members/list")
 def members_list(request: Request):
 
@@ -1013,25 +1027,60 @@ def members_list(request: Request):
     try:
 
         members = db.execute(text("""
+
             SELECT
-                id,
-                member_code,
-                member_name,
-                mobile,
-                aadhaar_no,
-                photo,
-                status
-            FROM members
-            ORDER BY id DESC
+
+                m.id,
+                m.member_code,
+                m.member_name,
+                m.mobile,
+                m.aadhaar_no,
+                m.photo,
+                m.status,
+
+                CASE
+
+                    WHEN EXISTS(
+
+                        SELECT 1
+
+                        FROM pandu_assignments pa
+
+                        INNER JOIN pandu_groups pg
+                            ON pg.id = pa.group_id
+
+                        WHERE
+                            pa.member_id = m.id
+                            AND pa.status = 'ACTIVE'
+                            AND pg.group_code = YEAR(CURDATE())
+
+                    )
+
+                    THEN 1
+
+                    ELSE 0
+
+                END AS is_current_year_pandu_joined
+
+            FROM members m
+
+            ORDER BY m.id DESC
+
         """)).mappings().all()
 
         return templates.TemplateResponse(
-            request=request, name="members_list.html", context={"members": members}
+            request=request,
+            name="members_list.html",
+            context={
+                "members": members
+            }
         )
 
     finally:
-        db.close()
 
+        db.close()
+        
+        
 
 @app.get("/members/view/{member_id}")
 def member_view(request: Request, member_id: int):
@@ -1040,13 +1089,109 @@ def member_view(request: Request, member_id: int):
 
     try:
 
+        # -----------------------------
+        # Member Details
+        # -----------------------------
+
         member = (
             db.execute(
                 text("""
-            SELECT *
-            FROM members
-            WHERE id = :id
-        """),
+                SELECT *
+                FROM members
+                WHERE id = :id
+            """),
+                {"id": member_id},
+            )
+            .mappings()
+            .first()
+        )
+
+        if not member:
+            return RedirectResponse("/members/list", status_code=302)
+
+        # -----------------------------
+        # Current Year Pandu Membership
+        # -----------------------------
+
+        memberships = (
+            db.execute(
+                text("""
+                SELECT
+
+                    pa.id,
+
+                    'Pandu' AS membership_type,
+
+                    pg.group_name AS scheme_name,
+
+                    pa.group_monthly_due AS monthly_amount,
+
+                    (
+                        SELECT COUNT(*)
+                        FROM collections c
+                        WHERE
+                            c.assignment_id = pa.id
+                            AND c.collection_year = YEAR(CURDATE())
+                    ) AS paid_months,
+
+                    (
+                        12 -
+                        (
+                            SELECT COUNT(*)
+                            FROM collections c
+                            WHERE
+                                c.assignment_id = pa.id
+                                AND c.collection_year = YEAR(CURDATE())
+                        )
+                    ) AS pending_months,
+
+                    pa.status
+
+                FROM pandu_assignments pa
+
+                INNER JOIN pandu_groups pg
+                    ON pg.id = pa.group_id
+
+                WHERE
+                    pa.member_id = :member_id
+                    AND pa.status='ACTIVE'
+            """),
+                {"member_id": member_id},
+            )
+            .mappings()
+            .all()
+        )
+
+        return templates.TemplateResponse(
+            request=request,
+            name="member_view.html",
+            context={"member": member, "memberships": memberships},
+        )
+
+    finally:
+
+        db.close()
+
+
+# ==========================================
+# EDIT MEMBER
+# ==========================================
+
+
+@app.get("/members/edit/{member_id}")
+def edit_member(request: Request, member_id: int):
+
+    db = SessionLocal()
+
+    try:
+
+        member = (
+            db.execute(
+                text("""
+                SELECT *
+                FROM members
+                WHERE id=:id
+            """),
                 {"id": member_id},
             )
             .mappings()
@@ -1055,11 +1200,119 @@ def member_view(request: Request, member_id: int):
 
         if not member:
 
-            return RedirectResponse(url="/members/list", status_code=302)
+            return RedirectResponse("/members/list", status_code=302)
 
-        return templates.TemplateResponse(
-            request=request, name="member_view.html", context={"member": member}
+            return templates.TemplateResponse(
+                request=request,
+                name="members_edit.html",
+                context={
+                    "member": member,
+                    "memberships": memberships,
+                },
+            )
+
+    finally:
+
+        db.close()
+
+
+# ==========================================
+# UPDATE MEMBER
+# ==========================================
+
+
+@app.post("/members/update/{member_id}")
+async def update_member(
+    member_id: int,
+    member_name: str = Form(...),
+    aadhaar_no: str = Form(""),
+    mobile: str = Form(""),
+    whatsapp_no: str = Form(""),
+    address: str = Form(""),
+    status: str = Form("ACTIVE"),
+    photo: UploadFile = File(None),
+):
+
+    db = SessionLocal()
+
+    try:
+
+        # -----------------------------------
+        # Existing Photo
+        # -----------------------------------
+
+        old_photo = db.execute(
+            text("""
+                SELECT photo
+                FROM members
+                WHERE id=:id
+            """),
+            {"id": member_id},
+        ).scalar()
+
+        photo_path = old_photo
+
+        # -----------------------------------
+        # Upload New Photo
+        # -----------------------------------
+
+        if photo and photo.filename:
+
+            upload_dir = "app/static/uploads/members"
+
+            os.makedirs(upload_dir, exist_ok=True)
+
+            filename = f"M{member_id}_{photo.filename}"
+
+            filepath = os.path.join(upload_dir, filename)
+
+            with open(filepath, "wb") as buffer:
+
+                shutil.copyfileobj(photo.file, buffer)
+
+            photo_path = f"/static/uploads/members/{filename}"
+
+        # -----------------------------------
+        # Update Member
+        # -----------------------------------
+
+        db.execute(
+            text("""
+                UPDATE members
+
+                SET
+
+                    member_name=:member_name,
+
+                    aadhaar_no=:aadhaar_no,
+
+                    mobile=:mobile,
+
+                    whatsapp_no=:whatsapp_no,
+
+                    address=:address,
+
+                    photo=:photo,
+
+                    status=:status
+
+                WHERE id=:id
+            """),
+            {
+                "member_name": member_name,
+                "aadhaar_no": aadhaar_no,
+                "mobile": mobile,
+                "whatsapp_no": whatsapp_no,
+                "address": address,
+                "photo": photo_path,
+                "status": status,
+                "id": member_id,
+            },
         )
+
+        db.commit()
+
+        return RedirectResponse(url=f"/members/view/{member_id}", status_code=302)
 
     finally:
 
@@ -1120,10 +1373,12 @@ def pandu_assign(request: Request):
 
         """)).mappings().all()
 
+        group = groups[0] if groups else None
+
         return templates.TemplateResponse(
             request=request,
             name="pandu_assign.html",
-            context={"groups": groups, "assignments": assignments},
+            context={"group": group, "assignments": assignments},
         )
 
     finally:
@@ -1136,7 +1391,7 @@ def pandu_assign(request: Request):
 
 
 @app.get("/api/assign-member-search")
-def assign_member_search(q: str = ""):
+def assign_member_search(q: str = "", group_id: int = 0):
 
     db = SessionLocal()
 
@@ -1147,22 +1402,51 @@ def assign_member_search(q: str = ""):
                 text("""
             SELECT
 
-                id,
-                member_code,
-                member_name,
-                mobile,
-                aadhaar_no,
-                photo
+    m.id,
 
-            FROM members
+    m.member_code,
 
-            WHERE
+    m.member_name,
 
-                member_name LIKE :q
-                OR member_code LIKE :q
-                OR mobile LIKE :q
+    m.mobile,
 
-            LIMIT 20
+    m.aadhaar_no,
+
+    m.photo,
+
+    CASE
+
+        WHEN EXISTS(
+
+            SELECT 1
+
+            FROM pandu_assignments pa
+
+            WHERE pa.member_id = m.id
+
+            AND pa.status='ACTIVE'
+
+        )
+
+        THEN 1
+
+        ELSE 0
+
+    END AS already_assigned
+
+FROM members m
+
+WHERE
+
+    m.member_name LIKE :q
+
+    OR m.member_code LIKE :q
+
+    OR m.mobile LIKE :q
+
+ORDER BY m.member_name
+
+LIMIT 20
 
         """),
                 {"q": f"%{q}%"},
@@ -1171,7 +1455,17 @@ def assign_member_search(q: str = ""):
             .all()
         )
 
-        return JSONResponse(content=[dict(r) for r in rows])
+        result = []
+
+        for row in rows:
+
+            item = dict(row)
+
+            item["already_assigned"] = bool(item["already_assigned"])
+
+            result.append(item)
+
+        return JSONResponse(content=result)
 
     finally:
         db.close()
@@ -1214,7 +1508,9 @@ def save_assignment(
 
         if not group:
 
-            return RedirectResponse("/pandu/assign", status_code=302)
+            return JSONResponse(
+                content={"success": True, "message": "Member Joined Successfully."}
+            )
 
         group_monthly_due = float(group["monthly_due"]) * pandu_count
         group_chit_amount = float(group["chit_amount"])
@@ -1228,6 +1524,32 @@ def save_assignment(
         settlement_amount = (group_monthly_due * 12) + group_monthly_due
 
         qr_code = f"M{member_id}-G{group_id}"
+
+        existing = db.execute(
+            text("""
+
+                SELECT id
+
+                FROM pandu_assignments
+
+                WHERE
+
+                    member_id=:member_id
+
+                    AND status='ACTIVE'
+
+            """),
+            {"member_id": member_id},
+        ).first()
+
+        if existing:
+
+            return JSONResponse(
+                content={
+                    "success": False,
+                    "message": "Member Already Joined."
+                }
+            )
 
         db.execute(
             text("""
@@ -1292,7 +1614,12 @@ def save_assignment(
 
         db.commit()
 
-        return RedirectResponse("/pandu/assign", status_code=302)
+        return JSONResponse(
+            content={
+                "success": True,
+                "message": "Member Joined Successfully."
+            }
+        )
 
     finally:
 
@@ -1538,28 +1865,22 @@ async def process_settlement(assignment_id: int, request: Request):
             {"amount": data["amount"], "remarks": data["remarks"], "id": assignment_id},
         )
 
-
-
-
         row = db.execute(
             text("""
                 SELECT balance_amount
                 FROM pandu_assignments
                 WHERE id=:id
             """),
-            {"id": assignment_id}
+            {"id": assignment_id},
         ).first()
 
         if row and float(row[0]) > 0:
 
             return {
                 "success": False,
-                "message":
-                f"Cannot settle. Pending Amount ₹{row[0]}"
+                "message": f"Cannot settle. Pending Amount ₹{row[0]}",
             }
-    
-    
-    
+
         db.commit()
 
         return {"success": True, "message": "Settlement Completed"}
@@ -1724,6 +2045,7 @@ async def pandu_pending(request: Request):
         },
     )
 
+
 @app.get("/api/pending-members-list")
 def pending_members_list(search: str = ""):
 
@@ -1774,10 +2096,7 @@ def pending_members_list(search: str = ""):
 
         """)
 
-        rows = db.execute(
-            sql,
-            {"search": f"%{search}%"}
-        ).mappings().all()
+        rows = db.execute(sql, {"search": f"%{search}%"}).mappings().all()
 
         current_month = datetime.now().month
 
@@ -1804,8 +2123,8 @@ def pending_members_list(search: str = ""):
     finally:
 
         db.close()
-        
-        
+
+
 @app.get("/api/member-year-due/{member_id}")
 def member_year_due(member_id: int):
 
@@ -1815,7 +2134,9 @@ def member_year_due(member_id: int):
 
         current_year = datetime.now().year
 
-        rows = db.execute(text("""
+        rows = (
+            db.execute(
+                text("""
 
             SELECT
 
@@ -1829,10 +2150,11 @@ def member_year_due(member_id: int):
             AND collection_year = :year
 
         """),
-        {
-            "member_id": member_id,
-            "year": current_year
-        }).mappings().all()
+                {"member_id": member_id, "year": current_year},
+            )
+            .mappings()
+            .all()
+        )
 
         paid_map = {}
 
@@ -1840,7 +2162,8 @@ def member_year_due(member_id: int):
 
             paid_map[r["collection_month"]] = float(r["amount"])
 
-        monthly_due = db.execute(text("""
+        monthly_due = db.execute(
+            text("""
 
             SELECT group_monthly_due
 
@@ -1853,35 +2176,28 @@ def member_year_due(member_id: int):
             LIMIT 1
 
         """),
-        {
-            "member_id": member_id
-        }).scalar()
+            {"member_id": member_id},
+        ).scalar()
 
         monthly_due = float(monthly_due or 0)
 
         result = []
 
-        for month in range(1,13):
+        for month in range(1, 13):
 
-            paid = paid_map.get(month,0)
+            paid = paid_map.get(month, 0)
 
             balance = monthly_due - paid
 
-            result.append({
-
-                "month":
-                datetime(2025,month,1).strftime("%B"),
-
-                "due": monthly_due,
-
-                "paid": paid,
-
-                "balance": balance,
-
-                "status":
-                "Paid" if paid > 0 else "Pending"
-
-            })
+            result.append(
+                {
+                    "month": datetime(2025, month, 1).strftime("%B"),
+                    "due": monthly_due,
+                    "paid": paid,
+                    "balance": balance,
+                    "status": "Paid" if paid > 0 else "Pending",
+                }
+            )
 
         return result
 
@@ -1894,25 +2210,19 @@ def member_year_due(member_id: int):
 def pending_members_print(request: Request):
 
     return templates.TemplateResponse(
-        request=request,
-        name="reports/pandu_pending_members_print.html"
+        request=request, name="reports/pandu_pending_members_print.html"
     )
-    
-    
+
+
 @app.get("/pandu-collection-summary")
 async def collection_summary(request: Request):
 
     return templates.TemplateResponse(
         request=request,
         name="reports/pandu_collection_summary.html",
-        context={
-            "active_page": "pandu-collection-summary"
-        }
+        context={"active_page": "pandu-collection-summary"},
     )
-    
 
-    
-    
 
 @app.get("/api/pandu-collection-summary")
 def collection_summary(year: int):
@@ -1935,7 +2245,8 @@ def collection_summary(year: int):
 
             """)).scalar()
 
-            collected = db.execute(text("""
+            collected = db.execute(
+                text("""
 
                 SELECT IFNULL(SUM(amount),0)
 
@@ -1945,40 +2256,38 @@ def collection_summary(year: int):
                 AND collection_year=:year
 
             """),
-            {
-                "month": month,
-                "year": year
-            }).scalar()
+                {"month": month, "year": year},
+            ).scalar()
 
             expected = float(expected or 0)
             collected = float(collected or 0)
 
-            result.append({
-                "month": datetime(2025, month, 1).strftime("%B"),
-                "expected": expected,
-                "collected": collected,
-                "pending": expected - collected
-            })
+            result.append(
+                {
+                    "month": datetime(2025, month, 1).strftime("%B"),
+                    "expected": expected,
+                    "collected": collected,
+                    "pending": expected - collected,
+                }
+            )
 
         return result
 
     finally:
 
         db.close()
-        
-        
+
 
 @app.get("/api/datewise-collection-list")
-def api_datewise_collection_list(
-    from_date: str,
-    to_date: str
-):
+def api_datewise_collection_list(from_date: str, to_date: str):
 
     db = SessionLocal()
 
     try:
 
-        rows = db.execute(text("""
+        rows = (
+            db.execute(
+                text("""
 
             SELECT
 
@@ -2016,10 +2325,11 @@ def api_datewise_collection_list(
                 c.id
 
         """),
-        {
-            "from_date": from_date,
-            "to_date": to_date
-        }).mappings().all()
+                {"from_date": from_date, "to_date": to_date},
+            )
+            .mappings()
+            .all()
+        )
 
         result = []
 
@@ -2036,11 +2346,12 @@ def api_datewise_collection_list(
     finally:
 
         db.close()
-        
+
 
 # ------------------------------------------
 # DATE WISE COLLECTION REPORT SCREEN
 # ------------------------------------------
+
 
 @app.get("/datewise-collection-list")
 async def datewise_collection_list(request: Request):
@@ -2048,23 +2359,19 @@ async def datewise_collection_list(request: Request):
     return templates.TemplateResponse(
         request=request,
         name="reports/datewise_collection_list.html",
-        context={
-            "active_page": "datewise_collection"
-        }
+        context={"active_page": "datewise_collection"},
     )
 
-    
+
 @app.get("/dashboard-live")
 async def datewise_collection_list(request: Request):
 
     return templates.TemplateResponse(
         request=request,
         name="dashboard.html",
-        context={
-            "active_page": "dashboard-live"
-        }
+        context={"active_page": "dashboard-live"},
     )
-    
+
 
 @app.post("/complete-settlement")
 async def complete_settlement(data: dict):
@@ -2074,13 +2381,14 @@ async def complete_settlement(data: dict):
 
     # update database
 
-    return {
-        "success": True
-    }
-    
+    return {"success": True}
+
+
 from fastapi import Request
 from fastapi.responses import HTMLResponse
 from sqlalchemy import text
+
+
 @app.get("/pandu-settlement-list", response_class=HTMLResponse)
 async def pandu_settlement_list(request: Request):
 
@@ -2121,17 +2429,12 @@ async def pandu_settlement_list(request: Request):
 
         total_members = len(settlements)
 
-        settled_members = len(
-            [x for x in settlements if x["is_settled"] == 1]
-        )
+        settled_members = len([x for x in settlements if x["is_settled"] == 1])
 
-        pending_members = len(
-            [x for x in settlements if x["is_settled"] == 0]
-        )
+        pending_members = len([x for x in settlements if x["is_settled"] == 0])
 
         total_settlement_amount = sum(
-            float(x["settlement_amount"] or 0)
-            for x in settlements
+            float(x["settlement_amount"] or 0) for x in settlements
         )
 
         return templates.TemplateResponse(
@@ -2150,6 +2453,7 @@ async def pandu_settlement_list(request: Request):
     finally:
 
         db.close()
+
 
 @app.get("/accounts/credits")
 def credits_entry(request: Request):
@@ -2194,23 +2498,21 @@ def credits_entry(request: Request):
             context={
                 "categories": categories,
                 "transactions": transactions,
-                "active_page": "credits"
-            }
+                "active_page": "credits",
+            },
         )
 
     finally:
         db.close()
-        
-        
+
+
 @app.post("/accounts/credits/save")
 def save_credit(
-
     transaction_date: str = Form(...),
     category: str = Form(...),
     amount: float = Form(...),
     payment_mode: str = Form(...),
-    remarks: str = Form("")
-
+    remarks: str = Form(""),
 ):
 
     db = SessionLocal()
@@ -2246,21 +2548,17 @@ def save_credit(
                 "category": category,
                 "amount": amount,
                 "payment_mode": payment_mode,
-                "remarks": remarks
-            }
+                "remarks": remarks,
+            },
         )
 
         db.commit()
 
-        return RedirectResponse(
-            "/accounts/credits",
-            status_code=302
-        )
+        return RedirectResponse("/accounts/credits", status_code=302)
 
     finally:
         db.close()
-        
-        
+
 
 @app.get("/accounts/expenses")
 def expenses_entry(request: Request):
@@ -2305,23 +2603,21 @@ def expenses_entry(request: Request):
             context={
                 "categories": categories,
                 "transactions": transactions,
-                "active_page": "expenses"
-            }
+                "active_page": "expenses",
+            },
         )
 
     finally:
         db.close()
-        
+
 
 @app.post("/accounts/expenses/save")
 def save_expense(
-
     transaction_date: str = Form(...),
     category: str = Form(...),
     amount: float = Form(...),
     payment_mode: str = Form(...),
-    remarks: str = Form("")
-
+    remarks: str = Form(""),
 ):
 
     db = SessionLocal()
@@ -2357,21 +2653,17 @@ def save_expense(
                 "category": category,
                 "amount": amount,
                 "payment_mode": payment_mode,
-                "remarks": remarks
-            }
+                "remarks": remarks,
+            },
         )
 
         db.commit()
 
-        return RedirectResponse(
-            "/accounts/expenses",
-            status_code=302
-        )
+        return RedirectResponse("/accounts/expenses", status_code=302)
 
     finally:
         db.close()
-        
-        
+
 
 @app.get("/api/accounts/daily-summary")
 def daily_summary():
@@ -2407,24 +2699,23 @@ def daily_summary():
         return {
             "credits": float(credits),
             "expenses": float(expenses),
-            "net_income": float(credits) - float(expenses)
+            "net_income": float(credits) - float(expenses),
         }
 
     finally:
         db.close()
-        
-        
+
+
 @app.get("/accounts/summary")
 def accounts_summary(request: Request):
 
     return templates.TemplateResponse(
         request=request,
         name="accounts/accounts_summary.html",
-        context={
-            "active_page": "accounts_summary"
-        }
+        context={"active_page": "accounts_summary"},
     )
-    
+
+
 @app.get("/api/accounts/summary")
 def api_accounts_summary():
 
@@ -2493,33 +2784,21 @@ def api_accounts_summary():
         """)).scalar()
 
         return {
-
             "credits": float(credits or 0),
-
             "expenses": float(expenses or 0),
-
-            "profit": float(credits or 0)
-                      - float(expenses or 0),
-
+            "profit": float(credits or 0) - float(expenses or 0),
             "cash_credits": float(cash_credits or 0),
-
             "gpay_credits": float(gpay_credits or 0),
-
-            "bank_credits": float(bank_credits or 0)
-
+            "bank_credits": float(bank_credits or 0),
         }
 
     finally:
 
-        db.close()    
-        
-        
+        db.close()
+
+
 @app.get("/accounts/credits-report")
-def credits_report(
-    request: Request,
-    from_date: str = "",
-    to_date: str = ""
-):
+def credits_report(request: Request, from_date: str = "", to_date: str = ""):
 
     db = SessionLocal()
 
@@ -2531,8 +2810,9 @@ def credits_report(
         if not to_date:
             to_date = datetime.now().strftime("%Y-%m-%d")
 
-        rows = db.execute(
-            text("""
+        rows = (
+            db.execute(
+                text("""
 
                 SELECT
 
@@ -2555,16 +2835,13 @@ def credits_report(
                     id DESC
 
             """),
-            {
-                "from_date": from_date,
-                "to_date": to_date
-            }
-        ).mappings().all()
-
-        total_amount = sum(
-            float(x["amount"])
-            for x in rows
+                {"from_date": from_date, "to_date": to_date},
+            )
+            .mappings()
+            .all()
         )
+
+        total_amount = sum(float(x["amount"]) for x in rows)
 
         return templates.TemplateResponse(
             request=request,
@@ -2574,20 +2851,16 @@ def credits_report(
                 "from_date": from_date,
                 "to_date": to_date,
                 "total_amount": total_amount,
-                "active_page": "credits_report"
-            }
+                "active_page": "credits_report",
+            },
         )
 
     finally:
         db.close()
-        
-        
+
+
 @app.get("/accounts/expenses-report")
-def expenses_report(
-    request: Request,
-    from_date: str = "",
-    to_date: str = ""
-):
+def expenses_report(request: Request, from_date: str = "", to_date: str = ""):
 
     db = SessionLocal()
 
@@ -2599,8 +2872,9 @@ def expenses_report(
         if not to_date:
             to_date = datetime.now().strftime("%Y-%m-%d")
 
-        rows = db.execute(
-            text("""
+        rows = (
+            db.execute(
+                text("""
 
                 SELECT
 
@@ -2623,16 +2897,13 @@ def expenses_report(
                     id DESC
 
             """),
-            {
-                "from_date": from_date,
-                "to_date": to_date
-            }
-        ).mappings().all()
-
-        total_amount = sum(
-            float(x["amount"])
-            for x in rows
+                {"from_date": from_date, "to_date": to_date},
+            )
+            .mappings()
+            .all()
         )
+
+        total_amount = sum(float(x["amount"]) for x in rows)
 
         return templates.TemplateResponse(
             request=request,
@@ -2642,19 +2913,16 @@ def expenses_report(
                 "from_date": from_date,
                 "to_date": to_date,
                 "total_amount": total_amount,
-                "active_page": "expenses_report"
-            }
+                "active_page": "expenses_report",
+            },
         )
 
     finally:
         db.close()
-        
+
+
 @app.get("/accounts/datewise-report")
-def datewise_accounts_report(
-    request: Request,
-    from_date: str = "",
-    to_date: str = ""
-):
+def datewise_accounts_report(request: Request, from_date: str = "", to_date: str = ""):
 
     db = SessionLocal()
 
@@ -2666,8 +2934,9 @@ def datewise_accounts_report(
         if not to_date:
             to_date = datetime.now().strftime("%Y-%m-%d")
 
-        rows = db.execute(
-            text("""
+        rows = (
+            db.execute(
+                text("""
 
                 SELECT
 
@@ -2700,11 +2969,11 @@ def datewise_accounts_report(
                 ORDER BY transaction_date DESC
 
             """),
-            {
-                "from_date": from_date,
-                "to_date": to_date
-            }
-        ).mappings().all()
+                {"from_date": from_date, "to_date": to_date},
+            )
+            .mappings()
+            .all()
+        )
 
         total_credits = 0
         total_expenses = 0
@@ -2721,12 +2990,14 @@ def datewise_accounts_report(
             total_credits += credits
             total_expenses += expenses
 
-            result.append({
-                "transaction_date": row["transaction_date"],
-                "credits": credits,
-                "expenses": expenses,
-                "profit": profit
-            })
+            result.append(
+                {
+                    "transaction_date": row["transaction_date"],
+                    "credits": credits,
+                    "expenses": expenses,
+                    "profit": profit,
+                }
+            )
 
         return templates.TemplateResponse(
             request=request,
@@ -2737,21 +3008,18 @@ def datewise_accounts_report(
                 "to_date": to_date,
                 "total_credits": total_credits,
                 "total_expenses": total_expenses,
-                "total_profit":
-                    total_credits - total_expenses,
-                "active_page":
-                    "datewise_accounts_report"
-            }
+                "total_profit": total_credits - total_expenses,
+                "active_page": "datewise_accounts_report",
+            },
         )
 
     finally:
         db.close()
-        
+
+
 @app.get("/accounts/categorywise-expense-report")
 def categorywise_expense_report(
-    request: Request,
-    from_date: str = "",
-    to_date: str = ""
+    request: Request, from_date: str = "", to_date: str = ""
 ):
 
     db = SessionLocal()
@@ -2764,8 +3032,9 @@ def categorywise_expense_report(
         if not to_date:
             to_date = datetime.now().strftime("%Y-%m-%d")
 
-        rows = db.execute(
-            text("""
+        rows = (
+            db.execute(
+                text("""
 
                 SELECT
 
@@ -2788,16 +3057,13 @@ def categorywise_expense_report(
                 ORDER BY total_amount DESC
 
             """),
-            {
-                "from_date": from_date,
-                "to_date": to_date
-            }
-        ).mappings().all()
-
-        grand_total = sum(
-            float(x["total_amount"] or 0)
-            for x in rows
+                {"from_date": from_date, "to_date": to_date},
+            )
+            .mappings()
+            .all()
         )
+
+        grand_total = sum(float(x["total_amount"] or 0) for x in rows)
 
         return templates.TemplateResponse(
             request=request,
@@ -2807,19 +3073,17 @@ def categorywise_expense_report(
                 "grand_total": grand_total,
                 "from_date": from_date,
                 "to_date": to_date,
-                "active_page":
-                    "categorywise_expense_report"
-            }
+                "active_page": "categorywise_expense_report",
+            },
         )
 
     finally:
         db.close()
-        
+
+
 @app.get("/accounts/categorywise-income-report")
 def categorywise_income_report(
-    request: Request,
-    from_date: str = "",
-    to_date: str = ""
+    request: Request, from_date: str = "", to_date: str = ""
 ):
 
     db = SessionLocal()
@@ -2832,8 +3096,9 @@ def categorywise_income_report(
         if not to_date:
             to_date = datetime.now().strftime("%Y-%m-%d")
 
-        rows = db.execute(
-            text("""
+        rows = (
+            db.execute(
+                text("""
 
                 SELECT
 
@@ -2856,16 +3121,13 @@ def categorywise_income_report(
                 ORDER BY total_amount DESC
 
             """),
-            {
-                "from_date": from_date,
-                "to_date": to_date
-            }
-        ).mappings().all()
-
-        grand_total = sum(
-            float(x["total_amount"] or 0)
-            for x in rows
+                {"from_date": from_date, "to_date": to_date},
+            )
+            .mappings()
+            .all()
         )
+
+        grand_total = sum(float(x["total_amount"] or 0) for x in rows)
 
         return templates.TemplateResponse(
             request=request,
@@ -2875,26 +3137,24 @@ def categorywise_income_report(
                 "grand_total": grand_total,
                 "from_date": from_date,
                 "to_date": to_date,
-                "active_page":
-                    "categorywise_income_report"
-            }
+                "active_page": "categorywise_income_report",
+            },
         )
 
     finally:
         db.close()
-        
+
+
 @app.get("/accounts/monthly-summary")
-def monthly_summary(
-    request: Request,
-    year: int = datetime.now().year
-):
+def monthly_summary(request: Request, year: int = datetime.now().year):
 
     db = SessionLocal()
 
     try:
 
-        rows = db.execute(
-            text("""
+        rows = (
+            db.execute(
+                text("""
 
                 SELECT
 
@@ -2925,22 +3185,25 @@ def monthly_summary(
                 ORDER BY MONTH(transaction_date)
 
             """),
-            {"year": year}
-        ).mappings().all()
+                {"year": year},
+            )
+            .mappings()
+            .all()
+        )
 
         month_names = {
-            1:"January",
-            2:"February",
-            3:"March",
-            4:"April",
-            5:"May",
-            6:"June",
-            7:"July",
-            8:"August",
-            9:"September",
-            10:"October",
-            11:"November",
-            12:"December"
+            1: "January",
+            2: "February",
+            3: "March",
+            4: "April",
+            5: "May",
+            6: "June",
+            7: "July",
+            8: "August",
+            9: "September",
+            10: "October",
+            11: "November",
+            12: "December",
         }
 
         result = []
@@ -2964,12 +3227,14 @@ def monthly_summary(
                 best_profit = profit
                 best_month = month_names[row["month_no"]]
 
-            result.append({
-                "month": month_names[row["month_no"]],
-                "credits": credits,
-                "expenses": expenses,
-                "profit": profit
-            })
+            result.append(
+                {
+                    "month": month_names[row["month_no"]],
+                    "credits": credits,
+                    "expenses": expenses,
+                    "profit": profit,
+                }
+            )
 
         return templates.TemplateResponse(
             request=request,
@@ -2979,33 +3244,26 @@ def monthly_summary(
                 "year": year,
                 "total_credits": total_credits,
                 "total_expenses": total_expenses,
-                "total_profit":
-                    total_credits - total_expenses,
+                "total_profit": total_credits - total_expenses,
                 "best_month": best_month,
-                "active_page": "monthly_summary"
-            }
+                "active_page": "monthly_summary",
+            },
         )
 
     finally:
         db.close()
-        
-        
+
+
 @app.get("/accounts/profit-summary")
-def profit_summary(
-    request: Request,
-    year: int = datetime.now().year
-):
+def profit_summary(request: Request, year: int = datetime.now().year):
 
     return templates.TemplateResponse(
         request=request,
         name="accounts/profit_summary.html",
-        context={
-            "year": year,
-            "active_page": "profit_summary"
-        }
+        context={"year": year, "active_page": "profit_summary"},
     )
-    
-    
+
+
 @app.get("/api/accounts/profit-summary")
 def api_profit_summary():
 
@@ -3103,39 +3361,19 @@ def api_profit_summary():
         """)).mappings().first()
 
         return {
-
-            "total_credits":
-                float(total_credits or 0),
-
-            "total_expenses":
-                float(total_expenses or 0),
-
-            "net_profit":
-                float(total_credits or 0)
-                - float(total_expenses or 0),
-
-            "cash_credits":
-                float(cash_credits or 0),
-
-            "gpay_credits":
-                float(gpay_credits or 0),
-
-            "bank_credits":
-                float(bank_credits or 0),
-
-            "top_income":
-                top_income["category"]
-                if top_income else "-",
-
-            "top_expense":
-                top_expense["category"]
-                if top_expense else "-"
-
+            "total_credits": float(total_credits or 0),
+            "total_expenses": float(total_expenses or 0),
+            "net_profit": float(total_credits or 0) - float(total_expenses or 0),
+            "cash_credits": float(cash_credits or 0),
+            "gpay_credits": float(gpay_credits or 0),
+            "bank_credits": float(bank_credits or 0),
+            "top_income": top_income["category"] if top_income else "-",
+            "top_expense": top_expense["category"] if top_expense else "-",
         }
 
     finally:
         db.close()
-        
+
 
 # ==========================
 # KANTHU DASHBOARD
@@ -3152,27 +3390,22 @@ templates = Jinja2Templates(directory="app/templates")
 async def kanthu_dashboard(request: Request):
 
     return templates.TemplateResponse(
-    request=request,
-    name="kanthu_dashboard.html",
-    context={
-        "active_page": "kanthu_dashboard"
-    }
-)
+        request=request,
+        name="kanthu_dashboard.html",
+        context={"active_page": "kanthu_dashboard"},
+    )
 
 
 # ==========================
 # NEW KANTHU
 # ==========================
 
+
 @app.get("/kanthu/new")
 async def kanthu_new(request: Request):
 
     return templates.TemplateResponse(
-        request=request,
-        name="kanthu_new.html",
-        context={
-            "active_page": "kanthu_new"
-        }
+        request=request, name="kanthu_new.html", context={"active_page": "kanthu_new"}
     )
 
 
@@ -3180,15 +3413,14 @@ async def kanthu_new(request: Request):
 # KANTHU COLLECTION
 # ==========================
 
+
 @app.get("/kanthu/collection")
 async def kanthu_collection(request: Request):
 
     return templates.TemplateResponse(
         request=request,
         name="kanthu_collection.html",
-        context={
-            "active_page": "kanthu_collection"
-        }
+        context={"active_page": "kanthu_collection"},
     )
 
 
@@ -3196,21 +3428,22 @@ async def kanthu_collection(request: Request):
 # MEMBER STATUS
 # ==========================
 
+
 @app.get("/kanthu/members")
 async def kanthu_members(request: Request):
 
     return templates.TemplateResponse(
         request=request,
         name="kanthu_members.html",
-        context={
-            "active_page": "kanthu_members"
-        }
+        context={"active_page": "kanthu_members"},
     )
+
 
 # ==========================
 # REPORTS
 # ==========================
-   
+
+
 @app.get("/api/kanthu-member-search")
 def kanthu_member_search(search: str = ""):
 
@@ -3218,8 +3451,9 @@ def kanthu_member_search(search: str = ""):
 
     try:
 
-        rows = db.execute(
-            text("""
+        rows = (
+            db.execute(
+                text("""
                 SELECT
                     id,
                     member_code,
@@ -3234,23 +3468,26 @@ def kanthu_member_search(search: str = ""):
                 ORDER BY member_name
                 LIMIT 20
             """),
-            {"search": f"%{search}%"}
-        ).mappings().all()
+                {"search": f"%{search}%"},
+            )
+            .mappings()
+            .all()
+        )
 
         return [dict(x) for x in rows]
 
     finally:
         db.close()
-        
-        
-        
-        
+
+
 @app.get("/api/member/{member_id}")
 async def get_member(member_id: int):
 
     with engine.connect() as conn:
 
-        member = conn.execute(text("""
+        member = (
+            conn.execute(
+                text("""
             SELECT
                 id,
                 member_no,
@@ -3259,9 +3496,12 @@ async def get_member(member_id: int):
                 village
             FROM members
             WHERE id = :id
-        """), {
-            "id": member_id
-        }).mappings().first()
+        """),
+                {"id": member_id},
+            )
+            .mappings()
+            .first()
+        )
 
     return dict(member) if member else {}
 
@@ -3271,7 +3511,9 @@ async def member_kanthu_summary(member_id: int):
 
     with engine.connect() as conn:
 
-        summary = conn.execute(text("""
+        summary = (
+            conn.execute(
+                text("""
             SELECT
 
                 COUNT(*) active_kanthus,
@@ -3296,12 +3538,14 @@ async def member_kanthu_summary(member_id: int):
             WHERE member_id = :member_id
             AND status = 'ACTIVE'
 
-        """), {
-            "member_id": member_id
-        }).mappings().first()
+        """),
+                {"member_id": member_id},
+            )
+            .mappings()
+            .first()
+        )
 
     return dict(summary)
-
 
 
 @app.get("/api/accounts/current-balance")
@@ -3329,11 +3573,9 @@ async def current_balance():
 
     balance = float(credits or 0) - float(debits or 0)
 
-    return {
-        "balance": balance
-    }
-    
-    
+    return {"balance": balance}
+
+
 @app.get("/api/kanthu/default-interest")
 async def default_interest():
 
@@ -3345,11 +3587,9 @@ async def default_interest():
             WHERE setting_key='KANTHU_INTEREST_PERCENT'
         """)).scalar()
 
-    return {
-        "interest_percent": float(setting or 10)
-    }
-    
-    
+    return {"interest_percent": float(setting or 10)}
+
+
 @app.get("/api/kanthu/generate-number")
 async def generate_kanthu_no():
 
@@ -3357,25 +3597,25 @@ async def generate_kanthu_no():
 
     with engine.connect() as conn:
 
-        last_no = conn.execute(text("""
+        last_no = conn.execute(
+            text("""
             SELECT COUNT(*)
             FROM kanthu_master
             WHERE financial_year=:year
-        """), {
-            "year": year
-        }).scalar()
+        """),
+            {"year": year},
+        ).scalar()
 
     next_no = (last_no or 0) + 1
 
     kanthu_no = f"KAN-{year}-{next_no:05d}"
 
-    return {
-        "kanthu_no": kanthu_no
-    }
-    
-    
+    return {"kanthu_no": kanthu_no}
+
+
 from datetime import datetime
 from sqlalchemy import text
+
 
 @app.post("/api/kanthu/save")
 async def save_kanthu(data: KanthuSaveRequest):
@@ -3386,15 +3626,9 @@ async def save_kanthu(data: KanthuSaveRequest):
 
         interest_percent = float(data.interest_percent)
 
-        interest_amount = (
-            principal_amount *
-            interest_percent
-        ) / 100
+        interest_amount = (principal_amount * interest_percent) / 100
 
-        net_paid_amount = (
-            principal_amount -
-            interest_amount
-        )
+        net_paid_amount = principal_amount - interest_amount
 
         current_year = datetime.now().year
 
@@ -3402,23 +3636,23 @@ async def save_kanthu(data: KanthuSaveRequest):
 
             # Generate Kanthu Number
 
-            total_count = conn.execute(text("""
+            total_count = conn.execute(
+                text("""
                 SELECT COUNT(*)
                 FROM kanthu_master
                 WHERE financial_year = :year
-            """), {
-                "year": current_year
-            }).scalar()
+            """),
+                {"year": current_year},
+            ).scalar()
 
             next_no = (total_count or 0) + 1
 
-            kanthu_no = (
-                f"KAN-{current_year}-{next_no:05d}"
-            )
+            kanthu_no = f"KAN-{current_year}-{next_no:05d}"
 
             # Save Master
 
-            result = conn.execute(text("""
+            result = conn.execute(
+                text("""
                 INSERT INTO kanthu_master (
 
                     kanthu_no,
@@ -3461,37 +3695,28 @@ async def save_kanthu(data: KanthuSaveRequest):
                     :remarks
 
                 )
-            """), {
-
-                "kanthu_no": kanthu_no,
-
-                "member_id": data.member_id,
-
-                "issue_date": data.issue_date,
-
-                "principal_amount": principal_amount,
-
-                "interest_percent": interest_percent,
-
-                "interest_amount": interest_amount,
-
-                "net_paid_amount": net_paid_amount,
-
-                "balance_amount": principal_amount,
-
-                "due_year": current_year,
-
-                "financial_year": current_year,
-
-                "remarks": data.remarks
-
-            })
+            """),
+                {
+                    "kanthu_no": kanthu_no,
+                    "member_id": data.member_id,
+                    "issue_date": data.issue_date,
+                    "principal_amount": principal_amount,
+                    "interest_percent": interest_percent,
+                    "interest_amount": interest_amount,
+                    "net_paid_amount": net_paid_amount,
+                    "balance_amount": principal_amount,
+                    "due_year": current_year,
+                    "financial_year": current_year,
+                    "remarks": data.remarks,
+                },
+            )
 
             kanthu_id = result.lastrowid
 
             # Transaction Entry
 
-            conn.execute(text("""
+            conn.execute(
+                text("""
                 INSERT INTO kanthu_transactions (
 
                     kanthu_id,
@@ -3510,47 +3735,27 @@ async def save_kanthu(data: KanthuSaveRequest):
                     :remarks
 
                 )
-            """), {
-
-                "kanthu_id": kanthu_id,
-
-                "transaction_date":
-                    data.issue_date,
-
-                "amount":
-                    principal_amount,
-
-                "remarks":
-                    "Kanthu Issued"
-
-            })
+            """),
+                {
+                    "kanthu_id": kanthu_id,
+                    "transaction_date": data.issue_date,
+                    "amount": principal_amount,
+                    "remarks": "Kanthu Issued",
+                },
+            )
 
         return {
-
             "success": True,
-
-            "message":
-                "Kanthu Created Successfully",
-
-            "kanthu_id":
-                kanthu_id,
-
-            "kanthu_no":
-                kanthu_no
-
+            "message": "Kanthu Created Successfully",
+            "kanthu_id": kanthu_id,
+            "kanthu_no": kanthu_no,
         }
 
     except Exception as e:
 
-        return {
+        return {"success": False, "message": str(e)}
 
-            "success": False,
 
-            "message": str(e)
-
-        }
-        
-        
 @app.get("/api/member-active-kanthus/{member_id}")
 def member_active_kanthus(member_id: int):
 
@@ -3558,8 +3763,9 @@ def member_active_kanthus(member_id: int):
 
     try:
 
-        rows = db.execute(
-            text("""
+        rows = (
+            db.execute(
+                text("""
                 SELECT
 
                     id,
@@ -3583,10 +3789,11 @@ def member_active_kanthus(member_id: int):
 
                 ORDER BY id DESC
             """),
-            {
-                "member_id": member_id
-            }
-        ).mappings().all()
+                {"member_id": member_id},
+            )
+            .mappings()
+            .all()
+        )
 
         result = []
 
@@ -3594,21 +3801,13 @@ def member_active_kanthus(member_id: int):
 
             item = dict(row)
 
-            item["principal_amount"] = float(
-                item["principal_amount"] or 0
-            )
+            item["principal_amount"] = float(item["principal_amount"] or 0)
 
-            item["total_collected"] = float(
-                item["total_collected"] or 0
-            )
+            item["total_collected"] = float(item["total_collected"] or 0)
 
-            item["balance_amount"] = float(
-                item["balance_amount"] or 0
-            )
+            item["balance_amount"] = float(item["balance_amount"] or 0)
 
-            item["issue_date"] = str(
-                item["issue_date"]
-            )
+            item["issue_date"] = str(item["issue_date"])
 
             result.append(item)
 
@@ -3617,8 +3816,8 @@ def member_active_kanthus(member_id: int):
     finally:
 
         db.close()
-        
-        
+
+
 class KanthuCollectionRequest(BaseModel):
 
     kanthu_id: int
@@ -3630,19 +3829,18 @@ class KanthuCollectionRequest(BaseModel):
     payment_mode: str
 
     remarks: str = ""
-    
-    
+
+
 @app.post("/api/kanthu/collection/save")
-async def save_kanthu_collection(
-    data: KanthuCollectionRequest
-):
+async def save_kanthu_collection(data: KanthuCollectionRequest):
 
     db = SessionLocal()
 
     try:
 
-        kanthu = db.execute(
-            text("""
+        kanthu = (
+            db.execute(
+                text("""
                 SELECT
 
                     id,
@@ -3654,28 +3852,23 @@ async def save_kanthu_collection(
 
                 WHERE id = :id
             """),
-            {
-                "id": data.kanthu_id
-            }
-        ).mappings().first()
+                {"id": data.kanthu_id},
+            )
+            .mappings()
+            .first()
+        )
 
         if not kanthu:
 
-            return {
-                "success": False,
-                "message": "Kanthu Not Found"
-            }
+            return {"success": False, "message": "Kanthu Not Found"}
 
-        balance_amount = float(
-            kanthu["balance_amount"]
-        )
+        balance_amount = float(kanthu["balance_amount"])
 
         if data.amount > balance_amount:
 
             return {
                 "success": False,
-                "message":
-                f"Collection exceeds balance ₹{balance_amount}"
+                "message": f"Collection exceeds balance ₹{balance_amount}",
             }
 
         # --------------------------------------------------
@@ -3702,18 +3895,11 @@ async def save_kanthu_collection(
                 )
             """),
             {
-                "kanthu_id":
-                    data.kanthu_id,
-
-                "transaction_date":
-                    data.collection_date,
-
-                "amount":
-                    data.amount,
-
-                "remarks":
-                    data.remarks
-            }
+                "kanthu_id": data.kanthu_id,
+                "transaction_date": data.collection_date,
+                "amount": data.amount,
+                "remarks": data.remarks,
+            },
         )
 
         # --------------------------------------------------
@@ -3734,13 +3920,7 @@ async def save_kanthu_collection(
 
                 WHERE id = :kanthu_id
             """),
-            {
-                "amount":
-                    data.amount,
-
-                "kanthu_id":
-                    data.kanthu_id
-            }
+            {"amount": data.amount, "kanthu_id": data.kanthu_id},
         )
 
         # --------------------------------------------------
@@ -3757,10 +3937,7 @@ async def save_kanthu_collection(
 
                 AND balance_amount <= 0
             """),
-            {
-                "kanthu_id":
-                    data.kanthu_id
-            }
+            {"kanthu_id": data.kanthu_id},
         )
 
         # --------------------------------------------------
@@ -3793,49 +3970,29 @@ async def save_kanthu_collection(
                 )
             """),
             {
-                "transaction_date":
-                    data.collection_date,
-
-                "amount":
-                    data.amount,
-
-                "payment_mode":
-                    data.payment_mode,
-
-                "reference_id":
-                    data.kanthu_id,
-
-                "remarks":
-                    f"Kanthu Collection - {kanthu['kanthu_no']}"
-            }
+                "transaction_date": data.collection_date,
+                "amount": data.amount,
+                "payment_mode": data.payment_mode,
+                "reference_id": data.kanthu_id,
+                "remarks": f"Kanthu Collection - {kanthu['kanthu_no']}",
+            },
         )
 
         db.commit()
 
-        return {
-
-            "success": True,
-
-            "message":
-                "Collection Saved Successfully"
-        }
+        return {"success": True, "message": "Collection Saved Successfully"}
 
     except Exception as e:
 
         db.rollback()
 
-        return {
-
-            "success": False,
-
-            "message": str(e)
-        }
+        return {"success": False, "message": str(e)}
 
     finally:
 
         db.close()
-        
-        
+
+
 @app.get("/api/member-kanthu-issues/{member_id}")
 def member_kanthu_issues(member_id: int):
 
@@ -3843,8 +4000,9 @@ def member_kanthu_issues(member_id: int):
 
     try:
 
-        rows = db.execute(
-            text("""
+        rows = (
+            db.execute(
+                text("""
                 SELECT
 
                     id,
@@ -3867,10 +4025,11 @@ def member_kanthu_issues(member_id: int):
 
                 ORDER BY issue_date DESC
             """),
-            {
-                "member_id": member_id
-            }
-        ).mappings().all()
+                {"member_id": member_id},
+            )
+            .mappings()
+            .all()
+        )
 
         result = []
 
@@ -3878,21 +4037,13 @@ def member_kanthu_issues(member_id: int):
 
             item = dict(row)
 
-            item["issue_date"] = str(
-                item["issue_date"]
-            )
+            item["issue_date"] = str(item["issue_date"])
 
-            item["principal_amount"] = float(
-                item["principal_amount"] or 0
-            )
+            item["principal_amount"] = float(item["principal_amount"] or 0)
 
-            item["total_collected"] = float(
-                item["total_collected"] or 0
-            )
+            item["total_collected"] = float(item["total_collected"] or 0)
 
-            item["balance_amount"] = float(
-                item["balance_amount"] or 0
-            )
+            item["balance_amount"] = float(item["balance_amount"] or 0)
 
             result.append(item)
 
@@ -3901,8 +4052,8 @@ def member_kanthu_issues(member_id: int):
     finally:
 
         db.close()
-        
-        
+
+
 @app.get("/api/member-kanthu-collections/{member_id}")
 def member_kanthu_collections(member_id: int):
 
@@ -3910,8 +4061,9 @@ def member_kanthu_collections(member_id: int):
 
     try:
 
-        rows = db.execute(
-            text("""
+        rows = (
+            db.execute(
+                text("""
                 SELECT
 
                     kt.transaction_date,
@@ -3938,10 +4090,11 @@ def member_kanthu_collections(member_id: int):
                 ORDER BY
                     kt.transaction_date DESC
             """),
-            {
-                "member_id": member_id
-            }
-        ).mappings().all()
+                {"member_id": member_id},
+            )
+            .mappings()
+            .all()
+        )
 
         result = []
 
@@ -3949,13 +4102,9 @@ def member_kanthu_collections(member_id: int):
 
             item = dict(row)
 
-            item["transaction_date"] = str(
-                item["transaction_date"]
-            )
+            item["transaction_date"] = str(item["transaction_date"])
 
-            item["amount"] = float(
-                item["amount"] or 0
-            )
+            item["amount"] = float(item["amount"] or 0)
 
             result.append(item)
 
@@ -3964,8 +4113,8 @@ def member_kanthu_collections(member_id: int):
     finally:
 
         db.close()
-        
-        
+
+
 @app.get("/api/member-kanthu-calendar/{member_id}")
 def member_kanthu_calendar(member_id: int):
 
@@ -3991,11 +4140,7 @@ def member_kanthu_calendar(member_id: int):
 
                     AND MONTH(issue_date) = :month
                 """),
-                {
-                    "member_id": member_id,
-                    "year": year,
-                    "month": month
-                }
+                {"member_id": member_id, "year": year, "month": month},
             ).scalar()
 
             collection_count = db.execute(
@@ -4027,45 +4172,34 @@ def member_kanthu_calendar(member_id: int):
                             kt.transaction_date
                         ) = :month
                 """),
-                {
-                    "member_id": member_id,
-                    "year": year,
-                    "month": month
-                }
+                {"member_id": member_id, "year": year, "month": month},
             ).scalar()
 
-            result.append({
-
-                "month": month,
-
-                "issue":
-                    int(issue_count or 0),
-
-                "collection":
-                    int(collection_count or 0)
-
-            })
+            result.append(
+                {
+                    "month": month,
+                    "issue": int(issue_count or 0),
+                    "collection": int(collection_count or 0),
+                }
+            )
 
         return result
 
     finally:
 
         db.close()
-        
-        
+
+
 @app.get("/kanthu/member-status")
 async def kanthu_member_status(request: Request):
 
     return templates.TemplateResponse(
         request=request,
         name="kanthu_member_status.html",
-        context={
-            "active_page":
-                "kanthu_member_status"
-        }
+        context={"active_page": "kanthu_member_status"},
     )
-    
-    
+
+
 @app.get("/api/member-kanthu-summary/{member_id}")
 def member_kanthu_summary(member_id: int):
 
@@ -4073,8 +4207,9 @@ def member_kanthu_summary(member_id: int):
 
     try:
 
-        row = db.execute(
-            text("""
+        row = (
+            db.execute(
+                text("""
                 SELECT
 
                     COUNT(
@@ -4103,37 +4238,26 @@ def member_kanthu_summary(member_id: int):
 
                 WHERE member_id=:member_id
             """),
-            {
-                "member_id": member_id
-            }
-        ).mappings().first()
+                {"member_id": member_id},
+            )
+            .mappings()
+            .first()
+        )
 
         return {
-
-            "active_kanthus":
-                int(row["active_kanthus"] or 0),
-
-            "total_given":
-                float(row["total_given"] or 0),
-
-            "total_collected":
-                float(row["total_collected"] or 0),
-
-            "outstanding":
-                float(row["outstanding"] or 0)
+            "active_kanthus": int(row["active_kanthus"] or 0),
+            "total_given": float(row["total_given"] or 0),
+            "total_collected": float(row["total_collected"] or 0),
+            "outstanding": float(row["outstanding"] or 0),
         }
 
     finally:
 
-        db.close()  
-        
+        db.close()
 
 
 @app.get("/api/member-calendar-summary/{member_id}")
-        
-def member_calendar_summary(
-    member_id: int
-):
+def member_calendar_summary(member_id: int):
 
     db = SessionLocal()
 
@@ -4141,7 +4265,7 @@ def member_calendar_summary(
 
         result = []
 
-        for month in range(1,13):
+        for month in range(1, 13):
 
             issue_amount = db.execute(
                 text("""
@@ -4161,10 +4285,7 @@ def member_calendar_summary(
 
                     MONTH(issue_date)=:month
                 """),
-                {
-                    "member_id":member_id,
-                    "month":month
-                }
+                {"member_id": member_id, "month": month},
             ).scalar()
 
             collection_amount = db.execute(
@@ -4194,10 +4315,7 @@ def member_calendar_summary(
                         kt.transaction_date
                     )=:month
                 """),
-                {
-                    "member_id":member_id,
-                    "month":month
-                }
+                {"member_id": member_id, "month": month},
             ).scalar()
 
             txn_count = db.execute(
@@ -4219,49 +4337,35 @@ def member_calendar_summary(
                         kt.transaction_date
                     )=:month
                 """),
-                {
-                    "member_id":member_id,
-                    "month":month
-                }
+                {"member_id": member_id, "month": month},
             ).scalar()
 
-            result.append({
-
-                "month":month,
-
-                "issue_amount":
-                    float(issue_amount or 0),
-
-                "collection_amount":
-                    float(collection_amount or 0),
-
-                "txn_count":
-                    int(txn_count or 0)
-
-            })
+            result.append(
+                {
+                    "month": month,
+                    "issue_amount": float(issue_amount or 0),
+                    "collection_amount": float(collection_amount or 0),
+                    "txn_count": int(txn_count or 0),
+                }
+            )
 
         return result
 
     finally:
 
         db.close()
-        
-        
-        
-@app.get(
-    "/api/member-month-transactions/{member_id}/{month}"
-)
-def member_month_transactions(
-    member_id: int,
-    month: int
-):
+
+
+@app.get("/api/member-month-transactions/{member_id}/{month}")
+def member_month_transactions(member_id: int, month: int):
 
     db = SessionLocal()
 
     try:
 
-        rows = db.execute(
-            text("""
+        rows = (
+            db.execute(
+                text("""
                 SELECT
 
                     km.issue_date AS txn_date,
@@ -4317,40 +4421,30 @@ def member_month_transactions(
 
                 ORDER BY txn_date DESC
             """),
-            {
-                "member_id": member_id,
-                "month": month
-            }
-        ).mappings().all()
+                {"member_id": member_id, "month": month},
+            )
+            .mappings()
+            .all()
+        )
 
         result = []
 
         for row in rows:
 
-            result.append({
-
-                "date":
-                    str(row["txn_date"]),
-
-                "type":
-                    row["txn_type"],
-
-                "kanthu_no":
-                    row["kanthu_no"],
-
-                "amount":
-                    float(row["amount"] or 0)
-
-            })
+            result.append(
+                {
+                    "date": str(row["txn_date"]),
+                    "type": row["txn_type"],
+                    "kanthu_no": row["kanthu_no"],
+                    "amount": float(row["amount"] or 0),
+                }
+            )
 
         return result
 
     finally:
 
-        db.close()  
-        
-        
-        
+        db.close()
 
 
 @app.get("/api/member-calendar-summary/{member_id}")
@@ -4360,7 +4454,9 @@ def member_calendar_summary(member_id: int):
 
     try:
 
-        rows = db.execute(text("""
+        rows = (
+            db.execute(
+                text("""
             SELECT
 
                 MONTH(issue_date) AS month,
@@ -4377,37 +4473,41 @@ def member_calendar_summary(member_id: int):
 
             ORDER BY MONTH(issue_date)
 
-        """), {
-            "member_id": member_id
-        }).mappings().all()
+        """),
+                {"member_id": member_id},
+            )
+            .mappings()
+            .all()
+        )
 
         result = []
 
         for row in rows:
 
-            result.append({
-                "month": row["month"],
-                "issue_amount": float(row["issue_amount"] or 0),
-                "collection_amount": float(row["collection_amount"] or 0)
-            })
+            result.append(
+                {
+                    "month": row["month"],
+                    "issue_amount": float(row["issue_amount"] or 0),
+                    "collection_amount": float(row["collection_amount"] or 0),
+                }
+            )
 
         return result
 
     finally:
-        db.close()        
-        
-        
+        db.close()
+
+
 @app.get("/api/member-month-transactions/{member_id}/{month}")
-def member_month_transactions(
-    member_id: int,
-    month: int
-):
+def member_month_transactions(member_id: int, month: int):
 
     db = SessionLocal()
 
     try:
 
-        rows = db.execute(text("""
+        rows = (
+            db.execute(
+                text("""
             SELECT
 
                 kt.transaction_date,
@@ -4434,28 +4534,32 @@ def member_month_transactions(
             ORDER BY
                 kt.transaction_date DESC
 
-        """), {
-            "member_id": member_id,
-            "month": month
-        }).mappings().all()
+        """),
+                {"member_id": member_id, "month": month},
+            )
+            .mappings()
+            .all()
+        )
 
         result = []
 
         for row in rows:
 
-            result.append({
-                "date": str(row["transaction_date"]),
-                "type": row["transaction_type"],
-                "kanthu_no": row["kanthu_no"],
-                "amount": float(row["amount"] or 0)
-            })
+            result.append(
+                {
+                    "date": str(row["transaction_date"]),
+                    "type": row["transaction_type"],
+                    "kanthu_no": row["kanthu_no"],
+                    "amount": float(row["amount"] or 0),
+                }
+            )
 
         return result
 
     finally:
         db.close()
-        
-        
+
+
 @app.get("/api/kanthu-member-profile/{member_id}")
 def kanthu_member_profile(member_id: int):
 
@@ -4463,7 +4567,9 @@ def kanthu_member_profile(member_id: int):
 
     try:
 
-        row = db.execute(text("""
+        row = (
+            db.execute(
+                text("""
 
             SELECT
 
@@ -4481,9 +4587,11 @@ def kanthu_member_profile(member_id: int):
             WHERE id=:member_id
 
         """),
-        {
-            "member_id": member_id
-        }).mappings().first()
+                {"member_id": member_id},
+            )
+            .mappings()
+            .first()
+        )
 
         if not row:
             return {}
@@ -4492,16 +4600,18 @@ def kanthu_member_profile(member_id: int):
 
     finally:
         db.close()
-        
+
 
 @app.get("/api/member-kanthu-timeline/{member_id}")
-def member_timeline(member_id:int):
+def member_timeline(member_id: int):
 
     db = SessionLocal()
 
     try:
 
-        row = db.execute(text("""
+        row = (
+            db.execute(
+                text("""
 
             SELECT
 
@@ -4514,18 +4624,22 @@ def member_timeline(member_id:int):
             WHERE member_id=:member_id
 
         """),
-        {
-            "member_id": member_id
-        }).mappings().first()
+                {"member_id": member_id},
+            )
+            .mappings()
+            .first()
+        )
 
         return dict(row)
 
     finally:
         db.close()
-        
+
+
 # ==========================================
 # KANTHU OUTSTANDING REPORT
 # ==========================================
+
 
 @app.get("/kanthu/outstanding")
 async def kanthu_outstanding(request: Request):
@@ -4533,12 +4647,10 @@ async def kanthu_outstanding(request: Request):
     return templates.TemplateResponse(
         request=request,
         name="kanthu_outstanding.html",
-        context={
-            "active_page": "kanthu_outstanding"
-        }
+        context={"active_page": "kanthu_outstanding"},
     )
-    
-    
+
+
 @app.get("/api/kanthu/outstanding-summary")
 def kanthu_outstanding_summary():
 
@@ -4586,29 +4698,18 @@ def kanthu_outstanding_summary():
         """)).scalar()
 
         return {
-
-            "total_given":
-                float(row["total_given"]),
-
-            "total_collected":
-                float(row["total_collected"]),
-
-            "total_balance":
-                float(row["total_balance"]),
-
-            "total_kanthus":
-                int(row["total_kanthus"]),
-
-            "critical_count":
-                int(critical_count)
-
+            "total_given": float(row["total_given"]),
+            "total_collected": float(row["total_collected"]),
+            "total_balance": float(row["total_balance"]),
+            "total_kanthus": int(row["total_kanthus"]),
+            "critical_count": int(critical_count),
         }
 
     finally:
 
         db.close()
-        
-        
+
+
 @app.get("/api/kanthu/outstanding-list")
 def outstanding_list(search: str = ""):
 
@@ -4616,7 +4717,9 @@ def outstanding_list(search: str = ""):
 
     try:
 
-        rows = db.execute(text("""
+        rows = (
+            db.execute(
+                text("""
 
             SELECT
 
@@ -4659,10 +4762,11 @@ def outstanding_list(search: str = ""):
                 km.balance_amount DESC
 
         """),
-        {
-            "search":
-                f"%{search}%"
-        }).mappings().all()
+                {"search": f"%{search}%"},
+            )
+            .mappings()
+            .all()
+        )
 
         result = []
 
@@ -4670,21 +4774,13 @@ def outstanding_list(search: str = ""):
 
             item = dict(row)
 
-            item["principal_amount"] = float(
-                item["principal_amount"] or 0
-            )
+            item["principal_amount"] = float(item["principal_amount"] or 0)
 
-            item["total_collected"] = float(
-                item["total_collected"] or 0
-            )
+            item["total_collected"] = float(item["total_collected"] or 0)
 
-            item["balance_amount"] = float(
-                item["balance_amount"] or 0
-            )
+            item["balance_amount"] = float(item["balance_amount"] or 0)
 
-            item["issue_date"] = str(
-                item["issue_date"]
-            )
+            item["issue_date"] = str(item["issue_date"])
 
             if item["balance_amount"] >= 50000:
 
@@ -4705,7 +4801,8 @@ def outstanding_list(search: str = ""):
     finally:
 
         db.close()
-        
+
+
 @app.get("/api/kanthu/member-ledger/{member_id}")
 def member_ledger(member_id: int):
 
@@ -4713,7 +4810,9 @@ def member_ledger(member_id: int):
 
     try:
 
-        rows = db.execute(text("""
+        rows = (
+            db.execute(
+                text("""
 
             SELECT
 
@@ -4739,10 +4838,11 @@ def member_ledger(member_id: int):
                 kt.id DESC
 
         """),
-        {
-            "member_id":
-                member_id
-        }).mappings().all()
+                {"member_id": member_id},
+            )
+            .mappings()
+            .all()
+        )
 
         result = []
 
@@ -4750,13 +4850,9 @@ def member_ledger(member_id: int):
 
             item = dict(row)
 
-            item["transaction_date"] = str(
-                item["transaction_date"]
-            )
+            item["transaction_date"] = str(item["transaction_date"])
 
-            item["amount"] = float(
-                item["amount"] or 0
-            )
+            item["amount"] = float(item["amount"] or 0)
 
             result.append(item)
 
@@ -4767,14 +4863,210 @@ def member_ledger(member_id: int):
         db.close()
 
 
-
 @app.get("/kanthu/reports")
 async def kanthu_reports(request: Request):
 
     return templates.TemplateResponse(
         request=request,
         name="kanthu_reports.html",
-        context={
-            "active_page": "kanthu_reports"
-        }
+        context={"active_page": "kanthu_reports"},
     )
+
+
+@app.get("/api/current-pandu")
+def current_pandu():
+
+    db = SessionLocal()
+
+    try:
+
+        row = db.execute(text("""
+                SELECT
+                    id,
+                    group_name,
+                    monthly_due,
+                    chit_amount,
+                    duration_months
+                FROM pandu_groups
+                WHERE status='ACTIVE'
+                  AND pandu_year = YEAR(CURDATE())
+                LIMIT 1
+            """)).mappings().first()
+
+        if not row:
+            return {"success": False}
+
+        return {
+            "success": True,
+            "id": row["id"],
+            "group_name": row["group_name"],
+            "monthly_due": float(row["monthly_due"]),
+            "chit_amount": float(row["chit_amount"]),
+            "duration_months": int(row["duration_months"]),
+        }
+
+    finally:
+        db.close()
+
+
+# ==========================================
+# SAVE ASSIGNMENT
+# ==========================================
+# ==========================================
+# SAVE ASSIGNMENT
+# ==========================================
+
+
+@app.post("/pandu/assign/save")
+async def save_assignment(
+    member_id: int = Form(...), group_id: int = Form(...), pandu_count: int = Form(...)
+):
+
+    db = SessionLocal()
+
+    try:
+
+        # ----------------------------
+        # Get Group Details
+        # ----------------------------
+
+        group = (
+            db.execute(
+                text("""
+                SELECT
+                    monthly_due,
+                    chit_amount,
+                    duration_months
+                FROM pandu_groups
+                WHERE id = :id
+            """),
+                {"id": group_id},
+            )
+            .mappings()
+            .first()
+        )
+
+        if not group:
+
+            return {"success": False, "message": "Pandu Group Not Found."}
+
+        # ----------------------------
+        # Already Assigned?
+        # ----------------------------
+
+        existing = (
+            db.execute(
+                text("""
+                SELECT id
+                FROM pandu_assignments
+                WHERE
+                    member_id = :member_id
+                AND
+                    status='ACTIVE'
+            """),
+                {"member_id": member_id},
+            )
+            .mappings()
+            .first()
+        )
+
+        if existing:
+
+            return {
+                "success": False,
+                "message": "Member Already Joined in Active Pandu.",
+            }
+
+        # ----------------------------
+        # Calculations
+        # ----------------------------
+
+        group_monthly_due = float(group["monthly_due"]) * pandu_count
+
+        group_chit_amount = float(group["chit_amount"])
+
+        duration_months = int(group["duration_months"])
+
+        total_amount = group_chit_amount * pandu_count
+
+        paid_amount = 0
+
+        balance_amount = total_amount
+
+        settlement_amount = (group_monthly_due * 12) + group_monthly_due
+
+        qr_code = f"M{member_id}-G{group_id}"
+
+        # ----------------------------
+        # Save Assignment
+        # ----------------------------
+
+        db.execute(
+            text("""
+                INSERT INTO pandu_assignments
+                (
+                    member_id,
+                    group_id,
+                    pandu_count,
+                    group_monthly_due,
+                    group_chit_amount,
+                    duration_months,
+                    total_amount,
+                    paid_amount,
+                    balance_amount,
+                    settlement_amount,
+                    join_date,
+                    qr_code,
+                    status
+                )
+                VALUES
+                (
+                    :member_id,
+                    :group_id,
+                    :pandu_count,
+                    :group_monthly_due,
+                    :group_chit_amount,
+                    :duration_months,
+                    :total_amount,
+                    :paid_amount,
+                    :balance_amount,
+                    :settlement_amount,
+                    CURDATE(),
+                    :qr_code,
+                    'ACTIVE'
+                )
+            """),
+            {
+                "member_id": member_id,
+                "group_id": group_id,
+                "pandu_count": pandu_count,
+                "group_monthly_due": group_monthly_due,
+                "group_chit_amount": group_chit_amount,
+                "duration_months": duration_months,
+                "total_amount": total_amount,
+                "paid_amount": paid_amount,
+                "balance_amount": balance_amount,
+                "settlement_amount": settlement_amount,
+                "qr_code": qr_code,
+            },
+        )
+
+        db.commit()
+
+        return {"success": True, "message": "Member Joined Successfully."}
+
+    except Exception as e:
+
+        db.rollback()
+
+        import traceback
+
+        traceback.print_exc()
+
+        return {"success": False, "message": str(e)}
+
+    finally:
+
+        db.close()
+
+

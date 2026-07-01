@@ -1,234 +1,349 @@
 {% extends "base.html" %}
 
-{% block title %}
-Member Profile
-{% endblock %}
+{% block title %}Member Profile{% endblock %}
 
 {% block content %}
 
-<link rel="stylesheet"
-href="{{ url_for('static',
-path='css/member_view.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', path='css/member_view.css') }}">
 
-<div class="container-fluid">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 
-<div class="row">
+<div class="container-fluid member-page">
 
-    <!-- SIDEBAR -->
+    <!-- Header -->
+    <div class="page-header">
 
-    <div class="col-md-2 sidebar p-3">
+        <div>
 
-        <div class="text-center mb-4">
-
-            <h4 class="text-white">
-                Pasumpon Chit ERP
-            </h4>
-
-        </div>
-
-        <a href="/dashboard">
-            Dashboard
-        </a>
-
-        <a href="/members/add">
-            Add Member
-        </a>
-
-        <a href="/members/list"
-           class="active-menu">
-            Member List
-        </a>
-
-    </div>
-
-    <!-- MAIN -->
-
-    <div class="col-md-10 p-4">
-
-        <div class="profile-header">
-
-            <h2>
+            <h2 class="page-title">
+                <i class="bi bi-person-vcard-fill"></i>
                 Member Profile
             </h2>
 
-            <a href="/members/list"
-               class="btn btn-primary">
-
-               Back
-
-            </a>
+            <p class="page-subtitle">
+                View complete member information
+            </p>
 
         </div>
 
-        <div class="row">
+        <div class="header-buttons">
 
-            <!-- LEFT -->
+            <a href="/members/list" class="btn btn-light btn-custom">
 
-            <div class="col-md-4">
+                <i class="bi bi-arrow-left"></i>
+                Back
 
-                <div class="card profile-card">
+            </a>
+
+            <a href="/members/edit/{{ member.id }}" class="btn btn-warning btn-custom">
+
+                <i class="bi bi-pencil-square"></i>
+                Edit
+
+            </a>
+
+            <button class="btn btn-primary btn-custom">
+
+                <i class="bi bi-printer-fill"></i>
+                Print
+
+            </button>
+
+        </div>
+
+    </div>
+
+
+    <div class="row g-4">
+
+        <!-- LEFT PROFILE -->
+
+        <div class="col-lg-4">
+
+            <div class="profile-card">
+
+                <div class="profile-cover"></div>
+
+                <div class="profile-body">
 
                     {% if member.photo %}
 
-                    <img
-                        src="{{ member.photo }}"
-                        class="profile-photo">
+                    <img src="{{ member.photo }}" class="profile-image">
 
                     {% else %}
 
-                    <img
-                        src="/static/images/user.png"
-                        class="profile-photo">
+                    <img src="/static/images/user.png" class="profile-image">
 
                     {% endif %}
 
-                    <h4>
-                        {{ member.member_name }}
-                    </h4>
+                    <h3>{{ member.member_name }}</h3>
 
-                    <p>
+                    <div class="member-id">
                         {{ member.member_code }}
-                    </p>
+                    </div>
 
-                    <span class="badge bg-success">
+                    <span class="status-badge">
                         {{ member.status }}
                     </span>
+
+                    <hr>
+
+                    <div class="quick-info">
+
+                        <div class="info-item">
+
+                            <i class="bi bi-telephone-fill"></i>
+
+                            <span>{{ member.mobile }}</span>
+
+                        </div>
+
+                        <div class="info-item">
+
+                            <i class="bi bi-whatsapp"></i>
+
+                            <span>{{ member.whatsapp_no }}</span>
+
+                        </div>
+
+
+
+                        <div class="info-item">
+
+                            <i class="bi bi-geo-alt-fill"></i>
+
+                            <span>{{ member.address }}</span>
+
+                        </div>
+
+                    </div>
 
                 </div>
 
             </div>
 
-            <!-- RIGHT -->
 
-            <div class="col-md-8">
+            <!-- Statistics -->
 
-                <div class="card p-4 mb-4">
 
-                    <h5>
-                        Basic Information
-                    </h5>
 
-                    <div class="row">
+        </div>
 
-                        <div class="col-md-6">
 
-                            <label>Name</label>
 
-                            <div>
-                                {{ member.member_name }}
-                            </div>
+        <!-- RIGHT SIDE -->
 
-                        </div>
+        <div class="col-lg-8">
 
-                        <div class="col-md-6">
+            <!-- Basic -->
 
-                            <label>Aadhaar</label>
+            <div class="info-card">
 
-                            <div>
-                                {{ member.aadhaar_no }}
-                            </div>
+                <div class="card-title">
 
-                        </div>
+                    <i class="bi bi-person-fill"></i>
+
+                    Basic Information
+
+                </div>
+
+                <div class="row">
+
+                    <div class="col-md-6 field">
+
+                        <label>Member Name</label>
+
+                        <div>{{ member.member_name }}</div>
+
+                    </div>
+
+
+
+                    <div class="col-md-6 field">
+
+                        <label>Aadhaar Number</label>
+
+                        <div>{{ member.aadhaar_no }}</div>
+
+                    </div>
+
+
+                </div>
+
+            </div>
+
+
+            <!-- Contact -->
+
+            <div class="info-card">
+
+                <div class="card-title">
+
+                    <i class="bi bi-telephone-fill"></i>
+
+                    Contact Information
+
+                </div>
+
+                <div class="row">
+
+                    <div class="col-md-6 field">
+
+                        <label>Mobile Number</label>
+
+                        <div>{{ member.mobile }}</div>
+
+                    </div>
+
+                    <div class="col-md-6 field">
+
+                        <label>WhatsApp Number</label>
+
+                        <div>{{ member.whatsapp_no }}</div>
 
                     </div>
 
                 </div>
 
-                <div class="card p-4 mb-4">
+            </div>
 
-                    <h5>
-                        Contact Information
-                    </h5>
 
-                    <div class="row">
+            <!-- Address -->
 
-                        <div class="col-md-6">
+            <div class="info-card">
 
-                            <label>Mobile</label>
+                <div class="card-title">
 
-                            <div>
-                                {{ member.mobile }}
-                            </div>
+                    <i class="bi bi-geo-alt-fill"></i>
 
-                        </div>
-
-                        <div class="col-md-6">
-
-                            <label>WhatsApp</label>
-
-                            <div>
-                                {{ member.whatsapp_no }}
-                            </div>
-
-                        </div>
-
-                    </div>
+                    Address
 
                 </div>
 
-                <div class="card p-4 mb-4">
+                <div class="row">
 
-                    <h5>
-                        Address
-                    </h5>
+                    <div class="col-md-12 field">
 
-                    <p>
-                        {{ member.address }}
-                    </p>
+                        <label>Address</label>
 
-                    <p>
-                        {{ member.area }}
-                        -
-                        {{ member.village }}
-                    </p>
+                        <div>{{ member.address }}</div>
+
+                    </div>
+
+                    <!-- <div class="col-md-6 field">
+
+                        <label>Area</label>
+
+                        <div>{{ member.area }}</div>
+
+                    </div>
+
+                    <div class="col-md-6 field">
+
+                        <label>Village</label>
+
+                        <div>{{ member.village }}</div>
+
+                    </div> -->
 
                 </div>
 
-                <div class="card p-4">
+            </div>
 
-                    <h5>
-                        Membership Details
-                    </h5>
 
-                    <div class="row">
+            <!-- Membership -->
 
-                        <div class="col-md-4">
+            <div class="info-card">
 
-                            <strong>
-                                Pandu Count
-                            </strong>
+                <div class="card-title">
+                    <i class="bi bi-table"></i>
+                    Current Year Membership Details
+                </div>
 
-                            <br>
+                <div class="table-responsive">
 
-                            {{ member.pandu_count }}
+                    <table class="table table-hover align-middle membership-table">
 
-                        </div>
+                        <thead>
 
-                        <div class="col-md-4">
+                            <tr>
 
-                            <strong>
-                                Joining Amount
-                            </strong>
+                                <th>Membership</th>
 
-                            <br>
+                                <th>Scheme</th>
 
-                            ₹ {{ member.joining_amount }}
+                                <th>Monthly Amount</th>
 
-                        </div>
+                                <th>Paid</th>
 
-                        <div class="col-md-4">
+                                <th>Pending</th>
 
-                            <strong>
-                                Occupation
-                            </strong>
+                                <th>Status</th>
 
-                            <br>
 
-                            {{ member.occupation }}
 
-                        </div>
+                            </tr>
 
-                    </div>
+                        </thead>
+
+                        <tbody>
+
+                            {% for item in memberships %}
+
+                            <tr>
+
+                                <td>
+                                    {{ item.membership_type }}
+                                </td>
+
+                                <td>
+                                    {{ item.scheme_name }}
+                                </td>
+
+                                <td>
+                                    ₹ {{ item.monthly_amount }}
+                                </td>
+
+                                <td>
+                                    {{ item.paid_months }}/12
+                                </td>
+
+                                <td>
+                                    {{ item.pending_months }}
+                                </td>
+
+                                <td>
+
+                                    {% if item.status == "Running" %}
+
+                                    <span class="badge bg-success">
+                                        Running
+                                    </span>
+
+                                    {% elif item.status == "Completed" %}
+
+                                    <span class="badge bg-primary">
+                                        Completed
+                                    </span>
+
+                                    {% else %}
+
+                                    <span class="badge bg-warning text-dark">
+                                        Pending
+                                    </span>
+
+                                    {% endif %}
+
+                                </td>
+
+
+                            </tr>
+
+                            {% endfor %}
+
+                        </tbody>
+
+                    </table>
 
                 </div>
 
@@ -240,10 +355,6 @@ path='css/member_view.css') }}">
 
 </div>
 
-</div>
-
-<script src="{{ url_for('static',
-path='js/member_view.js') }}">
-</script>
+<script src="{{ url_for('static', path='js/member_view.js') }}"></script>
 
 {% endblock %}

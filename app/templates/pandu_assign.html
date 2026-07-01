@@ -1,106 +1,250 @@
 {% extends "base.html" %}
 
-{% block title %}
-Pandu Assignment Center
-{% endblock %}
+{% block title %}Pandu Assignment Center{% endblock %}
 
 {% block content %}
 
 <link rel="stylesheet" href="{{ url_for('static', path='css/pandu_assign.css') }}">
 
-<div class="container-fluid py-4">
+<div class="container-fluid pandu-page py-4">
 
-    <!-- HERO -->
+    <!-- ==========================================================
+                            HEADER
+    =========================================================== -->
 
-    <div class="hero-section mb-4">
+    <div class="top-header">
 
-        <div>
+        <div class="header-left">
 
-            <button type="button" onclick="window.location.href='/dashboard'">
-                Exit
-            </button>
+            <a href="/dashboard" class="back-btn">
+                <i class="bi bi-arrow-left"></i>
+            </a>
 
+            <div>
 
-            <h1>
-                <i class="bi bi-bank2"></i>
-                Pasumpon Chit Fund
-            </h1>
+                <h2>
+                    <i class="bi bi-bank2"></i>
+                    Pandu Assignment Center
+                </h2>
 
-            <p>
-                Premium Assignment Control Center
-            </p>
+                <p>
+                    Assign Members into Current Pandu Group
+                </p>
+
+            </div>
+
         </div>
 
-        <div class="hero-badges">
+        <div class="header-right">
 
-            <div class="hero-stat">
-                <span>Assignments</span>
+            <div class="stat-box">
+
+                <small>Total Members</small>
+
                 <h3>{{ assignments|length }}</h3>
+
             </div>
 
-            <div class="hero-stat">
-                <span>Groups</span>
-                <h3>{{ groups|length }}</h3>
+            <div class="stat-box">
+
+                <small>Pandu Group</small>
+
+                <h3>{{ group.group_name }}</h3>
+
             </div>
-
-
 
         </div>
 
     </div>
 
-    <!-- MAIN -->
 
-    <div class="row g-4">
 
-        <!-- MEMBER PANEL -->
 
-        <div class="col-lg-3">
 
-            <div class="premium-card member-panel">
+    <div class="row mt-4 g-4">
 
-                <div class="search-box">
+        <!-- =====================================================
+                    LEFT SIDE
+        ====================================================== -->
 
-                    <input type="text" id="memberSearch" class="form-control premium-input" placeholder="Search Member">
+        <div class="col-lg-4">
 
-                    <div id="searchResults" class="search-results">
-                    </div>
+            <!-- ===========================
+                  CURRENT GROUP
+            ============================ -->
 
-                </div>
+            <div class="card premium-card mb-4">
 
-                <div class="profile-area">
+                <div class="card-header-area">
 
-                    <img id="memberPhoto" src="/static/images/user.png">
+                    <h4>
 
-                    <h4 id="memberName">
-                        Select Member
+                        <i class="bi bi-diagram-3-fill"></i>
+
+                        Current Pandu Group
+
                     </h4>
 
-                    <small id="memberCode">
-                        Member Code
-                    </small>
-
                 </div>
 
-                <div class="member-meta">
+                <input type="hidden" id="group_id" name="group_id" value="{{ group.id }}">
 
-                    <div class="meta-item">
+                <div class="group-summary">
 
-                        <label>Mobile</label>
+                    <div class="group-name">
 
-                        <span id="memberMobile">
-                            -
-                        </span>
+                        {{ group.group_name }}
 
                     </div>
 
-                    <div class="meta-item">
+                    <div class="group-grid">
 
-                        <label>Aadhaar</label>
+                        <div class="group-box">
 
-                        <span id="memberAadhaar">
-                            -
+                            <small>Monthly Due</small>
+
+                            <h5>
+
+                                ₹{{ "{:,.2f}".format(group.monthly_due) }}
+
+                            </h5>
+
+                        </div>
+
+                        <div class="group-box">
+
+                            <small>Chit Amount</small>
+
+                            <h5>
+
+                                ₹{{ "{:,.2f}".format(group.chit_amount) }}
+
+                            </h5>
+
+                        </div>
+
+                        <div class="group-box">
+
+                            <small>Duration</small>
+
+                            <h5>
+
+                                {{ group.duration_months }}
+
+                                Months
+
+                            </h5>
+
+                        </div>
+
+                        <div class="group-box">
+
+                            <small>Status</small>
+
+                            <span class="badge bg-success">
+
+                                Active
+
+                            </span>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+
+
+
+            <!-- ===========================
+                  SELECTED MEMBER
+            ============================ -->
+
+            <div class="card premium-card">
+
+                <div class="card-header-area">
+
+                    <div class="d-flex justify-content-between align-items-center">
+
+                        <h4>
+
+                            <i class="bi bi-person-check-fill"></i>
+
+                            Selected Member
+
+                        </h4>
+
+                        <button type="button" class="btn-search-member" data-bs-toggle="modal"
+                            data-bs-target="#memberModal">
+
+                            <i class="bi bi-search"></i>
+
+                            Search Member
+
+                        </button>
+
+                    </div>
+
+                </div>
+
+                <input type="hidden" id="member_id" name="member_id">
+
+                <div class="member-profile">
+
+                    <img id="memberPhoto" src="/static/images/user.png" class="member-photo">
+
+                    <h3 id="memberName">
+
+                        No Member Selected
+
+                    </h3>
+
+                    <div id="memberCode" class="member-code">
+
+                        ----
+
+                    </div>
+
+                </div>
+
+                <div class="member-info">
+
+                    <div class="info-row">
+
+                        <span>
+
+                            <i class="bi bi-phone"></i>
+
+                            Mobile
+
                         </span>
+
+                        <strong id="memberMobile">
+
+                            -
+
+                        </strong>
+
+                    </div>
+
+                    <div class="info-row">
+
+                        <span>
+
+                            <i class="bi bi-credit-card"></i>
+
+                            Aadhaar
+
+                        </span>
+
+                        <strong id="memberAadhaar">
+
+                            -
+
+                        </strong>
 
                     </div>
 
@@ -110,69 +254,168 @@ Pandu Assignment Center
 
         </div>
 
-        <!-- ASSIGNMENT -->
+
+
+
+
+
+
+        <!-- =====================================================
+                    ASSIGNMENT
+        ====================================================== -->
 
         <div class="col-lg-5">
 
-            <div class="premium-card">
+            <div class="card premium-card">
 
-                <h4 class="section-title">
+                <div class="card-header-area">
 
-                    <i class="bi bi-diagram-3"></i>
+                    <h4>
 
-                    Assignment Engine
+                        <i class="bi bi-check2-square"></i>
 
-                </h4>
+                        Assign Member
 
-                <form method="post" action="/pandu/assign/save">
+                    </h4>
 
-                    <input type="hidden" id="member_id" name="member_id">
+                </div>
 
-                    <label class="form-label">
-                        Pandu Group
-                    </label>
+                <form action="/pandu/assign/save" method="post">
 
-                    <select class="form-select premium-input" name="group_id" id="groupSelect">
+                    <input type="hidden" name="group_id" value="{{ group.id }}">
 
-                        {% for g in groups %}
+                    <!-- Pandu Count -->
 
-                        <option value="{{ g.id }}" data-monthly="{{ g.monthly_due }}" data-chit="{{ g.chit_amount }}"
-                            data-duration="{{ g.duration_months }}">
+                    <div class="count-section">
 
-                            {{ g.group_name }}
+                        <label class="count-title">
 
-                        </option>
+                            Pandu Count
 
-                        {% endfor %}
+                        </label>
 
-                    </select>
+                        <div class="count-box">
 
-                    <label class="form-label mt-4">
-                        Pandu Count
-                    </label>
+                            <button type="button" id="minusCount" class="count-btn">
 
-                    <input type="number" name="pandu_count" id="panduCount" value="1"
-                        class="form-control premium-input">
+                                <i class="bi bi-dash-lg"></i>
 
-                    <div class="total-panel">
+                            </button>
 
-                        <small>
-                            Total Liability
-                        </small>
+                            <input type="number" id="panduCount" name="pandu_count" class="count-input" value="1"
+                                min="1">
 
-                        <h1>
-                            ₹<span id="totalAmount">
-                                0
-                            </span>
-                        </h1>
+                            <button type="button" id="plusCount" class="count-btn">
+
+                                <i class="bi bi-plus-lg"></i>
+
+                            </button>
+
+                        </div>
 
                     </div>
 
-                    <button class="btn btn-premium w-100">
+                    <!-- Summary -->
 
-                        <i class="bi bi-check2-circle"></i>
+                    <div class="summary-card mt-4">
 
-                        Assign Member
+                        <div class="summary-title">
+
+                            Assignment Summary
+
+                        </div>
+
+                        <div class="summary-row">
+
+                            <span>Monthly Due</span>
+
+                            <strong>
+
+                                ₹<span id="monthlyDue">
+
+                                    {{ group.monthly_due }}
+
+                                </span>
+
+                            </strong>
+
+                        </div>
+
+                        <div class="summary-row">
+
+                            <span>Chit Amount</span>
+
+                            <strong>
+
+                                ₹<span id="chitAmount">
+
+                                    {{ group.chit_amount }}
+
+                                </span>
+
+                            </strong>
+
+                        </div>
+
+                        <div class="summary-row">
+
+                            <span>Duration</span>
+
+                            <strong>
+
+                                <span id="durationMonths">
+
+                                    {{ group.duration_months }}
+
+                                </span>
+
+                                Months
+
+                            </strong>
+
+                        </div>
+
+                        <div class="summary-row">
+
+                            <span>Total Pandus</span>
+
+                            <strong>
+
+                                <span id="summaryCount">
+
+                                    1
+
+                                </span>
+
+                            </strong>
+
+                        </div>
+
+                        <hr>
+
+                        <div class="summary-total">
+
+                            <span>Total Liability</span>
+
+                            <h1>
+
+                                ₹<span id="totalAmount">
+
+                                    {{ group.chit_amount }}
+
+                                </span>
+
+                            </h1>
+
+                        </div>
+
+                    </div>
+
+                    <button id="assignButton" class="btn btn-assign w-100 mt-4" disabled>
+
+                        <i class="bi bi-check-circle-fill"></i>
+
+                        Select Member First
 
                     </button>
 
@@ -182,61 +425,381 @@ Pandu Assignment Center
 
         </div>
 
-        <!-- ANALYTICS -->
 
-        <div class="col-lg-4">
 
-            <div class="premium-card">
 
-                <h4 class="section-title">
 
-                    <i class="bi bi-bar-chart"></i>
+        <!-- =====================================================
+                    ANALYTICS
+                    (Continue in Part 2)
+        ====================================================== -->
 
-                    Live Analytics
+        <div class="col-lg-3">
+
+            <div class="card premium-card">
+
+                <div class="card-header-area">
+
+                    <h4>
+
+                        <i class="bi bi-graph-up-arrow"></i>
+
+                        Live Analytics
+
+                    </h4>
+
+                </div>
+
+                <div class="analytics-grid">
+
+                    <div class="analytics-box blue">
+
+                        <div>
+
+                            <small>Monthly Due</small>
+
+                            <h2>
+
+                                ₹<span id="analyticsMonthly">
+
+                                    {{ group.monthly_due }}
+
+                                </span>
+
+                            </h2>
+
+                        </div>
+
+                        <i class="bi bi-wallet2"></i>
+
+                    </div>
+
+                    <div class="analytics-box green">
+
+                        <div>
+
+                            <small>Chit Amount</small>
+
+                            <h2>
+
+                                ₹<span id="analyticsChit">
+
+                                    {{ group.chit_amount }}
+
+                                </span>
+
+                            </h2>
+
+                        </div>
+
+                        <i class="bi bi-cash-stack"></i>
+
+                    </div>
+
+                    <div class="analytics-box orange">
+
+                        <div>
+
+                            <small>Duration</small>
+
+                            <h2>
+
+                                <span id="analyticsDuration">
+
+                                    {{ group.duration_months }}
+
+                                </span>
+
+                                M
+
+                            </h2>
+
+                        </div>
+
+                        <i class="bi bi-calendar2-week"></i>
+
+                    </div>
+
+                    <div class="analytics-box purple">
+
+                        <div>
+
+                            <small>Pandu Count</small>
+
+                            <h2>
+
+                                <span id="analyticsCount">
+
+                                    1
+
+                                </span>
+
+                            </h2>
+
+                        </div>
+
+                        <i class="bi bi-layers"></i>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <!-- ==========================================================
+                    ACTIVE ASSIGNMENTS
+    =========================================================== -->
+
+    <div class="card premium-card mt-4">
+
+        <div class="table-header">
+
+            <div>
+
+                <h4>
+
+                    <i class="bi bi-people-fill"></i>
+
+                    Active Pandu Assignments
 
                 </h4>
 
-                <div class="metric-card">
+                <small>
 
-                    <span>
-                        Monthly Due
-                    </span>
+                    Current Group Members
 
-                    <h3>
-                        ₹<span id="monthlyDue">
-                            0
-                        </span>
-                    </h3>
+                </small>
 
-                </div>
+            </div>
 
-                <div class="metric-card">
+            <div class="table-tools">
 
-                    <span>
-                        Chit Amount
-                    </span>
+                <div class="table-search">
 
-                    <h3>
-                        ₹<span id="chitAmount">
-                            0
-                        </span>
-                    </h3>
+                    <i class="bi bi-search"></i>
+
+                    <input type="text" id="assignmentSearch" placeholder="Search Member...">
 
                 </div>
 
-                <div class="metric-card">
+            </div>
 
-                    <span>
-                        Duration
-                    </span>
+        </div>
 
-                    <h3>
-                        <span id="durationMonths">
-                            0
-                        </span>
+        <div class="table-responsive mt-4">
 
-                        Months
-                    </h3>
+            <table class="table premium-table align-middle">
+
+                <thead>
+
+                    <tr>
+
+                        <th>Member</th>
+
+                        <th>Pandus</th>
+
+                        <th>Total</th>
+
+                        <th>Paid</th>
+
+                        <th>Balance</th>
+
+                        <th>Status</th>
+
+                        <th class="text-center">
+
+                            Action
+
+                        </th>
+
+                    </tr>
+
+                </thead>
+
+                <tbody id="assignmentTable">
+
+                    {% for a in assignments %}
+
+                    <tr>
+
+                        <td>
+
+                            <div class="member-table">
+
+                                <img src="{{ a.photo if a.photo else '/static/images/user.png' }}" class="table-photo">
+
+                                <div>
+
+                                    <strong>
+
+                                        {{ a.member_name }}
+
+                                    </strong>
+
+                                    <br>
+
+                                    <small>
+
+                                        {{ a.member_code }}
+
+                                    </small>
+
+                                </div>
+
+                            </div>
+
+                        </td>
+
+                        <td>
+
+                            <span class="badge bg-primary">
+
+                                {{ a.pandu_count }}
+
+                            </span>
+
+                        </td>
+
+                        <td>
+
+                            ₹{{ "{:,.2f}".format(a.total_amount) }}
+
+                        </td>
+
+                        <td class="text-success fw-bold">
+
+                            ₹{{ "{:,.2f}".format(a.paid_amount) }}
+
+                        </td>
+
+                        <td class="text-danger fw-bold">
+
+                            ₹{{ "{:,.2f}".format(a.balance_amount) }}
+
+                        </td>
+
+                        <td>
+
+                            {% if a.status=="ACTIVE" %}
+
+                            <span class="status active">
+
+                                Active
+
+                            </span>
+
+                            {% elif a.status=="COMPLETED" %}
+
+                            <span class="status completed">
+
+                                Completed
+
+                            </span>
+
+                            {% else %}
+
+                            <span class="status pending">
+
+                                {{ a.status }}
+
+                            </span>
+
+                            {% endif %}
+
+                        </td>
+
+                        <td class="text-center">
+
+                            <button class="btn btn-light btn-sm action-btn">
+
+                                <i class="bi bi-eye"></i>
+
+                            </button>
+
+                            <button class="btn btn-warning btn-sm action-btn">
+
+                                <i class="bi bi-pencil"></i>
+
+                            </button>
+
+                            <button class="btn btn-danger btn-sm action-btn">
+
+                                <i class="bi bi-trash"></i>
+
+                            </button>
+
+                        </td>
+
+                    </tr>
+
+                    {% endfor %}
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+
+
+
+    <!-- ==========================================================
+                    MEMBER SEARCH MODAL
+    =========================================================== -->
+
+    <div class="modal fade" id="memberModal" tabindex="-1">
+
+        <div class="modal-dialog modal-xl modal-dialog-scrollable">
+
+            <div class="modal-content">
+
+                <div class="modal-header">
+
+                    <h4>
+
+                        <i class="bi bi-search"></i>
+
+                        Search Member
+
+                    </h4>
+
+                    <button class="btn-close" data-bs-dismiss="modal"></button>
+
+                </div>
+
+                <div class="modal-body">
+
+                    <div class="search-wrapper mb-4">
+
+                        <i class="bi bi-search"></i>
+
+                        <input type="text" id="memberSearch" class="form-control"
+                            placeholder="Search Name / Code / Mobile">
+
+                    </div>
+
+                    <div id="searchResults" class="member-popup-list">
+
+                        <div class="text-center py-5 text-muted">
+
+                            <i class="bi bi-search" style="font-size:60px;"></i>
+
+                            <h5 class="mt-3">
+
+                                Start typing to search members
+
+                            </h5>
+
+                        </div>
+
+                    </div>
 
                 </div>
 
@@ -245,85 +808,8 @@ Pandu Assignment Center
         </div>
 
     </div>
-
-    <!-- ASSIGNMENTS -->
-
-    <div class="premium-card mt-4">
-
-        <h4 class="section-title">
-
-            Active Assignments
-
-        </h4>
-
-        <div class="row">
-
-            {% for a in assignments %}
-
-            <div class="col-lg-4 mb-4">
-
-                <div class="assignment-card">
-
-                    <h5>
-                        {{ a.member_name }}
-                    </h5>
-
-                    <small>
-                        {{ a.group_name }}
-                    </small>
-
-                    <hr>
-
-                    <div class="amount-row">
-
-                        <span>Total</span>
-
-                        <strong>
-                            ₹{{ a.total_amount }}
-                        </strong>
-
-                    </div>
-
-                    <div class="amount-row">
-
-                        <span>Paid</span>
-
-                        <strong>
-                            ₹{{ a.paid_amount }}
-                        </strong>
-
-                    </div>
-
-                    <div class="amount-row">
-
-                        <span>Balance</span>
-
-                        <strong class="text-warning">
-                            ₹{{ a.balance_amount }}
-                        </strong>
-
-                    </div>
-
-                    <div class="status-pill">
-
-                        {{ a.status }}
-
-                    </div>
-
-                </div>
-
-            </div>
-
-            {% endfor %}
-
-        </div>
-
-    </div>
-
 </div>
 
-<script src="{{ url_for('static',
-path='js/pandu_assign.js') }}">
-</script>
+<script src="{{ url_for('static', path='js/pandu_assign.js') }}"></script>
 
 {% endblock %}

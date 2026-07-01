@@ -1,0 +1,434 @@
+/* ===================================================
+   MEMBER EDIT - PREMIUM ERP UI
+=================================================== */
+
+body{
+    background:#f4f7fb;
+    font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;
+}
+
+/* =========================================
+   PAGE
+========================================= */
+
+.member-page{
+    padding:18px;
+}
+
+/* =========================================
+   HEADER
+========================================= */
+
+.page-header{
+
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+
+    background:#fff;
+
+    padding:20px 25px;
+
+    border-radius:16px;
+
+    margin-bottom:18px;
+
+    box-shadow:0 6px 18px rgba(0,0,0,.08);
+
+}
+
+.page-title{
+
+    font-size:30px;
+
+    font-weight:700;
+
+    color:#1e293b;
+
+}
+
+.page-title i{
+
+    color:#2563eb;
+
+    margin-right:10px;
+
+}
+
+.page-subtitle{
+
+    color:#64748b;
+
+    margin-top:5px;
+
+    margin-bottom:0;
+
+}
+
+.header-buttons{
+
+    display:flex;
+
+    gap:10px;
+
+}
+
+.btn-custom{
+
+    border-radius:10px;
+
+    padding:10px 22px;
+
+    font-weight:600;
+
+}
+
+/* =========================================
+   PROFILE CARD
+========================================= */
+
+.profile-card{
+
+    background:#fff;
+
+    border:none;
+
+    border-radius:18px;
+
+    overflow:hidden;
+
+    box-shadow:0 8px 20px rgba(0,0,0,.08);
+
+}
+
+.profile-cover{
+
+    height:120px;
+
+    background:linear-gradient(
+        135deg,
+        #2563eb,
+        #0ea5e9
+    );
+
+}
+
+.profile-body{
+
+    text-align:center;
+
+    padding:18px;
+
+}
+
+.profile-image{
+
+    width:150px;
+
+    height:150px;
+
+    border-radius:50%;
+
+    object-fit:cover;
+
+    border:6px solid white;
+
+    margin-top:-85px;
+
+    background:white;
+
+    box-shadow:0 8px 18px rgba(0,0,0,.15);
+
+    transition:.3s;
+
+}
+
+.profile-image:hover{
+
+    transform:scale(1.05);
+
+}
+
+.member-id{
+
+    display:inline-block;
+
+    background:#eef4ff;
+
+    color:#2563eb;
+
+    padding:6px 18px;
+
+    border-radius:30px;
+
+    margin-top:10px;
+
+    font-weight:600;
+
+}
+
+.quick-info{
+
+    margin-top:18px;
+
+}
+
+.info-item{
+
+    display:flex;
+
+    align-items:center;
+
+    gap:10px;
+
+    background:#f8fafc;
+
+    border-radius:10px;
+
+    padding:10px;
+
+    margin-bottom:10px;
+
+}
+
+.info-item i{
+
+    width:38px;
+
+    height:38px;
+
+    display:flex;
+
+    align-items:center;
+
+    justify-content:center;
+
+    background:#2563eb;
+
+    color:white;
+
+    border-radius:50%;
+
+}
+
+/* =========================================
+   INFORMATION CARD
+========================================= */
+
+.info-card{
+
+    background:#fff;
+
+    border:none;
+
+    border-radius:18px;
+
+    padding:20px;
+
+    margin-bottom:15px;
+
+    box-shadow:0 6px 18px rgba(0,0,0,.08);
+
+}
+
+.card-title{
+
+    display:flex;
+
+    align-items:center;
+
+    gap:10px;
+
+    font-size:20px;
+
+    font-weight:700;
+
+    color:#1e293b;
+
+    margin-bottom:18px;
+
+}
+
+.card-title i{
+
+    width:40px;
+
+    height:40px;
+
+    display:flex;
+
+    justify-content:center;
+
+    align-items:center;
+
+    border-radius:10px;
+
+    background:#2563eb;
+
+    color:white;
+
+}
+
+/* =========================================
+   FORM
+========================================= */
+
+.field{
+
+    margin-bottom:15px;
+
+}
+
+.field label{
+
+    display:block;
+
+    margin-bottom:6px;
+
+    font-size:13px;
+
+    font-weight:600;
+
+    color:#64748b;
+
+    text-transform:uppercase;
+
+}
+
+.form-control,
+.form-select{
+
+    height:48px;
+
+    border-radius:10px;
+
+    border:1px solid #dbe3ec;
+
+    font-size:15px;
+
+    box-shadow:none;
+
+    transition:.3s;
+
+}
+
+textarea.form-control{
+
+    height:auto;
+
+    min-height:100px;
+
+    resize:vertical;
+
+}
+
+.form-control:focus,
+.form-select:focus{
+
+    border-color:#2563eb;
+
+    box-shadow:0 0 0 .18rem rgba(37,99,235,.15);
+
+}
+
+/* =========================================
+   PHOTO BUTTON
+========================================= */
+
+.btn-outline-primary{
+
+    border-radius:10px;
+
+}
+
+/* =========================================
+   FOOTER BUTTONS
+========================================= */
+
+.btn-success{
+
+    background:#16a34a;
+
+    border:none;
+
+}
+
+.btn-success:hover{
+
+    background:#15803d;
+
+}
+
+.btn-warning{
+
+    color:white;
+
+}
+
+.btn-secondary{
+
+    border:none;
+
+}
+
+/* =========================================
+   RESPONSIVE
+========================================= */
+
+@media(max-width:992px){
+
+.page-header{
+
+    flex-direction:column;
+
+    align-items:flex-start;
+
+    gap:15px;
+
+}
+
+.header-buttons{
+
+    width:100%;
+
+    flex-wrap:wrap;
+
+}
+
+.btn-custom{
+
+    flex:1;
+
+}
+
+}
+
+@media(max-width:768px){
+
+.member-page{
+
+    padding:10px;
+
+}
+
+.page-title{
+
+    font-size:24px;
+
+}
+
+.profile-image{
+
+    width:120px;
+
+    height:120px;
+
+}
+
+.info-card{
+
+    padding:18px;
+
+}
+
+}
