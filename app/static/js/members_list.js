@@ -122,11 +122,11 @@ function initializeJoinButtons() {
 
             selectedMemberId = this.dataset.memberId;
 
-document.getElementById("memberName").value =
-    this.dataset.memberName;
+            document.getElementById("memberName").value =
+                this.dataset.memberName;
 
-console.log("Member ID =", selectedMemberId);
-console.log("Member Name =", this.dataset.memberName);
+            console.log("Member ID =", selectedMemberId);
+            console.log("Member Name =", this.dataset.memberName);
 
             panduCount = 1;
 

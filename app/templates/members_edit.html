@@ -4,569 +4,392 @@
 
 {% block content %}
 
-<link rel="stylesheet"
-      href="{{ url_for('static', path='css/members_edit.css') }}">
-
-<link rel="stylesheet"
-      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+<link rel="stylesheet" href="{{ url_for('static', path='css/member_view.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', path='css/members_edit.css') }}">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 
 <div class="container-fluid member-page">
 
-    <!-- ===========================================
-                    PAGE HEADER
-    ============================================ -->
+    <!-- =========================
+            PAGE HEADER
+    ========================== -->
 
     <div class="page-header">
 
         <div>
 
             <h2 class="page-title">
-
                 <i class="bi bi-pencil-square"></i>
-
                 Edit Member
-
             </h2>
 
             <p class="page-subtitle">
-
                 Update member information
-
             </p>
 
         </div>
 
         <div class="header-buttons">
 
-            <a href="/members/view/{{ member.id }}"
-               class="btn btn-light btn-custom">
+            <a href="/members/view/{{ member.id }}" class="btn btn-light btn-custom">
 
                 <i class="bi bi-arrow-left"></i>
-
                 Back
 
             </a>
 
-            <button
-                type="submit"
-                form="memberForm"
-                class="btn btn-success btn-custom">
-
-                <i class="bi bi-check-circle-fill"></i>
-
-                Update Member
-
-            </button>
-
-            <button
-                type="reset"
-                form="memberForm"
-                class="btn btn-warning btn-custom">
-
-                <i class="bi bi-arrow-clockwise"></i>
-
-                Reset
-
-            </button>
-
         </div>
 
     </div>
 
 
+    <!-- =========================
+            FORM
+    ========================== -->
 
-<form
-    id="memberForm"
-    method="POST"
-    action="/members/update/{{ member.id }}"
-    enctype="multipart/form-data">
+    <form action="/members/update/{{ member.id }}" method="POST" enctype="multipart/form-data">
 
-<div class="row g-4">
+        <div class="row g-4">
 
+            <!-- =====================================
+                    LEFT PROFILE CARD
+            ====================================== -->
 
+            <div class="col-lg-4">
 
+                <div class="profile-card">
 
-<!-- ==================================================
-                    LEFT PROFILE
-=================================================== -->
+                    <div class="profile-cover"></div>
 
-<div class="col-lg-4">
+                    <div class="profile-body">
 
-<div class="profile-card">
+                        {% if member.photo %}
 
-<div class="profile-cover"></div>
-
-<div class="profile-body">
-
-{% if member.photo %}
-
-<img
-    id="preview"
-    src="{{ member.photo }}"
-    class="profile-image">
-
-{% else %}
-
-<img
-    id="preview"
-    src="/static/images/user.png"
-    class="profile-image">
-
-{% endif %}
-
-
-
-<div class="mt-3">
-
-<label
-    class="btn btn-outline-primary w-100">
-
-<i class="bi bi-camera-fill"></i>
-
-Change Photo
-
-<input
-    type="file"
-    id="photo"
-    name="photo"
-    accept="image/*"
-    hidden>
-
-</label>
-
-</div>
-
-
-
-<h3
-    class="mt-4"
-    id="previewName">
-
-{{ member.member_name }}
-
-</h3>
-
-
-
-<div class="member-id">
-
-{{ member.member_code }}
-
-</div>
-
-
-
-<span class="status-badge">
-
-{{ member.status }}
-
-</span>
-
-<hr>
-
-
-
-<div class="quick-info">
-
-<div class="info-item">
-
-<i class="bi bi-telephone-fill"></i>
-
-<span id="previewMobile">
-
-{{ member.mobile }}
-
-</span>
-
-</div>
-
-
-
-<div class="info-item">
-
-<i class="bi bi-whatsapp"></i>
-
-<span id="previewWhatsapp">
-
-{{ member.whatsapp_no }}
-
-</span>
-
-</div>
-
-
-
-<div class="info-item">
-
-<i class="bi bi-geo-alt-fill"></i>
-
-<span id="previewAddress">
-
-{{ member.address }}
-
-</span>
-
-</div>
-
-</div>
-
-</div>
-
-</div>
-
-</div>
-
-
-
-<!-- ==================================================
-                RIGHT SIDE STARTS
-=================================================== -->
-
-<div class="col-lg-8">
-    <!-- ==========================================
-            BASIC INFORMATION
-========================================== -->
-
-<div class="info-card">
-
-    <div class="card-title">
-
-        <i class="bi bi-person-fill"></i>
-
-        Basic Information
-
-    </div>
-
-    <div class="row">
-
-        <div class="col-md-6 field">
-
-            <label>Member Name</label>
-
-            <input
-                type="text"
-                id="member_name"
-                name="member_name"
-                class="form-control"
-                value="{{ member.member_name }}"
-                required>
-
-        </div>
-
-        <div class="col-md-6 field">
-
-            <label>Aadhaar Number</label>
-
-            <input
-                type="text"
-                name="aadhaar_no"
-                class="form-control"
-                maxlength="12"
-                value="{{ member.aadhaar_no or '' }}">
-
-        </div>
-
-    </div>
-
-</div>
-
-
-<!-- ==========================================
-            CONTACT INFORMATION
-========================================== -->
-
-<div class="info-card">
-
-    <div class="card-title">
-
-        <i class="bi bi-telephone-fill"></i>
-
-        Contact Information
-
-    </div>
-
-    <div class="row">
-
-        <div class="col-md-6 field">
-
-            <label>Mobile Number</label>
-
-            <input
-                type="text"
-                id="mobile"
-                name="mobile"
-                class="form-control"
-                maxlength="10"
-                value="{{ member.mobile or '' }}">
-
-        </div>
-
-        <div class="col-md-6 field">
-
-            <label>WhatsApp Number</label>
-
-            <input
-                type="text"
-                id="whatsapp"
-                name="whatsapp_no"
-                class="form-control"
-                maxlength="10"
-                value="{{ member.whatsapp_no or '' }}">
-
-        </div>
-
-    </div>
-
-</div>
-
-
-<!-- ==========================================
-                ADDRESS
-========================================== -->
-
-<div class="info-card">
-
-    <div class="card-title">
-
-        <i class="bi bi-geo-alt-fill"></i>
-
-        Address Information
-
-    </div>
-
-    <div class="row">
-
-        <div class="col-md-12 field">
-
-            <label>Address</label>
-
-            <textarea
-                id="address"
-                name="address"
-                class="form-control"
-                rows="4">{{ member.address or '' }}</textarea>
-
-        </div>
-
-        <div class="col-md-4 field">
-
-            <label>Area</label>
-
-            <input
-                type="text"
-                name="area"
-                class="form-control"
-                value="{{ member.area or '' }}">
-
-        </div>
-
-        <div class="col-md-4 field">
-
-            <label>Village</label>
-
-            <input
-                type="text"
-                name="village"
-                class="form-control"
-                value="{{ member.village or '' }}">
-
-        </div>
-
-        <div class="col-md-4 field">
-
-            <label>Pincode</label>
-
-            <input
-                type="text"
-                name="pincode"
-                class="form-control"
-                maxlength="6"
-                value="{{ member.pincode or '' }}">
-
-        </div>
-
-    </div>
-
-</div>
-<!-- ==========================================
-        CURRENT YEAR MEMBERSHIP
-========================================== -->
-
-<div class="info-card">
-
-    <div class="card-title">
-
-        <i class="bi bi-table"></i>
-
-        Current Year Membership Details
-
-    </div>
-
-    <div class="table-responsive">
-
-        <table class="table table-hover align-middle membership-table">
-
-            <thead>
-
-                <tr>
-
-                    <th>Membership</th>
-
-                    <th>Scheme</th>
-
-                    <th>Monthly Amount</th>
-
-                    <th>Paid</th>
-
-                    <th>Pending</th>
-
-                    <th>Status</th>
-
-                </tr>
-
-            </thead>
-
-            <tbody>
-
-            {% if memberships %}
-
-                {% for item in memberships %}
-
-                <tr>
-
-                    <td>{{ item.membership_type }}</td>
-
-                    <td>{{ item.scheme_name }}</td>
-
-                    <td>₹ {{ item.monthly_amount }}</td>
-
-                    <td>{{ item.paid_months }}/12</td>
-
-                    <td>{{ item.pending_months }}</td>
-
-                    <td>
-
-                        {% if item.status=="ACTIVE" %}
-
-                        <span class="badge bg-success">
-
-                            ACTIVE
-
-                        </span>
-
-                        {% elif item.status=="COMPLETED" %}
-
-                        <span class="badge bg-primary">
-
-                            COMPLETED
-
-                        </span>
+                        <img src="{{ member.photo }}" id="photoPreview" class="profile-image">
 
                         {% else %}
 
-                        <span class="badge bg-warning text-dark">
-
-                            {{ item.status }}
-
-                        </span>
+                        <img src="/static/images/user.png" id="photoPreview" class="profile-image">
 
                         {% endif %}
 
-                    </td>
+                        <div class="mt-3">
 
-                </tr>
+                            <input type="file" name="photo" id="photoInput" class="form-control">
 
-                {% endfor %}
+                        </div>
 
-            {% else %}
+                        <h3 class="mt-4" id="liveMemberName">
 
-                <tr>
+                            {{ member.member_name }}
 
-                    <td colspan="6" class="text-center text-muted py-4">
+                        </h3>
 
-                        No Active Membership Found
+                        <div class="member-id">
 
-                    </td>
+                            {{ member.member_code }}
 
-                </tr>
+                        </div>
 
-            {% endif %}
+                        <hr>
 
-            </tbody>
+                        <div class="mb-3">
 
-        </table>
+                            <label class="form-label fw-bold">
 
-    </div>
+                                Status
 
-</div>
+                            </label>
+
+                            <select class="form-select" name="status">
+
+                                <option value="ACTIVE" {% if member.status=="ACTIVE" %} selected {% endif %}>
+                                    ACTIVE
+                                </option>
+
+                                <option value="INACTIVE" {% if member.status=="INACTIVE" %} selected {% endif %}>
+                                    INACTIVE
+                                </option>
+
+                            </select>
+
+                        </div>
+
+                        <div class="quick-info">
+
+                            <div class="info-item">
+
+                                <i class="bi bi-telephone-fill"></i>
+
+                                <span>
+
+                                    {{ member.mobile }}
+
+                                </span>
+
+                            </div>
+
+                            <div class="info-item">
+
+                                <i class="bi bi-whatsapp"></i>
+
+                                <span>
+
+                                    {{ member.whatsapp_no }}
+
+                                </span>
+
+                            </div>
+
+                            <div class="info-item">
+
+                                <i class="bi bi-geo-alt-fill"></i>
+
+                                <span>
+
+                                    {{ member.address }}
+
+                                </span>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
 
 
-<!-- ==========================================
-            SAVE PANEL
-========================================== -->
+            <!-- =====================================
+                    RIGHT SIDE
+            ====================================== -->
 
-<div class="info-card">
+            <div class="col-lg-8">
 
-    <div class="row align-items-center">
+                <!-- =========================
+                        BASIC INFORMATION
+                ========================== -->
 
-        <div class="col-md-8">
+                <div class="info-card">
 
-            <h4 class="mb-2">
+                    <div class="card-title">
 
-                <i class="bi bi-info-circle-fill text-primary"></i>
+                        <i class="bi bi-person-fill"></i>
 
-                Save Changes
+                        Basic Information
 
-            </h4>
+                    </div>
 
-            <p class="text-muted mb-0">
+                    <div class="row">
 
-                Verify the member details before updating.
-                Membership information is read-only.
+                        <div class="col-md-6 mb-3">
 
-            </p>
+                            <label class="form-label">
+
+                                Member Name
+
+                            </label>
+
+                            <input type="text" class="form-control" id="memberName" name="member_name"
+                                value="{{ member.member_name }}" required>
+
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+
+                            <label class="form-label">
+
+                                Aadhaar Number
+
+                            </label>
+
+                            <input type="text" class="form-control" name="aadhaar_no" value="{{ member.aadhaar_no }}">
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <!-- =========================
+                        CONTACT
+                ========================== -->
+
+                <div class="info-card">
+
+                    <div class="card-title">
+
+                        <i class="bi bi-telephone-fill"></i>
+
+                        Contact Information
+
+                    </div>
+
+                    <div class="row">
+
+                        <div class="col-md-6 mb-3">
+
+                            <label class="form-label">
+
+                                Mobile Number
+
+                            </label>
+
+                            <input type="text" class="form-control" name="mobile" value="{{ member.mobile }}">
+
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+
+                            <label class="form-label">
+
+                                WhatsApp Number
+
+                            </label>
+
+                            <input type="text" class="form-control" name="whatsapp_no" value="{{ member.whatsapp_no }}">
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <!-- =========================
+                        ADDRESS
+                ========================== -->
+
+                <div class="info-card">
+
+                    <div class="card-title">
+
+                        <i class="bi bi-geo-alt-fill"></i>
+
+                        Address
+
+                    </div>
+
+                    <div class="row">
+
+                        <div class="col-md-12">
+
+                            <label class="form-label">
+
+                                Address
+
+                            </label>
+
+                            <textarea class="form-control" rows="4" name="address">{{ member.address }}</textarea>
+
+                        </div>
+
+                    </div>
+
+                </div>
+                <!-- =========================
+                        ACTION BUTTONS
+                ========================== -->
+
+                <div class="info-card">
+
+                    <div class="d-flex justify-content-end gap-3">
+
+                        <a href="/members/view/{{ member.id }}" class="btn btn-secondary btn-lg">
+
+                            <i class="bi bi-x-circle"></i>
+
+                            Cancel
+
+                        </a>
+
+                        <button type="submit" class="btn btn-success btn-lg px-5">
+
+                            <i class="bi bi-check-circle-fill"></i>
+
+                            Update Member
+
+                        </button>
+
+                    </div>
+
+                </div>
+
+            </div>
 
         </div>
 
-        <div class="col-md-4 text-end">
-
-            <a
-                href="/members/view/{{ member.id }}"
-                class="btn btn-secondary btn-lg">
-
-                <i class="bi bi-x-circle"></i>
-
-                Cancel
-
-            </a>
-
-            <button
-                type="submit"
-                class="btn btn-success btn-lg">
-
-                <i class="bi bi-check-circle-fill"></i>
-
-                Update
-
-            </button>
-
-        </div>
-
-    </div>
+    </form>
 
 </div>
 
 
-</div>
-<!-- END RIGHT -->
+<script>
 
-</div>
-<!-- END ROW -->
+    //
+    // Live Member Name
+    //
 
-</form>
+    const memberName =
+        document.getElementById("memberName");
 
-</div>
+    const liveName =
+        document.getElementById("liveMemberName");
 
-<script src="{{ url_for('static', path='js/members_edit.js') }}"></script>
+    if (memberName) {
+
+        memberName.addEventListener("keyup", function () {
+
+            if (this.value.trim() == "") {
+
+                liveName.innerHTML = "Member Name";
+
+            }
+            else {
+
+                liveName.innerHTML = this.value;
+
+            }
+
+        });
+
+    }
+
+
+
+    //
+    // Photo Preview
+    //
+
+    const photoInput =
+        document.getElementById("photoInput");
+
+    if (photoInput) {
+
+        photoInput.addEventListener("change", function (e) {
+
+            if (e.target.files.length > 0) {
+
+                const reader = new FileReader();
+
+                reader.onload = function (event) {
+
+                    document.getElementById("photoPreview").src =
+                        event.target.result;
+
+                };
+
+                reader.readAsDataURL(e.target.files[0]);
+
+            }
+
+        });
+
+    }
+
+</script>
 
 {% endblock %}

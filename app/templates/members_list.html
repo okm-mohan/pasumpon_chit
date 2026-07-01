@@ -264,28 +264,34 @@
                         </td>
 
                         <!-- Pandu -->
-                        <td class="text-center">
+                       <td class="text-center">
 
-                            {% if m.is_current_year_pandu_joined == 1 %}
+    {% if m.is_current_year_pandu_joined == 1 %}
 
-                            <span class="badge bg-primary px-3 py-2">
-                                <i class="bi bi-check-circle-fill"></i>
-                                Pandu Joined
-                            </span>
+    <span class="pandu-joined-badge">
 
-                            {% else %}
+        <i class="bi bi-patch-check-fill"></i>
 
-                            <button
-    class="btn btn-success btn-sm join-pandu-btn"
-    data-member-id="{{ m.id }}"
-    data-member-name="{{ m.member_name }}"
->
-    <i class="bi bi-person-plus-fill"></i>
-    Join Pandu
-</button>
-                            {% endif %}
+        Joined
 
-                        </td>
+    </span>
+
+    {% else %}
+
+    <button
+        class="join-pandu-btn"
+        data-member-id="{{ m.id }}"
+        data-member-name="{{ m.member_name }}">
+
+        <i class="bi bi-person-plus-fill"></i>
+
+        Join Pandu
+
+    </button>
+
+    {% endif %}
+
+</td>
 
                         <!-- Actions -->
                         <td>

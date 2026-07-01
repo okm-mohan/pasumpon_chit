@@ -1019,6 +1019,7 @@ async def save_member(
 
         db.close()
 
+
 @app.get("/members/list")
 def members_list(request: Request):
 
@@ -1069,18 +1070,13 @@ def members_list(request: Request):
         """)).mappings().all()
 
         return templates.TemplateResponse(
-            request=request,
-            name="members_list.html",
-            context={
-                "members": members
-            }
+            request=request, name="members_list.html", context={"members": members}
         )
 
     finally:
 
         db.close()
-        
-        
+
 
 @app.get("/members/view/{member_id}")
 def member_view(request: Request, member_id: int):
@@ -1176,6 +1172,9 @@ def member_view(request: Request, member_id: int):
 # ==========================================
 # EDIT MEMBER
 # ==========================================
+# ==========================================
+# EDIT MEMBER
+# ==========================================
 
 
 @app.get("/members/edit/{member_id}")
@@ -1188,10 +1187,10 @@ def edit_member(request: Request, member_id: int):
         member = (
             db.execute(
                 text("""
-                SELECT *
-                FROM members
-                WHERE id=:id
-            """),
+                    SELECT *
+                    FROM members
+                    WHERE id = :id
+                """),
                 {"id": member_id},
             )
             .mappings()
@@ -1200,21 +1199,22 @@ def edit_member(request: Request, member_id: int):
 
         if not member:
 
-            return RedirectResponse("/members/list", status_code=302)
+            return RedirectResponse(url="/members/list", status_code=302)
 
-            return templates.TemplateResponse(
-                request=request,
-                name="members_edit.html",
-                context={
-                    "member": member,
-                    "memberships": memberships,
-                },
-            )
+        return templates.TemplateResponse(
+            request=request,
+            name="members_edit.html",
+            context={"member": member, "active_page": "members"},
+        )
 
     finally:
 
         db.close()
 
+
+# ==========================================
+# UPDATE MEMBER
+# ==========================================
 
 # ==========================================
 # UPDATE MEMBER
@@ -1237,10 +1237,6 @@ async def update_member(
 
     try:
 
-        # -----------------------------------
-        # Existing Photo
-        # -----------------------------------
-
         old_photo = db.execute(
             text("""
                 SELECT photo
@@ -1251,10 +1247,6 @@ async def update_member(
         ).scalar()
 
         photo_path = old_photo
-
-        # -----------------------------------
-        # Upload New Photo
-        # -----------------------------------
 
         if photo and photo.filename:
 
@@ -1272,31 +1264,27 @@ async def update_member(
 
             photo_path = f"/static/uploads/members/{filename}"
 
-        # -----------------------------------
-        # Update Member
-        # -----------------------------------
-
         db.execute(
             text("""
                 UPDATE members
 
                 SET
 
-                    member_name=:member_name,
+                    member_name = :member_name,
 
-                    aadhaar_no=:aadhaar_no,
+                    aadhaar_no = :aadhaar_no,
 
-                    mobile=:mobile,
+                    mobile = :mobile,
 
-                    whatsapp_no=:whatsapp_no,
+                    whatsapp_no = :whatsapp_no,
 
-                    address=:address,
+                    address = :address,
 
-                    photo=:photo,
+                    status = :status,
 
-                    status=:status
+                    photo = :photo
 
-                WHERE id=:id
+                WHERE id = :id
             """),
             {
                 "member_name": member_name,
@@ -1304,15 +1292,18 @@ async def update_member(
                 "mobile": mobile,
                 "whatsapp_no": whatsapp_no,
                 "address": address,
-                "photo": photo_path,
                 "status": status,
+                "photo": photo_path,
                 "id": member_id,
             },
         )
 
         db.commit()
 
-        return RedirectResponse(url=f"/members/view/{member_id}", status_code=302)
+        return RedirectResponse(
+            url=f"/members/view/{member_id}",
+            status_code=302,
+        )
 
     finally:
 
@@ -1545,10 +1536,7 @@ def save_assignment(
         if existing:
 
             return JSONResponse(
-                content={
-                    "success": False,
-                    "message": "Member Already Joined."
-                }
+                content={"success": False, "message": "Member Already Joined."}
             )
 
         db.execute(
@@ -1615,10 +1603,7 @@ def save_assignment(
         db.commit()
 
         return JSONResponse(
-            content={
-                "success": True,
-                "message": "Member Joined Successfully."
-            }
+            content={"success": True, "message": "Member Joined Successfully."}
         )
 
     finally:
@@ -5068,5 +5053,3 @@ async def save_assignment(
     finally:
 
         db.close()
-
-
