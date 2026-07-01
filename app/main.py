@@ -1019,6 +1019,9 @@ async def save_member(
 
         db.close()
 
+# ==========================================
+# MEMBERS LIST
+# ==========================================
 
 @app.get("/members/list")
 def members_list(request: Request):
@@ -1027,57 +1030,62 @@ def members_list(request: Request):
 
     try:
 
-        members = db.execute(text("""
+        members = db.execute(
+            text("""
 
-            SELECT
+                SELECT
 
-                m.id,
-                m.member_code,
-                m.member_name,
-                m.mobile,
-                m.aadhaar_no,
-                m.photo,
-                m.status,
+                    m.id,
+                    m.member_code,
+                    m.member_name,
+                    m.mobile,
+                    m.aadhaar_no,
+                    m.photo,
+                    m.status,
 
-                CASE
+                    IFNULL(
 
-                    WHEN EXISTS(
+                        (
 
-                        SELECT 1
+                            SELECT SUM(pa.pandu_count)
 
-                        FROM pandu_assignments pa
+                            FROM pandu_assignments pa
 
-                        INNER JOIN pandu_groups pg
-                            ON pg.id = pa.group_id
+                            INNER JOIN pandu_groups pg
+                                ON pg.id = pa.group_id
 
-                        WHERE
-                            pa.member_id = m.id
-                            AND pa.status = 'ACTIVE'
-                            AND pg.group_code = YEAR(CURDATE())
+                            WHERE
+                                pa.member_id = m.id
+                                AND pa.status = 'ACTIVE'
+                                AND pg.group_code = YEAR(CURDATE())
 
-                    )
+                        ),
 
-                    THEN 1
+                        0
 
-                    ELSE 0
+                    ) AS current_year_pandu_count
 
-                END AS is_current_year_pandu_joined
+                FROM members m
 
-            FROM members m
+                ORDER BY m.member_name
 
-            ORDER BY m.id DESC
-
-        """)).mappings().all()
+            """)
+        ).mappings().all()
 
         return templates.TemplateResponse(
-            request=request, name="members_list.html", context={"members": members}
+            request=request,
+            name="members_list.html",
+            context={
+                "members": members,
+                "active_page": "members"
+            }
         )
 
     finally:
 
         db.close()
-
-
+        
+        
 @app.get("/members/view/{member_id}")
 def member_view(request: Request, member_id: int):
 
