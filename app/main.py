@@ -5061,3 +5061,218 @@ async def save_assignment(
     finally:
 
         db.close()
+
+@app.get("/api/pandu-details/summary")
+def pandu_details_summary():
+
+    db = SessionLocal()
+
+    try:
+
+        row = db.execute(text("""
+
+                        SELECT
+
+                COUNT(*) AS total_members,
+
+                IFNULL(SUM(pa.total_amount),0) AS total_amount,
+
+                IFNULL(SUM(pa.paid_amount),0) AS paid_amount,
+
+                IFNULL(SUM(pa.balance_amount),0) AS balance_amount,
+
+                IFNULL(SUM(pa.pandu_count),0) AS total_installments
+
+            FROM pandu_assignments pa
+
+            INNER JOIN pandu_groups pg
+
+            ON pg.id = pa.group_id
+
+            WHERE
+
+            pg.group_code = YEAR(CURDATE())
+
+            AND pa.status='ACTIVE'
+
+        """)).mappings().first()
+
+        today = db.execute(text("""
+
+            SELECT IFNULL(SUM(amount),0)
+
+            FROM collections
+
+            WHERE DATE(collection_date)=CURDATE()
+
+        """)).scalar()
+
+        month = db.execute(text("""
+
+            SELECT IFNULL(SUM(amount),0)
+
+            FROM collections
+
+            WHERE
+
+                MONTH(collection_date)=MONTH(CURDATE())
+
+                AND YEAR(collection_date)=YEAR(CURDATE())
+
+        """)).scalar()
+
+        result=dict(row)
+
+        result["today_collection"]=float(today)
+
+        result["month_collection"]=float(month)
+
+        if result["total_amount"]>0:
+
+            result["percentage"]=round(
+
+                result["paid_amount"]/
+
+                result["total_amount"]*100,2
+
+            )
+
+        else:
+
+            result["percentage"]=0
+
+        return result
+
+    finally:
+
+        db.close()
+        
+@app.get("/api/pandu-details/members")
+def pandu_members(search:str=""):
+
+    db=SessionLocal()
+
+    try:
+
+        rows=db.execute(text("""
+
+        SELECT
+
+            pa.id,
+
+            m.member_name,
+
+            m.mobile,
+
+            pa.pandu_count,
+
+            pa.total_amount,
+
+            pa.paid_amount,
+
+            pa.balance_amount,
+
+            CASE
+
+                WHEN pa.balance_amount<=0
+
+                THEN 'Paid'
+
+                WHEN pa.paid_amount>0
+
+                THEN 'Pending'
+
+                ELSE 'Balance'
+
+            END status
+
+        FROM pandu_assignments pa
+
+        INNER JOIN members m
+
+            ON m.id=pa.member_id
+
+        INNER JOIN pandu_groups pg
+
+            ON pg.id=pa.group_id
+
+        WHERE
+
+            pg.group_code=YEAR(CURDATE())
+
+            AND pa.status='ACTIVE'
+
+            AND
+
+            (
+
+                m.member_name LIKE :search
+
+                OR
+
+                m.mobile LIKE :search
+
+            )
+
+        ORDER BY
+
+            m.member_name
+
+        """),
+
+        {
+
+            "search":f"%{search}%"
+
+        }).mappings().all()
+
+        return [dict(x) for x in rows]
+
+    finally:
+
+        db.close()
+
+@app.get("/api/pandu-details/recent")
+def recent_collection():
+
+    db=SessionLocal()
+
+    try:
+
+        rows=db.execute(text("""
+
+        SELECT
+
+            c.receipt_no,
+
+            m.member_name,
+
+            c.amount,
+
+            DATE_FORMAT(
+
+                c.collection_date,
+
+                '%d-%m-%Y'
+
+            ) collection_date
+
+        FROM collections c
+
+        INNER JOIN members m
+
+            ON m.id=c.member_id
+
+        ORDER BY
+
+            c.id DESC
+
+        LIMIT 10
+
+        """)).mappings().all()
+
+        return [dict(x) for x in rows]
+
+    finally:
+
+        db.close()

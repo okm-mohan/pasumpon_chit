@@ -1,47 +1,47 @@
 {% extends "base.html" %}
 
-{% block title %}Pandu Dashboard{% endblock %}
+{% block title %}
+Pandu Details
+{% endblock %}
 
 {% block content %}
 
 <link rel="stylesheet" href="/static/css/pandu_details.css">
 
-<div class="container-fluid">
+<div class="container-fluid pandu-page">
 
-    <!-- HERO SECTION -->
+    <!-- =========================
+            PAGE HEADER
+    ========================== -->
 
-    <div class="executive-card">
+    <div class="page-header">
 
-        <div class="executive-left">
+        <div class="header-left">
 
-            <a href="/dashboard">
+            <a href="/dashboard" class="back-btn">
                 <i class="bi bi-arrow-left-circle-fill"></i>
-                Back to Dashboard
+                Dashboard
             </a>
 
-            <h1 id="dashboardTitle">
-    Pandu Collection Dashboard
-</h1>
+            <h1>
+                <i class="bi bi-bank2"></i>
+                Pandu Details
+            </h1>
 
-<script>
-document.getElementById("dashboardTitle").innerText =
-    "Pandu Collection Dashboard - " + new Date().getFullYear();
-</script>
             <p>
-                Real-time monitoring of collections, pending dues,
-                member performance and financial progress.
+                Complete overview of this year's Pandu collections and member status.
             </p>
 
         </div>
 
-        <div class="executive-right">
+        <div class="header-right">
 
-            <div class="amount-block">
+            <div class="year-card">
 
-                <small>Total Pandu Value</small>
+                <span>Current Year</span>
 
-                <h2 id="totalAmount">
-                    ₹0
+                <h2 id="currentYear">
+                    2026
                 </h2>
 
             </div>
@@ -50,92 +50,434 @@ document.getElementById("dashboardTitle").innerText =
 
     </div>
 
-    <!-- KPI CARDS -->
-
-    <div class="kpi-grid">
 
 
-        <div class="kpi-card members">
+    <!-- =========================
+            MAIN CONTENT
+    ========================== -->
 
-            <div class="card-icon">
-                👥
-            </div>
+    <div class="row mt-4">
 
-            <div>
-                <span>Total Pandu Amount</span>
-                <h2 id="totalAmountCard">
-                    ₹0
-                </h2>
+
+
+
+        <!-- ===================================
+                LEFT SIDE
+        ==================================== -->
+
+        <div class="col-lg-4">
+
+            <div class="summary-panel">
+
+                <div class="panel-header">
+
+                    <h4>
+
+                        <i class="bi bi-bar-chart-fill"></i>
+
+                        Current Year Summary
+
+                    </h4>
+
+                </div>
+
+                <div class="summary-list">
+
+
+
+                    <div class="summary-item">
+
+                        <div class="icon blue">
+
+                            <i class="bi bi-people-fill"></i>
+
+                        </div>
+
+                        <div class="details">
+
+                            <span>Total Joined Members</span>
+
+                            <h3 id="totalMembers">
+
+                                0
+
+                            </h3>
+
+                        </div>
+
+                    </div>
+
+
+
+                    <div class="summary-item">
+
+                        <div class="icon green">
+
+                            <i class="bi bi-cash-stack"></i>
+
+                        </div>
+
+                        <div class="details">
+
+                            <span>Total Pandu Amount</span>
+
+                            <h3 id="totalAmount">
+
+                                ₹0
+
+                            </h3>
+
+                        </div>
+
+                    </div>
+
+
+
+                    <div class="summary-item">
+
+                        <div class="icon success">
+
+                            <i class="bi bi-wallet2"></i>
+
+                        </div>
+
+                        <div class="details">
+
+                            <span>Total Paid Amount</span>
+
+                            <h3 id="paidAmount">
+
+                                ₹0
+
+                            </h3>
+
+                        </div>
+
+                    </div>
+
+
+
+                    <div class="summary-item">
+
+                        <div class="icon danger">
+
+                            <i class="bi bi-exclamation-triangle-fill"></i>
+
+                        </div>
+
+                        <div class="details">
+
+                            <span>Balance Amount</span>
+
+                            <h3 id="balanceAmount">
+
+                                ₹0
+
+                            </h3>
+
+                        </div>
+
+                    </div>
+
+
+
+                    <div class="summary-item">
+
+                        <div class="icon orange">
+
+                            <i class="bi bi-calendar2-week-fill"></i>
+
+                        </div>
+
+                        <div class="details">
+
+                            <span>Current Month Collection</span>
+
+                            <h3 id="monthCollection">
+
+                                ₹0
+
+                            </h3>
+
+                        </div>
+
+                    </div>
+
+
+
+                    <div class="summary-item">
+
+                        <div class="icon purple">
+
+                            <i class="bi bi-calendar-check-fill"></i>
+
+                        </div>
+
+                        <div class="details">
+
+                            <span>Today's Collection</span>
+
+                            <h3 id="todayCollection">
+
+                                ₹0
+
+                            </h3>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+
+                <!-- =======================
+                    PROGRESS CARD
+                ======================== -->
+
+                <div class="progress-box">
+
+                    <div class="d-flex justify-content-between">
+
+                        <strong>
+
+                            Collection Progress
+
+                        </strong>
+
+                        <span id="collectionPercent">
+
+                            0%
+
+                        </span>
+
+                    </div>
+
+                    <div class="progress mt-3">
+
+                        <div class="progress-bar" id="collectionBar" style="width:0%;">
+
+                            0%
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+
+                <!-- =======================
+                    INSTALLMENT SUMMARY
+                ======================== -->
+
+                <div class="installment-card">
+
+                    <h5>
+
+                        Installment Summary
+
+                    </h5>
+
+                    <div class="installment-row">
+
+                        <span>Total Installments</span>
+
+                        <strong id="totalInstallments">
+
+                            0
+
+                        </strong>
+
+                    </div>
+
+                    <div class="installment-row">
+
+                        <span>Paid Installments</span>
+
+                        <strong id="paidInstallments">
+
+                            0
+
+                        </strong>
+
+                    </div>
+
+                    <div class="installment-row">
+
+                        <span>Pending Installments</span>
+
+                        <strong id="pendingInstallments">
+
+                            0
+
+                        </strong>
+
+                    </div>
+
+                </div>
+
             </div>
 
         </div>
 
 
 
-        <div class="kpi-card collected">
 
-            <div class="card-icon">
-                💰
-            </div>
 
+
+        <!-- ===================================
+                RIGHT SIDE
+        ==================================== -->
+
+        <!-- ===================================
+        RIGHT SIDE
+==================================== -->
+
+<div class="col-lg-8">
+
+    <div class="member-panel">
+
+        <div class="member-header">
 
             <div>
-                <span>Collected Amount</span>
-                <h2 id="collectedAmount">
-                    ₹0
-                </h2>
+
+                <h3>
+                    <i class="bi bi-person-lines-fill"></i>
+                    Joined Members
+                </h3>
+
+                <small>
+                    Current year Pandu member details
+                </small>
+
+            </div>
+
+            <div class="member-actions">
+
+                <input
+                    type="text"
+                    id="searchMember"
+                    class="form-control"
+                    placeholder="Search Member...">
+
             </div>
 
         </div>
 
-        <div class="kpi-card balance">
+        <!-- <div class="filter-buttons mt-3">
 
-            <div class="card-icon">
-                ⚠️
-            </div>
+            <button class="btn btn-primary active-filter">
+                All Members
+            </button>
 
-            <div>
-                <span>Balance Amount</span>
-                <h2 id="balanceAmount">
-                    ₹0
-                </h2>
-            </div>
+            <button class="btn btn-success">
+                Paid
+            </button>
+
+            <button class="btn btn-warning">
+                Pending
+            </button>
+
+            <button class="btn btn-danger">
+                Balance
+            </button>
+
+        </div> -->
+
+        <!-- Members Table -->
+
+        <div class="table-responsive mt-4">
+
+            <table class="table member-table">
+
+                <thead>
+
+                    <tr>
+
+                        <th style="width:60px;">#</th>
+
+                        <th style="width:320px;">Member</th>
+
+                        <th style="width:100px;" class="text-center">
+                            Pandu
+                        </th>
+
+                        <th style="width:150px;" class="text-end">
+                            Total
+                        </th>
+
+                        <th style="width:150px;" class="text-end">
+                            Paid
+                        </th>
+
+                        <th style="width:150px;" class="text-end">
+                            Balance
+                        </th>
+
+                        <th style="width:120px;" class="text-center">
+                            Status
+                        </th>
+
+                        <th style="width:80px;" class="text-center">
+                            Action
+                        </th>
+
+                    </tr>
+
+                </thead>
+
+                <tbody id="memberTableBody">
+
+                    <tr>
+
+                        <td colspan="8" class="text-center py-5">
+
+                            <div class="loading-box">
+
+                                <div class="spinner-border text-primary"></div>
+
+                                <p class="mt-3">
+                                    Loading Members...
+                                </p>
+
+                            </div>
+
+                        </td>
+
+                    </tr>
+
+                </tbody>
+
+            </table>
 
         </div>
 
+        <div class="table-footer">
 
-        <div class="kpi-card percent">
+            <div class="footer-left">
 
-            <div class="card-icon">
-                📈
-            </div>
+                <strong>Total Members :</strong>
 
-            <div>
-                <span>Collection %</span>
-                <h2 id="percentage">
-                    0%
-                </h2>
+                <span id="footerMembers">0</span>
+
             </div>
 
         </div>
 
     </div>
 
-    <!-- MEMBER STATUS -->
+    <!-- Statistics -->
 
     <div class="row mt-4">
 
         <div class="col-lg-4">
 
-            <div class="status-card">
+            <div class="mini-card success-card">
 
-                <h5>
-                    Paid Members
-                </h5>
+                <small>Paid Members</small>
 
-                <h2 id="paidMembers">
-                    0
-                </h2>
+                <h2 id="paidMembers">0</h2>
 
             </div>
 
@@ -143,15 +485,11 @@ document.getElementById("dashboardTitle").innerText =
 
         <div class="col-lg-4">
 
-            <div class="status-card">
+            <div class="mini-card warning-card">
 
-                <h5>
-                    Pending Members
-                </h5>
+                <small>Pending Members</small>
 
-                <h2 id="pendingMembers">
-                    0
-                </h2>
+                <h2 id="pendingMembers">0</h2>
 
             </div>
 
@@ -159,15 +497,11 @@ document.getElementById("dashboardTitle").innerText =
 
         <div class="col-lg-4">
 
-            <div class="status-card">
+            <div class="mini-card danger-card">
 
-                <h5>
-                    Today's Collection
-                </h5>
+                <small>Balance Amount</small>
 
-                <h2 id="todayCollection">
-                    ₹0
-                </h2>
+                <h2 id="footerBalance">₹0</h2>
 
             </div>
 
@@ -175,183 +509,63 @@ document.getElementById("dashboardTitle").innerText =
 
     </div>
 
-    <!-- COLLECTION PROGRESS -->
+    <!-- Recent Collections -->
 
-    <div class="premium-panel mt-4">
+    <div class="recent-panel mt-4">
 
-        <div class="d-flex justify-content-between">
+        <div class="recent-header">
 
             <h4>
-                Collection Progress
+
+                <i class="bi bi-clock-history"></i>
+
+                Recent Collections
+
             </h4>
 
-            <span id="progressLabel">
-                0%
-            </span>
-
         </div>
 
-        <div class="progress premium-progress mt-3">
+        <div class="table-responsive">
 
-            <div id="progressBar" class="progress-bar">
+            <table class="table recent-table">
 
-                0%
+                <thead>
 
-            </div>
+                    <tr>
 
-        </div>
+                        <th>Receipt No</th>
 
-    </div>
+                        <th>Member Name</th>
 
-    <!-- CHARTS -->
+                        <th>Amount</th>
 
-    <div class="row mt-4">
+                        <th>Date</th>
 
-        <div class="col-lg-8">
+                    </tr>
 
-            <div class="premium-panel">
+                </thead>
 
-                <div class="panel-title">
+                <tbody id="recentCollectionBody">
 
-                    Monthly Collection Trend
+                    <tr>
 
-                </div>
+                        <td colspan="4" class="text-center py-4">
 
-                <canvas id="collectionChart" height="120">
+                            Loading...
 
-                </canvas>
+                        </td>
 
-            </div>
+                    </tr>
 
-        </div>
+                </tbody>
 
-        <div class="col-lg-4">
-
-            <div class="premium-panel">
-
-                <div class="panel-title">
-
-                    Collection Breakdown
-
-                </div>
-
-                <canvas id="donutChart" height="220">
-
-                </canvas>
-
-            </div>
+            </table>
 
         </div>
 
     </div>
 
-    <!-- BOTTOM WIDGETS -->
-
-    <div class="row mt-4">
-
-        <div class="col-lg-6">
-
-            <div class="premium-panel">
-
-                <div class="panel-title">
-
-                    Current Month Collection
-
-                </div>
-
-                <h1 class="money-highlight" id="monthCollection">
-
-                    ₹0
-
-                </h1>
-
-            </div>
-
-        </div>
-
-        <div class="col-lg-6">
-
-            <div class="premium-panel">
-
-                <div class="panel-title">
-
-                    System Overview
-
-                </div>
-
-                <div class="overview-item">
-
-                    <span>Total Members</span>
-                    <strong id="overviewMembers">
-                        0
-                    </strong>
-
-                </div>
-
-                <div class="overview-item">
-
-                    <span>Paid Members</span>
-                    <strong id="overviewPaid">
-                        0
-                    </strong>
-
-                </div>
-
-                <div class="overview-item">
-
-                    <span>Pending Members</span>
-                    <strong id="overviewPending">
-                        0
-                    </strong>
-
-                </div>
-
-            </div>
-
-        </div>
-
-    </div>
-
-    <!-- RECENT COLLECTIONS -->
-
-    <div class="premium-panel mt-4">
-
-        <div class="panel-title">
-
-            Recent Collections
-
-        </div>
-
-        <table class="table table-hover">
-
-            <thead>
-
-                <tr>
-
-                    <th>Receipt No</th>
-                    <th>Member</th>
-                    <th>Amount</th>
-                    <th>Date</th>
-
-                </tr>
-
-            </thead>
-
-            <tbody id="recentCollections">
-
-                <tr>
-
-                    <td colspan="4" class="text-center">
-
-                        Loading...
-
-                    </td>
-
-                </tr>
-
-            </tbody>
-
-        </table>
+</div>
 
     </div>
 

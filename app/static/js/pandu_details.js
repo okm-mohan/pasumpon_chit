@@ -1,421 +1,899 @@
-let trendChart = null;
-let donutChart = null;
+// ===========================================================
+// PANDU DETAILS
+// Premium Version
+// ===========================================================
 
-/* ==========================================
-   FORMAT MONEY
-========================================== */
+// -----------------------------------------------------------
+// GLOBAL VARIABLES
+// -----------------------------------------------------------
 
-function formatMoney(value){
+let members = [];
+let filteredMembers = [];
+let recentCollections = [];
 
-    return "₹" +
-        Number(value || 0)
-        .toLocaleString("en-IN");
-}
+let currentFilter = "ALL";
+const PAGE_SIZE = 5;
+let currentPage = 1;
 
-/* ==========================================
-   ANIMATE NUMBER
-========================================== */
+// -----------------------------------------------------------
+// FORMAT CURRENCY
+// -----------------------------------------------------------
 
-function animateValue(
-    elementId,
-    start,
-    end,
-    duration = 1200
-){
+function money(value) {
 
-    const obj =
-        document.getElementById(elementId);
+    value = Number(value || 0);
 
-    let startTime = null;
-
-    function step(timestamp){
-
-        if(!startTime)
-            startTime = timestamp;
-
-        const progress =
-            Math.min(
-                (timestamp - startTime) / duration,
-                1
-            );
-
-        const value =
-            Math.floor(
-                progress * (end - start) + start
-            );
-
-        obj.innerHTML =
-            value.toLocaleString("en-IN");
-
-        if(progress < 1){
-
-            window.requestAnimationFrame(step);
+    return "₹" + value.toLocaleString(
+        "en-IN",
+        {
+            minimumFractionDigits: 0,
+            maximumFractionDigits: 0
         }
-    }
+    );
 
-    window.requestAnimationFrame(step);
 }
 
-/* ==========================================
-   LOAD DASHBOARD
-========================================== */
 
-async function loadDashboard(){
+// -----------------------------------------------------------
+// ANIMATE COUNTER
+// -----------------------------------------------------------
 
-    try{
+function animateValue(id, value, isMoney = false) {
 
-        const response =
-            await fetch(
-                "/api/pandu-dashboard"
-            );
+    const element = document.getElementById(id);
 
-        const data =
-            await response.json();
+    if (!element) return;
 
-        document.getElementById(
-            "totalAmount"
-        ).innerHTML =
-            formatMoney(
-                data.total_amount
-            );
+    value = Number(value || 0);
 
-                    document.getElementById(
-            "totalAmountCard"
-        ).innerHTML =
-            formatMoney(
-                data.total_amount
-            );
-            
+    let start = 0;
 
-        document.getElementById(
-            "collectedAmount"
-        ).innerHTML =
-            formatMoney(
-                data.collected_amount
-            );
+    const increment = Math.max(1, Math.ceil(value / 50));
 
-        document.getElementById(
-            "balanceAmount"
-        ).innerHTML =
-            formatMoney(
-                data.balance_amount
-            );
+    const timer = setInterval(() => {
+
+        start += increment;
+
+        if (start >= value) {
+
+            start = value;
+
+            clearInterval(timer);
+
+        }
+
+        if (isMoney) {
+
+            element.textContent = money(start);
+
+        } else {
+
+            element.textContent = start.toLocaleString();
+
+        }
+
+    }, 15);
+
+}
+
+
+
+// -----------------------------------------------------------
+// SHOW ERROR
+// -----------------------------------------------------------
+
+function showError(message) {
+
+    console.error(message);
+
+}
+
+
+
+// -----------------------------------------------------------
+// LOAD SUMMARY
+// -----------------------------------------------------------
+
+async function loadSummary() {
+
+    try {
+
+        const response = await fetch(
+            "/api/pandu-details/summary"
+        );
+
+        if (!response.ok) {
+
+            throw new Error("Unable to load summary");
+
+        }
+
+        const data = await response.json();
 
         animateValue(
             "totalMembers",
-            0,
             data.total_members
         );
 
         animateValue(
-            "paidMembers",
-            0,
-            data.paid_members
+            "totalAmount",
+            data.total_amount,
+            true
         );
 
         animateValue(
-            "pendingMembers",
-            0,
-            data.pending_members
+            "paidAmount",
+            data.paid_amount,
+            true
         );
 
-        document.getElementById(
-            "percentage"
-        ).innerHTML =
-            data.percentage + "%";
+        animateValue(
+            "balanceAmount",
+            data.balance_amount,
+            true
+        );
+
+        animateValue(
+            "todayCollection",
+            data.today_collection,
+            true
+        );
+
+        animateValue(
+            "monthCollection",
+            data.month_collection,
+            true
+        );
+
+        animateValue(
+            "totalInstallments",
+            data.total_installments
+        );
+
+        const progress =
+            Number(data.percentage || 0);
 
         document.getElementById(
-            "monthCollection"
-        ).innerHTML =
-            formatMoney(
-                data.current_month
+            "collectionPercent"
+        ).textContent =
+            progress + "%";
+
+        const progressBar =
+            document.getElementById(
+                "collectionBar"
             );
-
-        document.getElementById(
-            "todayCollection"
-        ).innerHTML =
-            formatMoney(
-                data.today_collection
-            );
-
-        document.getElementById(
-            "overviewMembers"
-        ).innerHTML =
-            data.total_members;
-
-        document.getElementById(
-            "overviewPaid"
-        ).innerHTML =
-            data.paid_members;
-
-        document.getElementById(
-            "overviewPending"
-        ).innerHTML =
-            data.pending_members;
-
-        loadProgress(
-            data.percentage
-        );
-
-        loadDonutChart(
-            data.collected_amount,
-            data.balance_amount
-        );
-
-    }
-    catch(error){
-
-        console.error(error);
-    }
-}
-
-/* ==========================================
-   PROGRESS BAR
-========================================== */
-
-function loadProgress(percent){
-
-    const progressBar =
-        document.getElementById(
-            "progressBar"
-        );
-
-    const progressLabel =
-        document.getElementById(
-            "progressLabel"
-        );
-
-    progressBar.style.width = "0%";
-
-    setTimeout(() => {
 
         progressBar.style.width =
-            percent + "%";
+            progress + "%";
 
-        progressBar.innerHTML =
-            percent + "%";
+        progressBar.textContent =
+            progress + "%";
 
-        progressLabel.innerHTML =
-            percent + "%";
-
-    },300);
-}
-
-/* ==========================================
-   DONUT CHART
-========================================== */
-
-function loadDonutChart(
-    collected,
-    balance
-){
-
-    const ctx =
-        document.getElementById(
-            "donutChart"
-        );
-
-    if(donutChart){
-
-        donutChart.destroy();
     }
 
-    donutChart =
-        new Chart(ctx,{
+    catch (error) {
 
-        type:"doughnut",
+        showError(error);
 
-        data:{
-
-            labels:[
-                "Collected",
-                "Balance"
-            ],
-
-            datasets:[{
-
-                data:[
-                    collected,
-                    balance
-                ],
-
-                backgroundColor:[
-                    "#10b981",
-                    "#ef4444"
-                ],
-
-                borderWidth:0
-
-            }]
-        },
-
-        options:{
-
-            responsive:true,
-
-            plugins:{
-
-                legend:{
-
-                    position:"bottom"
-                }
-            }
-        }
-    });
-}
-
-/* ==========================================
-   MONTHLY TREND
-========================================== */
-
-function loadTrendChart(){
-
-    const ctx =
-        document.getElementById(
-            "collectionChart"
-        );
-
-    if(trendChart){
-
-        trendChart.destroy();
     }
 
-    trendChart =
-        new Chart(ctx,{
+}
+// ===========================================================
+// LOAD MEMBERS
+// ===========================================================
 
-        type:"bar",
+async function loadMembers(search = "") {
 
-        data:{
+    try {
 
-            labels:[
-                "Jan",
-                "Feb",
-                "Mar",
-                "Apr",
-                "May",
-                "Jun",
-                "Jul",
-                "Aug",
-                "Sep",
-                "Oct",
-                "Nov",
-                "Dec"
-            ],
+        const response = await fetch(
+            "/api/pandu-details/members?search=" +
+            encodeURIComponent(search)
+        );
 
-            datasets:[{
+        if (!response.ok) {
 
-                label:
-                "Monthly Collection",
+            throw new Error("Unable to load members");
 
-                data:[
-                    50000,
-                    60000,
-                    70000,
-                    85000,
-                    90000,
-                    95000,
-                    100000,
-                    85000,
-                    65000,
-                    75000,
-                    95000,
-                    120000
-                ],
-
-                borderRadius:10,
-
-                backgroundColor:
-                    "#2563eb"
-            }]
-        },
-
-        options:{
-
-            responsive:true,
-
-            plugins:{
-
-                legend:{
-                    display:false
-                }
-            },
-
-            scales:{
-
-                y:{
-
-                    beginAtZero:true
-                }
-            }
         }
-    });
+
+        members = await response.json();
+
+        filteredMembers = [...members];
+
+        renderMembers();
+
+    }
+
+    catch (error) {
+
+        showError(error);
+
+    }
+
 }
 
-/* ==========================================
-   RECENT COLLECTIONS
-========================================== */
 
-function loadRecentCollections(){
+
+// ===========================================================
+// RENDER MEMBERS
+// ===========================================================
+
+function renderMembers() {
+
+    const tbody = document.getElementById(
+        "memberTableBody"
+    );
+
+    if (!tbody) return;
+
+    tbody.innerHTML = "";
+
+    let data = [...filteredMembers];
+
+
+
+    // -----------------------------------------
+    // FILTER
+    // -----------------------------------------
+
+    if (currentFilter === "PAID") {
+
+        data = data.filter(
+            x => x.status === "Paid"
+        );
+
+    }
+
+    if (currentFilter === "PENDING") {
+
+        data = data.filter(
+            x => x.status === "Pending"
+        );
+
+    }
+
+    if (currentFilter === "BALANCE") {
+
+        data = data.filter(
+            x => x.status === "Balance"
+        );
+
+    }
+
+
+
+    if (data.length === 0) {
+
+        tbody.innerHTML = `
+
+        <tr>
+
+            <td colspan="8" class="text-center py-5">
+
+                No Members Found
+
+            </td>
+
+        </tr>
+
+        `;
+
+        updateFooter([]);
+
+        return;
+
+    }
+
+
+
+    let html = "";
+
+
+
+    data.slice(0, 5).forEach((member, index) => {
+
+        let badge = "";
+
+        if (member.status === "Paid") {
+
+            badge =
+                `<span class="status status-paid">
+                    Paid
+                </span>`;
+
+        }
+
+        else if (member.status === "Pending") {
+
+            badge =
+                `<span class="status status-pending">
+                    Pending
+                </span>`;
+
+        }
+
+        else {
+
+            badge =
+                `<span class="status status-balance">
+                    Balance
+                </span>`;
+
+        }
+
+
+        const totalMembers = data.length;
+
+        const totalPages = Math.ceil(totalMembers / PAGE_SIZE);
+
+        if (currentPage > totalPages) {
+            currentPage = 1;
+        }
+
+        const start = (currentPage - 1) * PAGE_SIZE;
+
+        const end = start + PAGE_SIZE;
+
+        const pageData = data.slice(start, end);
+
+
+
+
+        const initials =
+            member.member_name
+                .split(" ")
+                .map(x => x.charAt(0))
+                .join("")
+                .substring(0, 2)
+                .toUpperCase();
+
+
+
+        html += `
+
+<tr>
+
+<td>
+
+${index + 1}
+
+</td>
+
+<td>
+
+<div class="member-name">
+
+<div class="member-avatar">
+
+${initials}
+
+</div>
+
+<div class="member-info">
+
+<h6>
+
+${member.member_name}
+
+</h6>
+
+<small>
+
+${member.mobile}
+
+</small>
+
+</div>
+
+</div>
+
+</td>
+
+<td class="text-center">
+
+${member.pandu_count}
+
+</td>
+
+<td class="text-end money">
+
+${money(member.total_amount)}
+
+</td>
+
+<td class="text-end money green">
+
+${money(member.paid_amount)}
+
+</td>
+
+<td class="text-end money red">
+
+${money(member.balance_amount)}
+
+</td>
+
+<td class="text-center">
+
+${badge}
+
+</td>
+
+<td class="text-center">
+
+<button
+class="action-btn"
+onclick="viewMember(${member.id})">
+
+<i class="bi bi-eye-fill"></i>
+
+</button>
+
+</td>
+
+</tr>
+
+`;
+
+    });
+
+
+
+    tbody.innerHTML = html;
+
+
+
+    updateFooter(data);
+
+}
+
+
+
+// ===========================================================
+// UPDATE FOOTER
+// ===========================================================
+
+function updateFooter(data) {
+
+    let paidMembers = 0;
+
+    let pendingMembers = 0;
+
+    let balanceAmount = 0;
+
+
+
+    data.forEach(member => {
+
+        balanceAmount += Number(
+            member.balance_amount || 0
+        );
+
+        if (member.status === "Paid") {
+
+            paidMembers++;
+
+        }
+
+        else {
+
+            pendingMembers++;
+
+        }
+
+    });
+
+
+
+    const footerMembers =
+        document.getElementById(
+            "footerMembers"
+        );
+
+    if (footerMembers) {
+
+        footerMembers.textContent =
+            data.length;
+
+    }
+
+
+
+    const paid =
+        document.getElementById(
+            "paidMembers"
+        );
+
+    if (paid) {
+
+        paid.textContent =
+            paidMembers;
+
+    }
+
+
+
+    const pending =
+        document.getElementById(
+            "pendingMembers"
+        );
+
+    if (pending) {
+
+        pending.textContent =
+            pendingMembers;
+
+    }
+
+
+
+    const balance =
+        document.getElementById(
+            "footerBalance"
+        );
+
+    if (balance) {
+
+        balance.textContent =
+            money(balanceAmount);
+
+    }
+
+}
+
+
+
+// ===========================================================
+// VIEW MEMBER
+// ===========================================================
+
+function viewMember(id) {
+
+    window.location.href =
+        "/members/view/" + id;
+
+}
+// ===========================================================
+// SEARCH MEMBERS
+// ===========================================================
+
+function initializeSearch() {
+
+    const searchBox = document.getElementById("searchMember");
+
+    if (!searchBox) return;
+
+    searchBox.addEventListener("keyup", function () {
+
+        loadMembers(this.value.trim());
+
+    });
+
+}
+
+
+
+// ===========================================================
+// FILTER BUTTONS
+// ===========================================================
+
+function initializeFilters() {
+
+    const buttons = document.querySelectorAll(
+        ".filter-buttons .btn"
+    );
+
+    buttons.forEach(button => {
+
+        button.addEventListener("click", function () {
+
+            buttons.forEach(btn => {
+
+                btn.classList.remove("active-filter");
+
+            });
+
+            this.classList.add("active-filter");
+
+            const value =
+                this.innerText.trim().toUpperCase();
+
+            switch (value) {
+
+                case "PAID":
+
+                    currentFilter = "PAID";
+
+                    break;
+
+                case "PENDING":
+
+                    currentFilter = "PENDING";
+
+                    break;
+
+                case "BALANCE":
+
+                    currentFilter = "BALANCE";
+
+                    break;
+
+                default:
+
+                    currentFilter = "ALL";
+
+            }
+
+            renderMembers();
+
+        });
+
+    });
+
+}
+
+
+
+// ===========================================================
+// LOAD RECENT COLLECTIONS
+// ===========================================================
+
+async function loadRecentCollections() {
+
+    try {
+
+        const response = await fetch(
+            "/api/pandu-details/recent"
+        );
+
+        if (!response.ok) {
+
+            throw new Error(
+                "Unable to load recent collections"
+            );
+
+        }
+
+        recentCollections =
+            await response.json();
+
+        renderRecentCollections();
+
+    }
+
+    catch (error) {
+
+        showError(error);
+
+    }
+
+}
+
+
+
+// ===========================================================
+// RENDER RECENT COLLECTIONS
+// ===========================================================
+
+function renderRecentCollections() {
 
     const tbody =
         document.getElementById(
-            "recentCollections"
+            "recentCollectionBody"
         );
 
-    tbody.innerHTML = `
+    if (!tbody) return;
+
+    tbody.innerHTML = "";
+
+    if (recentCollections.length === 0) {
+
+        tbody.innerHTML = `
 
         <tr>
 
-            <td>RC001</td>
+            <td colspan="4"
+                class="text-center py-4">
 
-            <td>Kumar</td>
+                No Collections Found
 
-            <td>₹5,000</td>
-
-            <td>Today</td>
-
-        </tr>
-
-        <tr>
-
-            <td>RC002</td>
-
-            <td>Ravi</td>
-
-            <td>₹5,000</td>
-
-            <td>Today</td>
+            </td>
 
         </tr>
 
-        <tr>
+        `;
 
-            <td>RC003</td>
-
-            <td>Selvam</td>
-
-            <td>₹5,000</td>
-
-            <td>Today</td>
-
-        </tr>
-
-    `;
-}
-
-/* ==========================================
-   INIT
-========================================== */
-
-document.addEventListener(
-    "DOMContentLoaded",
-    function(){
-
-        loadDashboard();
-
-        loadTrendChart();
-
-        loadRecentCollections();
+        return;
 
     }
+
+    recentCollections.forEach(item => {
+
+        tbody.innerHTML += `
+
+<tr>
+
+<td>
+
+${item.receipt_no}
+
+</td>
+
+<td>
+
+${item.member_name}
+
+</td>
+
+<td class="text-success fw-bold">
+
+${money(item.amount)}
+
+</td>
+
+<td>
+
+${item.collection_date}
+
+</td>
+
+</tr>
+
+`;
+
+    });
+
+}
+
+
+
+// ===========================================================
+// EXPORT CSV
+// ===========================================================
+
+function exportExcel() {
+
+    let csv = [];
+
+    csv.push([
+        "Member Name",
+        "Mobile",
+        "Pandu Count",
+        "Total Amount",
+        "Paid Amount",
+        "Balance Amount",
+        "Status"
+    ].join(","));
+
+    filteredMembers.forEach(member => {
+
+        csv.push([
+
+            member.member_name,
+
+            member.mobile,
+
+            member.pandu_count,
+
+            member.total_amount,
+
+            member.paid_amount,
+
+            member.balance_amount,
+
+            member.status
+
+        ].join(","));
+
+    });
+
+    const blob = new Blob(
+
+        [csv.join("\n")],
+
+        {
+
+            type: "text/csv"
+
+        }
+
+    );
+
+    const url =
+        window.URL.createObjectURL(blob);
+
+    const a =
+        document.createElement("a");
+
+    a.href = url;
+
+    a.download =
+        "Pandu_Details.csv";
+
+    a.click();
+
+}
+
+
+
+// ===========================================================
+// PRINT
+// ===========================================================
+
+function printPage() {
+
+    window.print();
+
+}
+
+
+
+// ===========================================================
+// BUTTON EVENTS
+// ===========================================================
+
+function initializeButtons() {
+
+    const buttons =
+        document.querySelectorAll(
+            ".footer-right .btn"
+        );
+
+    buttons.forEach(button => {
+
+        if (button.innerText.includes("Export")) {
+
+            button.onclick = exportExcel;
+
+        }
+
+        if (button.innerText.includes("Print")) {
+
+            button.onclick = printPage;
+
+        }
+
+    });
+
+}
+
+
+
+// ===========================================================
+// PAGE INITIALIZATION
+// ===========================================================
+
+document.addEventListener(
+
+    "DOMContentLoaded",
+
+    async function () {
+
+        const year =
+            document.getElementById(
+                "currentYear"
+            );
+
+        if (year) {
+
+            year.textContent =
+                new Date().getFullYear();
+
+        }
+
+        initializeSearch();
+
+        initializeFilters();
+
+        initializeButtons();
+
+        await loadSummary();
+
+        await loadMembers();
+
+        await loadRecentCollections();
+
+    }
+
 );
