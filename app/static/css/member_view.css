@@ -411,3 +411,94 @@ body{
 }
 
 }
+
+/* ===========================
+   ACTIONS
+=========================== */
+
+.action-grid{
+
+    display:grid;
+    grid-template-columns:repeat(2,1fr);
+    gap:18px;
+
+}
+
+.action-card{
+
+    text-decoration:none;
+    background:#fff;
+    border-radius:16px;
+    padding:25px;
+    transition:.30s;
+    border:1px solid #e5e7eb;
+    display:flex;
+    flex-direction:column;
+    align-items:flex-start;
+
+}
+
+.action-card:hover{
+
+    transform:translateY(-5px);
+    box-shadow:0 12px 25px rgba(0,0,0,.10);
+
+}
+
+.action-card i{
+
+    width:60px;
+    height:60px;
+    border-radius:14px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:28px;
+    color:#fff;
+    margin-bottom:15px;
+
+}
+
+.action-card h5{
+
+    color:#1e293b;
+    margin-bottom:6px;
+    font-size:19px;
+    font-weight:700;
+
+}
+
+.action-card span{
+
+    color:#64748b;
+    font-size:14px;
+
+}
+
+/* Colors */
+
+.settlement i{
+    background:#16a34a;
+}
+
+.kanthu i{
+    background:#2563eb;
+}
+
+.ayul i{
+    background:#ec4899;
+}
+
+.chit i{
+    background:#f59e0b;
+}
+
+@media(max-width:768px){
+
+.action-grid{
+
+    grid-template-columns:1fr;
+
+}
+
+}
