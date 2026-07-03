@@ -6,8 +6,7 @@ Pandu Settlement
 
 {% block content %}
 
-<link rel="stylesheet"
-      href="/static/css/pandu_settlement_list.css">
+<link rel="stylesheet" href="/static/css/pandu_settlement_list.css">
 
 <div class="settlement-page">
 
@@ -67,22 +66,38 @@ Pandu Settlement
 
         <div class="row">
 
-            <div class="col-md-8">
-                <input
-                    type="text"
-                    id="searchSettlement"
-                    class="form-control"
+            <div class="col-md-2">
+                <label>Year</label>
+                <select id="yearFilter" class="form-select" onchange="location='?year='+this.value">
+
+                    {% for y in years %}
+                    <option value="{{ y }}" {% if y==year %}selected{% endif %}>
+                        {{ y }}
+                    </option>
+                    {% endfor %}
+
+                </select>
+            </div>
+
+            <div class="col-md-6">
+                <label>Search</label>
+                <input type="text" id="searchSettlement" class="form-control"
                     placeholder="Search Member Name / Code / Mobile">
             </div>
 
-            <div class="col-md-4">
-
+            <div class="col-md-2">
+                <label>Status</label>
                 <select class="form-select" id="statusFilter">
                     <option value="">All Status</option>
                     <option value="pending">Pending</option>
                     <option value="settled">Settled</option>
                 </select>
+            </div>
 
+            <div class="col-md-2 d-flex align-items-end">
+                <button class="btn btn-primary w-100" id="btnSearch">
+                    Search
+                </button>
             </div>
 
         </div>
@@ -176,9 +191,7 @@ Pandu Settlement
 
                             {% if row.is_settled == 1 %}
 
-                            <button
-                                class="btn btn-success btn-sm"
-                                disabled>
+                            <button class="btn btn-success btn-sm" disabled>
 
                                 Completed
 
@@ -186,13 +199,9 @@ Pandu Settlement
 
                             {% else %}
 
-                            <button
-                                class="btn btn-primary btn-sm settlement-btn"
-                                data-id="{{ row.id }}"
-                                data-name="{{ row.member_name }}"
-                                data-total="{{ row.total_amount }}"
-                                data-paid="{{ row.paid_amount }}"
-                                data-balance="{{ row.balance_amount }}"
+                            <button class="btn btn-primary btn-sm settlement-btn" data-id="{{ row.id }}"
+                                data-name="{{ row.member_name }}" data-total="{{ row.total_amount }}"
+                                data-paid="{{ row.paid_amount }}" data-balance="{{ row.balance_amount }}"
                                 data-settlement="{{ row.settlement_amount }}">
 
                                 Settlement
@@ -220,10 +229,7 @@ Pandu Settlement
 
 <!-- Settlement Modal -->
 
-<div
-    class="modal fade"
-    id="settlementModal"
-    tabindex="-1">
+<div class="modal fade" id="settlementModal" tabindex="-1">
 
     <div class="modal-dialog modal-lg">
 
@@ -235,10 +241,7 @@ Pandu Settlement
                     Member Settlement
                 </h5>
 
-                <button
-                    type="button"
-                    class="btn-close btn-close-white"
-                    data-bs-dismiss="modal">
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal">
                 </button>
 
             </div>
@@ -251,11 +254,7 @@ Pandu Settlement
 
                         <label>Member Name</label>
 
-                        <input
-                            type="text"
-                            id="modalMemberName"
-                            class="form-control"
-                            readonly>
+                        <input type="text" id="modalMemberName" class="form-control" readonly>
 
                     </div>
 
@@ -263,11 +262,7 @@ Pandu Settlement
 
                         <label>Total Amount</label>
 
-                        <input
-                            type="text"
-                            id="modalTotal"
-                            class="form-control"
-                            readonly>
+                        <input type="text" id="modalTotal" class="form-control" readonly>
 
                     </div>
 
@@ -275,11 +270,7 @@ Pandu Settlement
 
                         <label>Paid Amount</label>
 
-                        <input
-                            type="text"
-                            id="modalPaid"
-                            class="form-control"
-                            readonly>
+                        <input type="text" id="modalPaid" class="form-control" readonly>
 
                     </div>
 
@@ -287,11 +278,7 @@ Pandu Settlement
 
                         <label>Balance Amount</label>
 
-                        <input
-                            type="text"
-                            id="modalBalance"
-                            class="form-control"
-                            readonly>
+                        <input type="text" id="modalBalance" class="form-control" readonly>
 
                     </div>
 
@@ -299,11 +286,7 @@ Pandu Settlement
 
                         <label>Settlement Amount</label>
 
-                        <input
-                            type="text"
-                            id="modalSettlement"
-                            class="form-control"
-                            readonly>
+                        <input type="text" id="modalSettlement" class="form-control" readonly>
 
                     </div>
 
@@ -311,10 +294,7 @@ Pandu Settlement
 
                         <label>Remarks</label>
 
-                        <textarea
-                            id="settlementRemarks"
-                            class="form-control"
-                            rows="3"></textarea>
+                        <textarea id="settlementRemarks" class="form-control" rows="3"></textarea>
 
                     </div>
 
@@ -324,17 +304,13 @@ Pandu Settlement
 
             <div class="modal-footer">
 
-                <button
-                    class="btn btn-secondary"
-                    data-bs-dismiss="modal">
+                <button class="btn btn-secondary" data-bs-dismiss="modal">
 
                     Close
 
                 </button>
 
-                <button
-                    id="completeSettlementBtn"
-                    class="btn btn-success">
+                <button id="completeSettlementBtn" class="btn btn-success">
 
                     Complete Settlement
 
@@ -350,9 +326,7 @@ Pandu Settlement
 
 
 
-<div class="modal fade"
-     id="confirmSettlementModal"
-     tabindex="-1">
+<div class="modal fade" id="confirmSettlementModal" tabindex="-1">
 
     <div class="modal-dialog">
 
@@ -364,9 +338,7 @@ Pandu Settlement
                     Confirm Pandu Settlement
                 </h5>
 
-                <button type="button"
-                        class="btn-close"
-                        data-bs-dismiss="modal">
+                <button type="button" class="btn-close" data-bs-dismiss="modal">
                 </button>
 
             </div>
@@ -402,13 +374,11 @@ Pandu Settlement
 
             <div class="modal-footer">
 
-                <button class="btn btn-secondary"
-                        data-bs-dismiss="modal">
+                <button class="btn btn-secondary" data-bs-dismiss="modal">
                     Cancel
                 </button>
 
-                <button id="confirmSettlementBtn"
-                        class="btn btn-success">
+                <button id="confirmSettlementBtn" class="btn btn-success">
                     Confirm Settlement
                 </button>
 

@@ -1,78 +1,78 @@
 document.addEventListener("DOMContentLoaded", function () {
 
-  
-const searchInput =
-    document.getElementById("searchSettlement");
 
-const statusFilter =
-    document.getElementById("statusFilter");
+    const searchInput =
+        document.getElementById("searchSettlement");
 
-function filterTable() {
+    const statusFilter =
+        document.getElementById("statusFilter");
 
-    const searchText =
-        searchInput.value.toLowerCase();
+    function filterTable() {
 
-    const statusValue =
-        statusFilter.value.toLowerCase();
+        const searchText =
+            searchInput.value.toLowerCase();
 
-    const rows =
-        document.querySelectorAll(
-            "table tbody tr"
+        const statusValue =
+            statusFilter.value.toLowerCase();
+
+        const rows =
+            document.querySelectorAll(
+                "table tbody tr"
+            );
+
+        rows.forEach(row => {
+
+            const rowText =
+                row.innerText.toLowerCase();
+
+            const badge =
+                row.querySelector(".badge");
+
+            let rowStatus = "";
+
+            if (badge) {
+
+                rowStatus =
+                    badge.innerText
+                        .trim()
+                        .toLowerCase();
+            }
+
+            const searchMatch =
+                rowText.includes(searchText);
+
+            const statusMatch =
+                !statusValue ||
+                rowStatus === statusValue;
+
+            if (searchMatch && statusMatch) {
+
+                row.style.display = "";
+
+            } else {
+
+                row.style.display = "none";
+            }
+
+        });
+
+    }
+
+    if (searchInput) {
+
+        searchInput.addEventListener(
+            "keyup",
+            filterTable
         );
+    }
 
-    rows.forEach(row => {
+    if (statusFilter) {
 
-        const rowText =
-            row.innerText.toLowerCase();
-
-        const badge =
-            row.querySelector(".badge");
-
-        let rowStatus = "";
-
-        if (badge) {
-
-            rowStatus =
-                badge.innerText
-                    .trim()
-                    .toLowerCase();
-        }
-
-        const searchMatch =
-            rowText.includes(searchText);
-
-        const statusMatch =
-            !statusValue ||
-            rowStatus === statusValue;
-
-        if (searchMatch && statusMatch) {
-
-            row.style.display = "";
-
-        } else {
-
-            row.style.display = "none";
-        }
-
-    });
-
-}
-
-if (searchInput) {
-
-    searchInput.addEventListener(
-        "keyup",
-        filterTable
-    );
-}
-
-if (statusFilter) {
-
-    statusFilter.addEventListener(
-        "change",
-        filterTable
-    );
-}
+        statusFilter.addEventListener(
+            "change",
+            filterTable
+        );
+    }
 
 
 });
@@ -132,62 +132,62 @@ document.addEventListener("DOMContentLoaded", function () {
 document.addEventListener("DOMContentLoaded", function () {
 
 
-const searchInput = document.getElementById("searchSettlement");
-const statusFilter = document.getElementById("statusFilter");
+    const searchInput = document.getElementById("searchSettlement");
+    const statusFilter = document.getElementById("statusFilter");
 
-function filterTable() {
+    function filterTable() {
 
-    const searchText = searchInput.value.trim().toLowerCase();
-    const statusText = statusFilter.value.trim().toLowerCase();
+        const searchText = searchInput.value.trim().toLowerCase();
+        const statusText = statusFilter.value.trim().toLowerCase();
 
-    const rows = document.querySelectorAll(
-        ".settlement-table-card tbody tr"
-    );
+        const rows = document.querySelectorAll(
+            ".settlement-table-card tbody tr"
+        );
 
-    rows.forEach(row => {
+        rows.forEach(row => {
 
-        const memberCode =
-            row.cells[1].textContent.toLowerCase();
+            const memberCode =
+                row.cells[1].textContent.toLowerCase();
 
-        const memberName =
-            row.cells[2].textContent.toLowerCase();
+            const memberName =
+                row.cells[2].textContent.toLowerCase();
 
-        const groupName =
-            row.cells[3].textContent.toLowerCase();
+            const groupName =
+                row.cells[3].textContent.toLowerCase();
 
-        const statusBadge =
-            row.querySelector(".badge");
+            const statusBadge =
+                row.querySelector(".badge");
 
-        const rowStatus =
-            statusBadge
-                ? statusBadge.textContent.trim().toLowerCase()
-                : "";
+            const rowStatus =
+                statusBadge
+                    ? statusBadge.textContent.trim().toLowerCase()
+                    : "";
 
-        const searchMatch =
-            memberCode.includes(searchText) ||
-            memberName.includes(searchText) ||
-            groupName.includes(searchText);
+            const searchMatch =
+                memberCode.includes(searchText) ||
+                memberName.includes(searchText) ||
+                groupName.includes(searchText);
 
-        const statusMatch =
-            statusText === "" ||
-            rowStatus === statusText;
+            const statusMatch =
+                statusText === "" ||
+                rowStatus === statusText;
 
-        row.style.display =
-            (searchMatch && statusMatch)
-                ? ""
-                : "none";
+            row.style.display =
+                (searchMatch && statusMatch)
+                    ? ""
+                    : "none";
 
-    });
+        });
 
-}
+    }
 
-if (searchInput) {
-    searchInput.addEventListener("input", filterTable);
-}
+    if (searchInput) {
+        searchInput.addEventListener("input", filterTable);
+    }
 
-if (statusFilter) {
-    statusFilter.addEventListener("change", filterTable);
-}
+    if (statusFilter) {
+        statusFilter.addEventListener("change", filterTable);
+    }
 
 
 });
@@ -240,9 +240,13 @@ document.getElementById(
             },
 
             body: JSON.stringify({
-                amount: 0,
-                remarks:
-                    "Settlement Completed"
+                amount: Number(
+                    document.getElementById("confirmAmount")
+                        .innerText
+                        .replace("₹", "")
+                        .replace(/,/g, "")
+                ),
+                remarks: "Settlement Completed"
             })
         }
     );

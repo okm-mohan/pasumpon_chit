@@ -13,6 +13,7 @@ import shutil
 import os
 from fastapi.responses import JSONResponse, FileResponse
 from datetime import datetime
+from fastapi import Request
 
 app = FastAPI()
 
@@ -32,9 +33,6 @@ class JoinPanduRequest(BaseModel):
     chit_amount: float
 
     duration_months: int
-
-
-from pydantic import BaseModel
 
 
 class KanthuSaveRequest(BaseModel):
@@ -187,123 +185,136 @@ def member_details(member_id: int):
 
     try:
 
-        sql = text("""
+        row = (
+            db.execute(
+                text("""
                 SELECT
-                m.id,
-                m.member_code,
-                m.member_name,
-                m.mobile,
-                m.address,
 
-                g.group_name,
+                    m.id,
+                    m.member_code,
+                    m.member_name,
+                    m.mobile,
+                    m.address,
 
-                pa.group_monthly_due AS monthly_due,
+                    pg.group_name,
 
-                pa.total_amount,
-                pa.balance_amount,
-                pa.settlement_amount AS maturity_amount,
+                    pa.group_monthly_due AS monthly_due,
+                    pa.group_chit_amount AS chit_amount,
+                    pa.pandu_count,
+                    pa.duration_months,
 
-                (
-                    SELECT pa.pandu_count
-                    FROM pandu_assignments pa
-                    WHERE pa.member_id = m.id
-                    AND pa.status = 'ACTIVE'
-                    ORDER BY pa.id DESC
-                    LIMIT 1
-                ) AS pandu_count
+                    pa.total_amount,
+                    pa.paid_amount,
+                    pa.balance_amount,
+                    pa.settlement_amount AS maturity_amount,
 
-            FROM members m
+                    pa.join_date
 
-            LEFT JOIN pandu_assignments pa
-            ON pa.member_id = m.id
-            AND pa.status='ACTIVE'
+                FROM members m
 
-            LEFT JOIN pandu_groups g
-            ON g.id = pa.group_id
+                LEFT JOIN pandu_assignments pa
+                    ON pa.member_id = m.id
+                    AND pa.status='ACTIVE'
 
-            WHERE m.id = :member_id
-        """)
+                LEFT JOIN pandu_groups pg
+                    ON pg.id = pa.group_id
 
-        row = db.execute(sql, {"member_id": member_id}).mappings().first()
+                WHERE m.id = :member_id
 
-        result = {}
+                LIMIT 1
+            """),
+                {"member_id": member_id},
+            )
+            .mappings()
+            .first()
+        )
 
-        for k, v in dict(row).items():
+        if not row:
 
-            if hasattr(v, "as_tuple"):  # Decimal values
-                result[k] = float(v)
-            else:
-                result[k] = v
-
-        paid_months = result.get("paid_months", 0)
-
-        result["pending_months"] = 12 - paid_months
-
-        # result = dict(row)
-        result = dict(row)
-        result["pending_months"] = 12 - paid_months
+            return JSONResponse(
+                status_code=404, content={"message": "Member Not Found"}
+            )
 
         result = {}
 
-        for k, v in dict(row).items():
+        # Convert Decimal values to float
+        for key, value in row.items():
 
-            if hasattr(v, "as_tuple"):  # Decimal values
-                result[k] = float(v)
-            else:
-                result[k] = v
+            try:
 
-        rows = db.execute(
+                if value is None:
+                    result[key] = None
+
+                elif hasattr(value, "as_tuple"):
+                    result[key] = float(value)
+
+                else:
+                    result[key] = value
+
+            except Exception:
+                result[key] = value
+
+        # ---------------------------------
+        # Paid Months (Current Year)
+        # ---------------------------------
+
+        paid_months = db.execute(
             text("""
-                    SELECT DISTINCT collection_month
-                    FROM collections
-                    WHERE member_id = :member_id
-                    AND collection_year = YEAR(CURDATE())
-                """),
+                SELECT COUNT(DISTINCT collection_month)
+
+                FROM collections
+
+                WHERE member_id = :member_id
+
+                AND collection_year = YEAR(CURDATE())
+            """),
             {"member_id": member_id},
-        ).fetchall()
+        ).scalar()
 
-        paid_months = set()
-
-        for row in rows:
-            paid_months.add(row[0])
+        paid_months = int(paid_months or 0)
 
         current_month = datetime.now().month
 
-        pending_months = 0
+        pending_months = max(0, current_month - paid_months)
 
-        for m in range(1, current_month + 1):
-            if m not in paid_months:
-                pending_months += 1
-
+        result["paid_months"] = paid_months
         result["pending_months"] = pending_months
 
-        if result.get("last_payment_date"):
-            result["last_payment_date"] = str(result["last_payment_date"])
+        # ---------------------------------
+        # Numeric Fields
+        # ---------------------------------
 
-            base_due = float(result["monthly_due"])
+        for field in [
+            "monthly_due",
+            "chit_amount",
+            "total_amount",
+            "paid_amount",
+            "balance_amount",
+            "maturity_amount",
+        ]:
 
-            # result["monthly_due"] = base_due * result["pandu_count"]
-            if result.get("monthly_due") is not None:
-                # result["monthly_due"] = float(result["monthly_due"])
-                result["monthly_due"] = float(result["monthly_due"]) * int(
-                    result["pandu_count"]
-                )
+            if result.get(field) is not None:
 
-            # result["base_due"] = base_due
-            # duration = 12
-            # result["maturity_amount"] = result["monthly_due"] * (duration + 1)
-            if result.get("base_due") is not None:
-                result["base_due"] = float(result["base_due"])
+                result[field] = float(result[field])
 
-            if result.get("maturity_amount") is not None:
-                result["maturity_amount"] = float(result["maturity_amount"])
+        if result.get("pandu_count") is None:
+            result["pandu_count"] = 0
 
-            if result.get("chit_amount") is not None:
-                result["chit_amount"] = float(result["chit_amount"])
+        if result.get("duration_months") is None:
+            result["duration_months"] = 12
 
-            result["is_assigned"] = result.get("pandu_count") is not None
+        result["is_assigned"] = result["pandu_count"] > 0
+
+        if result.get("join_date"):
+            result["join_date"] = str(result["join_date"])
 
         return JSONResponse(content=result)
+
+    except Exception as e:
+
+        return JSONResponse(
+            status_code=500, content={"success": False, "message": str(e)}
+        )
 
     finally:
 
@@ -428,6 +439,7 @@ def save_collection(
                         balance_amount - :amount
 
                 WHERE id = :assignment_id
+                
 
             """),
                 {"amount": amount, "assignment_id": assignment["id"]},
@@ -530,7 +542,6 @@ def member_due_status(member_id: int):
 
         db.close()
 
-
 @app.get("/api/member-full-due/{member_id}")
 def member_full_due(member_id: int):
 
@@ -538,119 +549,120 @@ def member_full_due(member_id: int):
 
     try:
 
-        group_sql = text("""
+        current_year = datetime.now().year
 
-    SELECT
+        assignment = db.execute(
+            text("""
+                SELECT
 
-        g.start_date,
-        g.duration_months,
+                    pa.id,
+                    pa.group_monthly_due,
+                    pa.join_date,
 
-        pa.group_monthly_due AS monthly_due,
+                    pg.duration_months,
+                    pg.group_name,
+                    pg.pandu_year
 
-        pa.pandu_count
+                FROM pandu_assignments pa
 
-    FROM pandu_assignments pa
+                INNER JOIN pandu_groups pg
+                    ON pg.id = pa.group_id
 
-    INNER JOIN pandu_groups g
-        ON pa.group_id = g.id
+                WHERE
+                    pa.member_id = :member_id
+                    AND pg.pandu_year = :year
 
-    WHERE pa.member_id = :member_id
+                ORDER BY pa.id DESC
 
-    AND pa.status = 'ACTIVE'
+                LIMIT 1
+            """),
+            {
+                "member_id": member_id,
+                "year": current_year
+            }
+        ).mappings().first()
 
-    ORDER BY pa.id DESC
-
-    LIMIT 1
-
-""")
-
-        group = db.execute(group_sql, {"member_id": member_id}).mappings().first()
-
-        if not group:
+        if not assignment:
             return []
 
-        paid_sql = text("""
-            SELECT
-                collection_month,
-                collection_year,
-                amount,
-                collection_date
-            FROM collections
-            WHERE member_id = :member_id
-        """)
+        collections = db.execute(
+            text("""
+                SELECT
 
-        paid_rows = db.execute(paid_sql, {"member_id": member_id}).mappings().all()
+                    collection_month,
+                    collection_year,
+                    amount,
+                    collection_date,
+                    receipt_no
+
+                FROM collections
+
+                WHERE
+                    member_id = :member_id
+                    AND collection_year = :year
+            """),
+            {
+                "member_id": member_id,
+                "year": current_year
+            }
+        ).mappings().all()
 
         paid_map = {}
 
-        for row in paid_rows:
+        for row in collections:
 
-            paid_map[(row["collection_month"], row["collection_year"])] = row
+            paid_map[row["collection_month"]] = row
+
+        monthly_due = float(assignment["group_monthly_due"])
+
+        current_month = datetime.now().month
 
         result = []
 
-        start_date = group["start_date"]
+        for month in range(1, 13):
 
-        current_month = datetime.now().month
-        current_year = datetime.now().year
+            payment = paid_map.get(month)
 
-        for i in range(group["duration_months"]):
+            if payment:
 
-            month = start_date.month + i
-
-            year = start_date.year + ((month - 1) // 12)
-
-            month = ((month - 1) % 12) + 1
-
-            month_name = [
-                "Jan",
-                "Feb",
-                "Mar",
-                "Apr",
-                "May",
-                "Jun",
-                "Jul",
-                "Aug",
-                "Sep",
-                "Oct",
-                "Nov",
-                "Dec",
-            ][month - 1]
-
-            key = (month, year)
-
-            if key in paid_map:
+                paid_amount = float(payment["amount"])
 
                 status = "Paid"
 
-                paid_amount = float(paid_map[key]["amount"])
+                collection_date = str(payment["collection_date"])
 
-                collection_date = str(paid_map[key]["collection_date"])
+                receipt_no = payment["receipt_no"]
 
             else:
 
-                if year < current_year or (
-                    year == current_year and month <= current_month
-                ):
-
-                    status = "Not Paid"
-
-                else:
-
-                    status = "Pending"
-
                 paid_amount = 0
+
+                receipt_no = "-"
+
                 collection_date = "-"
 
-            result.append(
-                {
-                    "month_name": f"{month_name}-{year}",
-                    "due_amount": float(group["monthly_due"]),
-                    "paid_amount": paid_amount,
-                    "status": status,
-                    "collection_date": collection_date,
-                }
-            )
+                if month <= current_month:
+                    status = "Not Paid"
+                else:
+                    status = "Pending"
+
+            result.append({
+
+                "month_name": datetime(current_year, month, 1).strftime("%B"),
+
+                "due_amount": monthly_due,
+
+                "paid_amount": paid_amount,
+
+                "balance_amount": monthly_due - paid_amount,
+
+                "status": status,
+
+                "collection_date": collection_date,
+
+                "receipt_no": receipt_no
+
+            })
 
         return JSONResponse(content=result)
 
@@ -1019,9 +1031,11 @@ async def save_member(
 
         db.close()
 
+
 # ==========================================
 # MEMBERS LIST
 # ==========================================
+
 
 @app.get("/members/list")
 def members_list(request: Request):
@@ -1030,8 +1044,7 @@ def members_list(request: Request):
 
     try:
 
-        members = db.execute(
-            text("""
+        members = db.execute(text("""
 
                 SELECT
 
@@ -1069,23 +1082,19 @@ def members_list(request: Request):
 
                 ORDER BY m.member_name
 
-            """)
-        ).mappings().all()
+            """)).mappings().all()
 
         return templates.TemplateResponse(
             request=request,
             name="members_list.html",
-            context={
-                "members": members,
-                "active_page": "members"
-            }
+            context={"members": members, "active_page": "members"},
         )
 
     finally:
 
         db.close()
-        
-        
+
+
 @app.get("/members/view/{member_id}")
 def member_view(request: Request, member_id: int):
 
@@ -1176,118 +1185,10 @@ def member_view(request: Request, member_id: int):
 
         db.close()
 
+
 from sqlalchemy import text
 from fastapi.responses import JSONResponse
 
-
-@app.get("/api/member/{member_id}/pandu-settlement")
-def get_member_settlement(member_id: int):
-
-    db = SessionLocal()
-
-    try:
-
-        row = db.execute(
-            text("""
-                SELECT
-
-                    pa.id AS assignment_id,
-
-                    m.member_name,
-                    m.member_code,
-
-                    pg.group_name,
-
-                    pa.pandu_count,
-                    pa.group_monthly_due,
-
-                    pa.total_amount,
-                    pa.paid_amount,
-                    pa.balance_amount,
-
-                    pa.duration_months,
-
-                    pa.settlement_amount,
-
-                    pa.is_settled
-
-                FROM pandu_assignments pa
-
-                INNER JOIN members m
-                    ON m.id = pa.member_id
-
-                INNER JOIN pandu_groups pg
-                    ON pg.id = pa.group_id
-
-                WHERE
-
-                    pa.member_id=:member_id
-
-                    AND pa.status='ACTIVE'
-
-                ORDER BY pa.id DESC
-
-                LIMIT 1
-            """),
-            {"member_id": member_id},
-        ).mappings().first()
-
-        if not row:
-
-            return JSONResponse(
-                status_code=404,
-                content={
-                    "success": False,
-                    "message": "Active Pandu not found."
-                }
-            )
-
-        result = dict(row)
-
-        for k in [
-            "group_monthly_due",
-            "total_amount",
-            "paid_amount",
-            "balance_amount",
-            "settlement_amount"
-        ]:
-
-            if result[k] is not None:
-                result[k] = float(result[k])
-
-        paid_months = db.execute(
-            text("""
-                SELECT COUNT(*)
-
-                FROM collections
-
-                WHERE assignment_id=:id
-            """),
-            {"id": result["assignment_id"]},
-        ).scalar()
-
-        result["paid_months"] = int(paid_months)
-
-        result["pending_months"] = (
-            int(result["duration_months"]) -
-            int(paid_months)
-        )
-
-        result["ready_to_settle"] = (
-
-            result["balance_amount"] <= 0
-
-            and
-
-            result["is_settled"] == 0
-
-        )
-
-        return result
-
-    finally:
-
-        db.close()
 # ==========================================
 # EDIT MEMBER
 # ==========================================
@@ -1866,8 +1767,6 @@ def pandu_settlement(request: Request):
     )
 
 
-
-
 @app.get("/api/member-search")
 def member_search(q: str = ""):
 
@@ -1917,10 +1816,6 @@ def member_search(q: str = ""):
     finally:
 
         db.close()
-
-
-
-
 
 
 @app.get("/pandu_details")
@@ -2076,21 +1971,26 @@ def member_year_due(member_id: int):
             paid_map[r["collection_month"]] = float(r["amount"])
 
         monthly_due = db.execute(
-            text("""
+    text("""
+        SELECT pa.group_monthly_due
 
-            SELECT group_monthly_due
+        FROM pandu_assignments pa
 
-            FROM pandu_assignments
+        INNER JOIN pandu_groups pg
+            ON pg.id = pa.group_id
 
-            WHERE member_id=:member_id
+        WHERE pa.member_id = :member_id
 
-            AND status='ACTIVE'
+        AND pa.status = 'ACTIVE'
 
-            LIMIT 1
+        AND pg.pandu_year = YEAR(CURDATE())
 
-        """),
-            {"member_id": member_id},
-        ).scalar()
+        ORDER BY pa.id DESC
+
+        LIMIT 1
+    """),
+    {"member_id": member_id},
+).scalar()
 
         monthly_due = float(monthly_due or 0)
 
@@ -2101,10 +2001,10 @@ def member_year_due(member_id: int):
             paid = paid_map.get(month, 0)
 
             balance = monthly_due - paid
-
+            current_year = datetime.now().year
             result.append(
                 {
-                    "month": datetime(2025, month, 1).strftime("%B"),
+                    "month": datetime(current_year, month, 1).strftime("%B"),
                     "due": monthly_due,
                     "paid": paid,
                     "balance": balance,
@@ -2297,19 +2197,34 @@ async def complete_settlement(data: dict):
     return {"success": True}
 
 
-from fastapi import Request
-from fastapi.responses import HTMLResponse
-from sqlalchemy import text
-
-
 @app.get("/pandu-settlement-list", response_class=HTMLResponse)
-async def pandu_settlement_list(request: Request):
+async def pandu_settlement_list(request: Request, year: int = datetime.now().year):
 
     db = SessionLocal()
 
     try:
 
-        settlements = db.execute(text("""
+        # ---------------------------------------
+        # Get Available Years
+        # ---------------------------------------
+
+        years = db.execute(text("""
+
+            SELECT DISTINCT pandu_year
+
+            FROM pandu_groups
+
+            ORDER BY pandu_year DESC
+
+        """)).scalars().all()
+
+        # ---------------------------------------
+        # Settlement List (Selected Year Only)
+        # ---------------------------------------
+
+        settlements = (
+            db.execute(
+                text("""
 
             SELECT
 
@@ -2319,6 +2234,7 @@ async def pandu_settlement_list(request: Request):
                 m.member_name,
 
                 pg.group_name,
+                pg.pandu_year,
 
                 pa.total_amount,
                 pa.paid_amount,
@@ -2336,9 +2252,21 @@ async def pandu_settlement_list(request: Request):
             INNER JOIN pandu_groups pg
                 ON pa.group_id = pg.id
 
-            ORDER BY m.member_name
+            WHERE pg.pandu_year = :year
 
-        """)).mappings().all()
+            ORDER BY
+                m.member_name
+
+        """),
+                {"year": year},
+            )
+            .mappings()
+            .all()
+        )
+
+        # ---------------------------------------
+        # Dashboard Cards
+        # ---------------------------------------
 
         total_members = len(settlements)
 
@@ -2350,6 +2278,10 @@ async def pandu_settlement_list(request: Request):
             float(x["settlement_amount"] or 0) for x in settlements
         )
 
+        # ---------------------------------------
+        # Return Page
+        # ---------------------------------------
+
         return templates.TemplateResponse(
             request=request,
             name="reports/pandu_settlement_list.html",
@@ -2360,6 +2292,8 @@ async def pandu_settlement_list(request: Request):
                 "settled_members": settled_members,
                 "pending_members": pending_members,
                 "total_settlement_amount": f"{total_settlement_amount:,.0f}",
+                "years": years,
+                "year": year,
             },
         )
 
@@ -3393,30 +3327,30 @@ def kanthu_member_search(search: str = ""):
         db.close()
 
 
-@app.get("/api/member/{member_id}")
-async def get_member(member_id: int):
+# @app.get("/api/member/{member_id}")
+# async def get_member(member_id: int):
 
-    with engine.connect() as conn:
+#     with engine.connect() as conn:
 
-        member = (
-            conn.execute(
-                text("""
-            SELECT
-                id,
-                member_no,
-                member_name,
-                mobile,
-                village
-            FROM members
-            WHERE id = :id
-        """),
-                {"id": member_id},
-            )
-            .mappings()
-            .first()
-        )
+#         member = (
+#             conn.execute(
+#                 text("""
+#             SELECT
+#                 id,
+#                 member_no,
+#                 member_name,
+#                 mobile,
+#                 village
+#             FROM members
+#             WHERE id = :id
+#         """),
+#                 {"id": member_id},
+#             )
+#             .mappings()
+#             .first()
+#         )
 
-    return dict(member) if member else {}
+#     return dict(member) if member else {}
 
 
 @app.get("/api/member-kanthu-summary/{member_id}")
@@ -4982,6 +4916,7 @@ async def save_assignment(
 
         db.close()
 
+
 @app.get("/api/pandu-details/summary")
 def pandu_details_summary():
 
@@ -5041,40 +4976,39 @@ def pandu_details_summary():
 
         """)).scalar()
 
-        result=dict(row)
+        result = dict(row)
 
-        result["today_collection"]=float(today)
+        result["today_collection"] = float(today)
 
-        result["month_collection"]=float(month)
+        result["month_collection"] = float(month)
 
-        if result["total_amount"]>0:
+        if result["total_amount"] > 0:
 
-            result["percentage"]=round(
-
-                result["paid_amount"]/
-
-                result["total_amount"]*100,2
-
+            result["percentage"] = round(
+                result["paid_amount"] / result["total_amount"] * 100, 2
             )
 
         else:
 
-            result["percentage"]=0
+            result["percentage"] = 0
 
         return result
 
     finally:
 
         db.close()
-        
-@app.get("/api/pandu-details/members")
-def pandu_members(search:str=""):
 
-    db=SessionLocal()
+
+@app.get("/api/pandu-details/members")
+def pandu_members(search: str = ""):
+
+    db = SessionLocal()
 
     try:
 
-        rows=db.execute(text("""
+        rows = (
+            db.execute(
+                text("""
 
         SELECT
 
@@ -5139,12 +5073,11 @@ def pandu_members(search:str=""):
             m.member_name
 
         """),
-
-        {
-
-            "search":f"%{search}%"
-
-        }).mappings().all()
+                {"search": f"%{search}%"},
+            )
+            .mappings()
+            .all()
+        )
 
         return [dict(x) for x in rows]
 
@@ -5152,14 +5085,15 @@ def pandu_members(search:str=""):
 
         db.close()
 
+
 @app.get("/api/pandu-details/recent")
 def recent_collection():
 
-    db=SessionLocal()
+    db = SessionLocal()
 
     try:
 
-        rows=db.execute(text("""
+        rows = db.execute(text("""
 
         SELECT
 
@@ -5196,10 +5130,87 @@ def recent_collection():
     finally:
 
         db.close()
-        
+
+
 # ==========================================
 # MEMBER PANDU SETTLEMENT DETAILS
 # ==========================================
+@app.post("/api/pandu-settlement/{assignment_id}")
+async def process_settlement(assignment_id: int, request: Request):
+
+    data = await request.json()
+
+    db = SessionLocal()
+
+    try:
+
+        assignment = (
+            db.execute(
+                text("""
+
+            SELECT
+                balance_amount,
+                is_settled
+
+            FROM pandu_assignments
+
+            WHERE id=:id
+
+        """),
+                {"id": assignment_id},
+            )
+            .mappings()
+            .first()
+        )
+
+        if not assignment:
+
+            return {"success": False, "message": "Assignment Not Found"}
+
+        if float(assignment["balance_amount"]) > 0:
+
+            return {"success": False, "message": "Pending Balance Exists"}
+
+        if assignment["is_settled"] == 1:
+
+            return {"success": False, "message": "Already Settled"}
+
+        db.execute(
+            text("""
+
+            UPDATE pandu_assignments
+
+            SET
+
+                is_settled=1,
+
+                settlement_date=CURDATE(),
+
+                settlement_amount=:amount,
+
+                settlement_remarks=:remarks,
+
+                status='SETTLED'
+
+            WHERE id=:id
+
+        """),
+            {"amount": data["amount"], "remarks": data["remarks"], "id": assignment_id},
+        )
+
+        db.commit()
+
+        return {"success": True, "message": "Settlement Completed Successfully"}
+
+    except Exception as e:
+
+        db.rollback()
+
+        return {"success": False, "message": str(e)}
+
+    finally:
+
+        db.close()
 
 
 @app.get("/api/member/{member_id}/pandu-settlement")
@@ -5209,8 +5220,9 @@ def member_pandu_settlement(member_id: int):
 
     try:
 
-        row = db.execute(
-            text("""
+        row = (
+            db.execute(
+                text("""
                 SELECT
 
                     pa.id AS assignment_id,
@@ -5252,17 +5264,17 @@ def member_pandu_settlement(member_id: int):
                 LIMIT 1
 
             """),
-            {"member_id": member_id},
-        ).mappings().first()
+                {"member_id": member_id},
+            )
+            .mappings()
+            .first()
+        )
 
         if not row:
 
             return JSONResponse(
                 status_code=404,
-                content={
-                    "success": False,
-                    "message": "No Active Pandu Found."
-                }
+                content={"success": False, "message": "No Active Pandu Found."},
             )
 
         data = dict(row)
@@ -5273,7 +5285,7 @@ def member_pandu_settlement(member_id: int):
             "total_amount",
             "paid_amount",
             "balance_amount",
-            "settlement_amount"
+            "settlement_amount",
         ]:
 
             if data[key] is not None:
@@ -5293,14 +5305,10 @@ def member_pandu_settlement(member_id: int):
 
         data["paid_months"] = int(paid_months)
 
-        data["pending_months"] = (
-            int(data["duration_months"]) -
-            int(paid_months)
-        )
+        data["pending_months"] = int(data["duration_months"]) - int(paid_months)
 
         data["ready_to_settle"] = (
-            data["balance_amount"] <= 0
-            and data["is_settled"] == 0
+            data["balance_amount"] <= 0 and data["is_settled"] == 0
         )
 
         return JSONResponse(content=data)
