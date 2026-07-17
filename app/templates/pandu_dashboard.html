@@ -1,0 +1,55 @@
+{% extends "pandu_base.html" %}
+{% block title %}Pandu Dashboard | Pasumpon{% endblock %}
+{% block page_styles %}<link rel="stylesheet" href="/static/css/pandu_dashboard.css">{% endblock %}
+
+{% block content %}
+<div class="pandu-dashboard-page">
+    <header class="pandu-dashboard-hero">
+        <div class="pandu-hero-copy">
+            <div class="pandu-hero-identity">
+                <div class="pandu-hero-image"><img src="/static/images/logo.png" alt="Pandu"></div>
+                <span class="pandu-hero-icon"><i class="bi bi-piggy-bank-fill"></i></span>
+            </div>
+            <div><span class="pandu-eyebrow">{{ current_year }} community savings scheme</span><h1>Pandu Dashboard</h1><p>Monitor monthly savings, member participation, pending dues and annual settlement readiness.</p></div>
+        </div>
+        <div class="pandu-hero-actions"><span class="scheme-live"><i></i> Scheme active</span><a href="/pandu/collection" class="pandu-primary-action"><i class="bi bi-wallet2"></i> New Collection</a></div>
+    </header>
+
+    <section class="pandu-kpi-grid">
+        <article class="pandu-kpi target"><div><span class="pandu-kpi-icon"><i class="bi bi-bullseye"></i></span><span class="pandu-kpi-badge">Annual</span></div><small>Total savings target</small><strong id="panduTotalAmount">—</strong><p>Expected from all active Pandu units</p></article>
+        <article class="pandu-kpi collected"><div><span class="pandu-kpi-icon"><i class="bi bi-check2-circle"></i></span><span class="pandu-kpi-badge">Received</span></div><small>Total collected</small><strong id="panduCollected">—</strong><p id="panduProgressLabel">Loading collection progress</p></article>
+        <article class="pandu-kpi balance"><div><span class="pandu-kpi-icon"><i class="bi bi-hourglass-split"></i></span><span class="pandu-kpi-badge">Pending</span></div><small>Outstanding balance</small><strong id="panduBalance">—</strong><p>Remaining against annual target</p></article>
+        <article class="pandu-kpi members"><div><span class="pandu-kpi-icon"><i class="bi bi-people-fill"></i></span><span class="pandu-kpi-badge">Members</span></div><small>Active Pandu members</small><strong id="panduMembers">—</strong><p id="panduUnits">Across active Pandu units</p></article>
+    </section>
+
+    <section class="pandu-dashboard-grid">
+        <article class="pandu-panel performance-panel">
+            <div class="pandu-panel-head"><div><span class="pandu-eyebrow">Annual performance</span><h2>Monthly Collection Trend</h2></div><span class="year-pill">{{ current_year }}</span></div>
+            <div class="pandu-chart-wrap"><canvas id="panduCollectionChart"></canvas></div>
+        </article>
+        <aside class="pandu-panel month-panel">
+            <div class="pandu-panel-head"><div><span class="pandu-eyebrow">Current cycle</span><h2>This Month</h2></div><span class="month-icon"><i class="bi bi-calendar3"></i></span></div>
+            <div class="month-amount"><span>Month collection</span><strong id="panduMonthCollection">—</strong></div>
+            <div class="today-amount"><span><i class="bi bi-lightning-charge-fill"></i> Collected today</span><strong id="panduTodayCollection">—</strong></div>
+            <div class="member-split"><div><strong id="panduPaidMembers">—</strong><span>Paid members</span></div><div><strong id="panduPendingMembers">—</strong><span>Pending members</span></div></div>
+            <a href="/pending-members-list" class="review-pending">Review pending dues <i class="bi bi-arrow-right"></i></a>
+        </aside>
+    </section>
+
+    <section class="pandu-operations-section">
+        <div class="pandu-section-head"><div><span class="pandu-eyebrow">Daily work</span><h2>Quick Operations</h2></div><span>Direct access to common Pandu tasks</span></div>
+        <div class="pandu-operation-grid">
+            <a href="/pandu/collection" class="pandu-operation collect"><span><i class="bi bi-wallet2"></i></span><div><strong>Collection Entry</strong><small>Record monthly dues and arrears</small></div><i class="bi bi-arrow-up-right"></i></a>
+            <a href="/pandu/assign" class="pandu-operation enrol"><span><i class="bi bi-person-plus-fill"></i></span><div><strong>Enrol Member</strong><small>Assign one or more Pandu units</small></div><i class="bi bi-arrow-up-right"></i></a>
+            <a href="/pending-members-list" class="pandu-operation due"><span><i class="bi bi-person-exclamation"></i></span><div><strong>Pending Dues</strong><small>Follow up unpaid and partial dues</small></div><i class="bi bi-arrow-up-right"></i></a>
+            <a href="/pandu-settlement" class="pandu-operation settle"><span><i class="bi bi-cash-coin"></i></span><div><strong>Settlement</strong><small>Process completed 12-month savings</small></div><i class="bi bi-arrow-up-right"></i></a>
+        </div>
+    </section>
+
+    <section class="pandu-bottom-grid">
+        <article class="pandu-panel recent-panel"><div class="pandu-panel-head"><div><span class="pandu-eyebrow">Latest activity</span><h2>Recent Collections</h2></div><a href="/datewise-collection-list">View report <i class="bi bi-arrow-up-right"></i></a></div><div class="table-responsive"><table><thead><tr><th>Receipt</th><th>Member</th><th>Date</th><th class="text-end">Amount</th></tr></thead><tbody id="panduRecentRows"><tr><td colspan="4" class="pandu-empty">Loading recent collections…</td></tr></tbody></table></div></article>
+        <aside class="pandu-panel due-calendar"><div class="pandu-panel-head"><div><span class="pandu-eyebrow">Payment discipline</span><h2>Monthly Due Cycle</h2></div></div><div class="due-date-card"><span>Due on or before</span><strong>10</strong><small>of every month</small></div><div class="month-track" id="panduMonthTrack"></div><p>Past-month balances can be collected fully or partially in the next payment.</p></aside>
+    </section>
+</div>
+{% endblock %}
+{% block page_scripts %}<script>window.PANDU_YEAR = {{ current_year }};</script><script src="/static/js/pandu_dashboard.js"></script>{% endblock %}

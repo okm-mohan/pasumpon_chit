@@ -215,8 +215,9 @@ function searchMember(keyword) {
                     item.className =
                         "member-item";
 
-                    item.innerHTML =
-                        `${member.member_code} - ${member.member_name} - ${member.mobile}`;
+                    item.textContent =
+                        `${member.member_code} · ${member.member_name} · ${member.mobile}` +
+                        (member.aadhaar_masked ? ` · Aadhaar ${member.aadhaar_masked}` : "");
 
                     item.onclick = function () {
 
@@ -625,7 +626,17 @@ async function loadMember(id) {
         document.getElementById("assignWarning");
 
     const paymentCard =
-        document.querySelector(".payment-card");
+        document.querySelector(".payment-entry-card");
+
+    const paymentControls = paymentCard
+        ? paymentCard.querySelectorAll("input, select, textarea, button")
+        : [];
+
+    const memberStatusPill =
+        document.getElementById("memberStatusPill");
+
+    const memberStatusText =
+        document.getElementById("memberStatusText");
 
     // Member not assigned
 
@@ -636,11 +647,23 @@ async function loadMember(id) {
     ) {
 
         if (warningBox) {
-            warningBox.style.display = "block";
+            warningBox.style.display = "flex";
         }
 
         if (paymentCard) {
-            paymentCard.style.display = "none";
+            paymentCard.classList.add("is-disabled");
+        }
+
+        paymentControls.forEach(control => control.disabled = true);
+        document.getElementById("memberId").value = "";
+
+        if (memberStatusPill) {
+            memberStatusPill.classList.remove("awaiting-selection");
+            memberStatusPill.classList.add("not-enrolled");
+        }
+
+        if (memberStatusText) {
+            memberStatusText.textContent = "Not enrolled in Pandu";
         }
 
         document.getElementById("memberCode").textContent =
@@ -664,6 +687,24 @@ async function loadMember(id) {
         document.getElementById("maturityAmount").textContent =
             "₹0";
 
+        document.getElementById("lastPaymentDate").textContent = "-";
+        document.getElementById("lastReceiptNo").textContent = "-";
+        document.getElementById("pendingMonths").textContent = "0";
+        document.getElementById("pendingDue").textContent = "₹0";
+        document.getElementById("amount").value = "0";
+        document.getElementById("totalPaid").textContent = "₹0";
+        document.getElementById("totalDue").textContent = "₹0";
+        document.getElementById("totalPending").textContent = "₹0";
+        document.getElementById("dueTableBody").innerHTML = `
+            <tr class="empty-due-row">
+                <td colspan="6">
+                    <i class="bi bi-person-x"></i>
+                    <strong>No Pandu scheme assigned</strong>
+                    <span>Enrol this member before recording a collection.</span>
+                </td>
+            </tr>
+        `;
+
         return;
     }
 
@@ -674,7 +715,18 @@ async function loadMember(id) {
     }
 
     if (paymentCard) {
-        paymentCard.style.display = "block";
+        paymentCard.classList.remove("is-disabled");
+    }
+
+    paymentControls.forEach(control => control.disabled = false);
+
+    if (memberStatusPill) {
+        memberStatusPill.classList.remove("awaiting-selection");
+        memberStatusPill.classList.remove("not-enrolled");
+    }
+
+    if (memberStatusText) {
+        memberStatusText.textContent = "Active membership";
     }
 
     document.getElementById("memberCode").textContent =
@@ -852,19 +904,45 @@ function clearMemberDetails() {
     document.getElementById("memberName").textContent = "-";
     document.getElementById("memberMobile").textContent = "-";
     document.getElementById("memberGroup").textContent = "-";
+    document.getElementById("panduCount").textContent = "-";
     //document.getElementById("memberAmount").textContent = "₹0";
     document.getElementById("memberDue").textContent = "₹0";
+    document.getElementById("maturityAmount").textContent = "₹0";
 
     document.getElementById("lastPaymentDate").textContent = "-";
     document.getElementById("lastReceiptNo").textContent = "-";
 
     document.getElementById("pendingMonths").textContent = "0";
     document.getElementById("pendingDue").textContent = "₹0";
+    document.getElementById("totalPaid").textContent = "₹0";
+    document.getElementById("totalDue").textContent = "₹0";
+    document.getElementById("totalPending").textContent = "₹0";
+
+    const warningBox = document.getElementById("assignWarning");
+    if (warningBox) warningBox.style.display = "none";
+
+    const paymentCard = document.querySelector(".payment-entry-card");
+    if (paymentCard) {
+        paymentCard.classList.remove("is-disabled");
+        paymentCard.querySelectorAll("input, select, textarea, button")
+            .forEach(control => control.disabled = false);
+    }
+
+    const memberStatusPill = document.getElementById("memberStatusPill");
+    if (memberStatusPill) {
+        memberStatusPill.classList.remove("not-enrolled");
+        memberStatusPill.classList.add("awaiting-selection");
+    }
+
+    const memberStatusText = document.getElementById("memberStatusText");
+    if (memberStatusText) memberStatusText.textContent = "Awaiting selection";
 
     document.getElementById("dueTableBody").innerHTML = `
-        <tr>
-            <td colspan="6" style="text-align:center;color:red;">
-                No Member Selected
+        <tr class="empty-due-row">
+            <td colspan="6">
+                <i class="bi bi-person-check"></i>
+                <strong>Select a member to view due history</strong>
+                <span>Monthly payment information will appear here.</span>
             </td>
         </tr>
     `;
@@ -1119,8 +1197,9 @@ document.addEventListener("DOMContentLoaded", () => {
                     item.className =
                         "member-item";
 
-                    item.innerHTML =
-                        `${member.member_code} - ${member.member_name}`;
+                    item.textContent =
+                        `${member.member_code} · ${member.member_name} · ${member.mobile}` +
+                        (member.aadhaar_masked ? ` · Aadhaar ${member.aadhaar_masked}` : "");
 
                     item.onclick = () => {
 

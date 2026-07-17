@@ -1,127 +1,241 @@
 {% extends "base.html" %}
 
-{% block title %}Issue Kanthu{% endblock %}
+{% block title %}Issue New Kanthu{% endblock %}
 
 {% block content %}
 
 <link rel="stylesheet"
       href="{{ url_for('static', path='css/kanthu_new.css') }}">
 
-<div class="container-fluid">
+<div class="container-fluid kanthu-page">
 
-    <!-- HEADER -->
+    <!-- ==========================================
+                PREMIUM HEADER
+    =========================================== -->
 
-    <div class="card shadow-sm border-0 mb-4">
-        <div class="card-body">
+    <div class="finance-header mb-4">
 
-            <div class="d-flex justify-content-between align-items-center">
+        <div class="row align-items-center">
 
-                <div>
-                    <h2 class="fw-bold text-success mb-1">
+            <div class="col-lg-8">
+
+                <div class="d-flex align-items-center">
+
+                    <div class="finance-icon">
+
                         <i class="bi bi-cash-stack"></i>
-                        Issue New Kanthu
-                    </h2>
 
-                    <small class="text-muted">
-                        Create New Kanthu Entry
-                    </small>
+                    </div>
+
+                    <div class="ms-3">
+
+                        <h2 class="finance-title">
+
+                            Issue New Kanthu
+
+                        </h2>
+
+                        <p class="finance-subtitle">
+
+                            Money Lending • Loan Disbursement
+
+                        </p>
+
+                    </div>
+
                 </div>
 
-                <div>
-                    <span class="badge bg-success fs-6">
-                        FY {{ current_year if current_year else 2026 }}
-                    </span>
+            </div>
+
+            <div class="col-lg-4">
+
+                <div class="row g-3">
+
+                    <div class="col-6">
+
+                        <div class="top-info-card">
+
+                            <small>Date</small>
+
+                            <h6 id="todayDate">
+
+                                {{ current_date if current_date else "" }}
+
+                            </h6>
+
+                        </div>
+
+                    </div>
+
+                    <div class="col-6">
+
+                        <div class="top-info-card">
+
+                            <small>Status</small>
+
+                            <h6>
+
+                                <span class="badge bg-success">
+
+                                    Ready
+
+                                </span>
+
+                            </h6>
+
+                        </div>
+
+                    </div>
+
                 </div>
 
             </div>
 
         </div>
+
     </div>
+
+    <!-- ==========================================
+                    MAIN LAYOUT
+    =========================================== -->
 
     <div class="row">
 
-        <!-- LEFT -->
+        <!-- LEFT SIDE -->
 
-        <div class="col-lg-8">
+        <div class="col-xl-8">
 
-            <!-- MEMBER SEARCH -->
+            <!-- ===================================
+                    MEMBER SEARCH
+            ==================================== -->
 
-            <div class="card shadow-sm mb-4">
+            <div class="finance-card mb-4">
 
-                <div class="card-header bg-primary text-white">
+                <div class="section-title">
 
                     <i class="bi bi-search"></i>
-                    Member Search
+
+                    Search Member
 
                 </div>
 
-                <div class="card-body">
+                <div class="section-body">
 
-                    <input
-                        type="text"
-                        id="member_search"
-                        class="form-control form-control-lg"
-                        placeholder="Search Member Name / Mobile / Member Code">
+                    <div class="search-wrapper">
 
-                    <div id="memberSearchResults"
-                         class="list-group mt-2">
+                        <i class="bi bi-search search-icon"></i>
+
+                        <input
+                            type="text"
+                            id="member_search"
+                            class="form-control finance-input search-input"
+                            placeholder="Search by Name, Mobile or Member Code">
+
+                    </div>
+
+                    <div
+                        id="memberSearchResults"
+                        class="search-results mt-3">
+
                     </div>
 
                 </div>
 
             </div>
 
-            <!-- MEMBER DETAILS -->
+            <!-- ===================================
+                    MEMBER PROFILE
+            ==================================== -->
 
-            <div class="card shadow-sm mb-4">
+            <div class="finance-card mb-4">
 
-                <div class="card-header bg-info text-white">
+                <div class="section-title">
 
                     <i class="bi bi-person-circle"></i>
-                    Member Information
+
+                    Member Profile
 
                 </div>
 
-                <div class="card-body">
+                <div class="section-body">
 
                     <div class="row">
 
-                        <div class="col-md-6 mb-3">
+                        <div class="col-lg-3">
 
-                            <label class="form-label">
-                                Member Name
-                            </label>
+                            <div class="member-avatar">
 
-                            <input type="text"
-                                   id="member_name"
-                                   class="form-control"
-                                   readonly>
+                                <i class="bi bi-person-fill"></i>
+
+                            </div>
 
                         </div>
 
-                        <div class="col-md-3 mb-3">
+                        <div class="col-lg-9">
 
-                            <label class="form-label">
-                                Mobile
-                            </label>
+                            <div class="row">
 
-                            <input type="text"
-                                   id="mobile"
-                                   class="form-control"
-                                   readonly>
+                                <div class="col-md-6 mb-3">
 
-                        </div>
+                                    <label>
 
-                        <div class="col-md-3 mb-3">
+                                        Member Name
 
-                            <label class="form-label">
-                                Village
-                            </label>
+                                    </label>
 
-                            <input type="text"
-                                   id="village"
-                                   class="form-control"
-                                   readonly>
+                                    <input
+                                        id="member_name"
+                                        class="form-control finance-input"
+                                        readonly>
+
+                                </div>
+
+                                <div class="col-md-6 mb-3">
+
+                                    <label>
+
+                                        Mobile Number
+
+                                    </label>
+
+                                    <input
+                                        id="mobile"
+                                        class="form-control finance-input"
+                                        readonly>
+
+                                </div>
+
+                                <div class="col-md-6 mb-3">
+
+                                    <label>
+
+                                        Village
+
+                                    </label>
+
+                                    <input
+                                        id="village"
+                                        class="form-control finance-input"
+                                        readonly>
+
+                                </div>
+
+                                <div class="col-md-6 mb-3">
+
+                                    <label>
+
+                                        Member Status
+
+                                    </label>
+
+                                    <input
+                                        class="form-control finance-input"
+                                        value="ACTIVE MEMBER"
+                                        readonly>
+
+                                </div>
+
+                            </div>
 
                         </div>
 
@@ -131,97 +245,219 @@
 
             </div>
 
-            <!-- KANTHU DETAILS -->
+            <!-- ===================================
+                    LOAN DETAILS
+            ==================================== -->
 
-            <div class="card shadow-sm">
+            <div class="finance-card mb-4">
 
-                <div class="card-header bg-success text-white">
+                <div class="section-title">
 
-                    <i class="bi bi-cash"></i>
-                    Kanthu Details
+                    <i class="bi bi-wallet2"></i>
+
+                    Loan Details
 
                 </div>
 
-                <div class="card-body">
+                <div class="section-body">
 
                     <div class="row">
 
-                        <div class="col-md-4 mb-3">
+                        <div class="col-md-4 mb-4">
 
-                            <label class="form-label">
+                            <label>
+
                                 Issue Date
+
                             </label>
 
                             <input
                                 type="date"
                                 id="issue_date"
-                                class="form-control">
+                                class="form-control finance-input">
 
                         </div>
 
-                        <div class="col-md-4 mb-3">
+                        <div class="col-md-4 mb-4">
 
-                            <label class="form-label">
-                                Kanthu Amount
+                            <label>
+
+                                Loan Amount
+
                             </label>
 
                             <input
                                 type="number"
                                 id="kanthu_amount"
-                                class="form-control">
+                                class="form-control finance-input"
+                                placeholder="0.00">
 
                         </div>
 
-                        <div class="col-md-4 mb-3">
+                        <div class="col-md-4 mb-4">
 
-                            <label class="form-label">
+                            <label>
+
                                 Interest %
+
                             </label>
 
                             <input
                                 type="number"
                                 id="interest_percent"
-                                value="10"
-                                class="form-control">
+                                class="form-control finance-input"
+                                value="10">
 
                         </div>
 
-                        <div class="col-md-6 mb-3">
+                        <div class="col-md-6 mb-4">
 
-                            <label class="form-label">
+                            <label>
+
                                 Payment Mode
+
                             </label>
 
                             <select
                                 id="payment_mode"
-                                class="form-select">
+                                class="form-select finance-input">
 
                                 <option value="CASH">
+
                                     Cash
+
                                 </option>
 
                                 <option value="BANK">
+
                                     Bank
+
                                 </option>
 
                                 <option value="GPAY">
+
                                     GPay
+
                                 </option>
 
                             </select>
 
                         </div>
 
-                        <div class="col-md-6 mb-3">
+                        <div class="col-md-6 mb-4">
 
-                            <label class="form-label">
+                            <label>
+
                                 Remarks
+
                             </label>
 
                             <input
                                 type="text"
                                 id="remarks"
-                                class="form-control">
+                                class="form-control finance-input"
+                                placeholder="Enter Remarks">
+
+                        </div>
+                                            </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <!-- ==========================================
+                    RIGHT SIDE SUMMARY
+        =========================================== -->
+
+        <div class="col-xl-4">
+
+            <div class="summary-card sticky-top">
+
+                <div class="summary-header">
+
+                    <i class="bi bi-calculator-fill"></i>
+
+                    <span>Loan Summary</span>
+
+                </div>
+
+                <div class="summary-body">
+
+                    <div class="summary-item">
+
+                        <div class="summary-label">
+
+                            Loan Amount
+
+                        </div>
+
+                        <div
+                            id="summaryLoanAmount"
+                            class="summary-value">
+
+                            ₹ 0.00
+
+                        </div>
+
+                    </div>
+
+                    <div class="summary-divider"></div>
+
+                    <div class="summary-item">
+
+                        <div class="summary-label">
+
+                            Interest %
+
+                        </div>
+
+                        <div
+                            id="summaryInterestPercent"
+                            class="summary-value success-text">
+
+                            10 %
+
+                        </div>
+
+                    </div>
+
+                    <div class="summary-divider"></div>
+
+                    <div class="summary-item">
+
+                        <div class="summary-label">
+
+                            Interest Amount
+
+                        </div>
+
+                        <div
+                            id="interest_amount"
+                            class="summary-value danger-text">
+
+                            ₹ 0.00
+
+                        </div>
+
+                    </div>
+
+                    <div class="summary-divider"></div>
+
+                    <div class="summary-item">
+
+                        <div class="summary-label">
+
+                            Net Paid Amount
+
+                        </div>
+
+                        <div
+                            id="net_paid_amount"
+                            class="summary-total">
+
+                            ₹ 0.00
 
                         </div>
 
@@ -231,39 +467,70 @@
 
             </div>
 
-        </div>
+            <div class="finance-card mt-4">
 
-        <!-- RIGHT -->
+                <div class="section-title">
 
-        <div class="col-lg-4">
+                    <i class="bi bi-info-circle"></i>
 
-            <div class="card shadow-sm border-success mb-4">
+                    Loan Information
 
-                <div class="card-body text-center">
+                </div>
 
-                    <h6 class="text-muted">
-                        Amount Calculation
-                    </h6>
+                <div class="section-body">
 
-                    <hr>
+                    <div class="info-box">
 
-                    <h5>
-                        Interest Amount
-                    </h5>
+                        <div class="info-icon bg-success">
 
-                    <h3 id="interest_amount"
-                        class="text-danger">
-                        ₹ 0
-                    </h3>
+                            <i class="bi bi-check-circle-fill"></i>
 
-                    <h5>
-                        Net Paid Amount
-                    </h5>
+                        </div>
 
-                    <h2 id="net_paid_amount"
-                        class="text-success fw-bold">
-                        ₹ 0
-                    </h2>
+                        <div>
+
+                            <h6>
+
+                                Ready to Issue
+
+                            </h6>
+
+                            <small>
+
+                                Verify the member details before issuing the
+                                loan.
+
+                            </small>
+
+                        </div>
+
+                    </div>
+
+                    <div class="info-box mt-3">
+
+                        <div class="info-icon bg-warning">
+
+                            <i class="bi bi-exclamation-circle-fill"></i>
+
+                        </div>
+
+                        <div>
+
+                            <h6>
+
+                                Interest
+
+                            </h6>
+
+                            <small>
+
+                                Interest amount is calculated automatically.
+
+                            </small>
+
+                        </div>
+
+                    </div>
 
                 </div>
 
@@ -271,11 +538,11 @@
 
             <button
                 id="saveKanthuBtn"
-                class="btn btn-success btn-lg w-100">
+                class="btn issue-btn w-100 mt-4">
 
-                <i class="bi bi-check-circle"></i>
+                <i class="bi bi-cash-stack me-2"></i>
 
-                ISSUE KANTHU
+                ISSUE NEW KANTHU
 
             </button>
 
@@ -284,6 +551,54 @@
     </div>
 
 </div>
+
+<script>
+
+document.addEventListener("DOMContentLoaded", function () {
+
+    const amountInput =
+        document.getElementById("kanthu_amount");
+
+    const interestInput =
+        document.getElementById("interest_percent");
+
+    function updateSummary() {
+
+        const amount =
+            parseFloat(amountInput.value) || 0;
+
+        const interest =
+            parseFloat(interestInput.value) || 0;
+
+        document.getElementById(
+            "summaryLoanAmount"
+        ).innerHTML =
+            "₹ " + amount.toLocaleString('en-IN', {
+                minimumFractionDigits: 2
+            });
+
+        document.getElementById(
+            "summaryInterestPercent"
+        ).innerHTML =
+            interest + " %";
+
+    }
+
+    amountInput.addEventListener(
+        "input",
+        updateSummary
+    );
+
+    interestInput.addEventListener(
+        "input",
+        updateSummary
+    );
+
+    updateSummary();
+
+});
+
+</script>
 
 <script src="{{ url_for('static', path='js/kanthu_new.js') }}"></script>
 

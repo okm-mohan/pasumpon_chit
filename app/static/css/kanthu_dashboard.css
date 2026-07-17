@@ -1,0 +1,509 @@
+/* =====================================================
+   ACTION CARDS
+===================================================== */
+
+.action-card{
+    transition:.3s;
+    cursor:pointer;
+}
+
+.action-card:hover{
+    transform:translateY(-5px);
+    box-shadow:0 10px 25px rgba(0,0,0,.15);
+}
+
+.card-header{
+    font-weight:600;
+}
+
+
+/* =====================================================
+   SUMMARY BOXES
+===================================================== */
+
+.summary-box{
+    display:flex;
+    align-items:center;
+    gap:18px;
+    padding:22px;
+    border-radius:18px;
+    transition:.3s;
+    color:#fff;
+}
+
+.summary-box:hover{
+    transform:translateY(-5px);
+    box-shadow:0 15px 30px rgba(0,0,0,.12);
+}
+
+.summary-icon{
+    width:65px;
+    height:65px;
+    border-radius:16px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:28px;
+    background:rgba(255,255,255,.2);
+}
+
+.cash-box{
+    background:linear-gradient(135deg,#10b981,#059669);
+}
+
+.upi-box{
+    background:linear-gradient(135deg,#3b82f6,#2563eb);
+}
+
+.interest-box{
+    background:linear-gradient(135deg,#8b5cf6,#6d28d9);
+}
+
+.pending-box{
+    background:linear-gradient(135deg,#ef4444,#dc2626);
+}
+
+.summary-box h3{
+    margin:0;
+    font-size:30px;
+    font-weight:700;
+}
+
+.summary-box small{
+    font-size:14px;
+    opacity:.9;
+}
+
+
+/* =====================================================
+   PAYMENT DUE CARD
+===================================================== */
+
+.due-member-card{
+    border:1px solid #edf0f4;
+    border-left:5px solid #dc3545;
+    border-radius:15px;
+    padding:18px;
+    margin-bottom:18px;
+    transition:.3s;
+    background:#fff;
+}
+
+.due-member-card:hover{
+    transform:translateX(6px);
+    box-shadow:0 10px 25px rgba(0,0,0,.08);
+}
+
+
+/* =====================================================
+   TIMELINE
+===================================================== */
+
+.timeline{
+    position:relative;
+    padding-left:25px;
+}
+
+.timeline::before{
+    content:"";
+    position:absolute;
+    left:8px;
+    top:0;
+    bottom:0;
+    width:3px;
+    background:#dee2e6;
+}
+
+.timeline-item{
+    position:relative;
+    margin-bottom:28px;
+}
+
+.timeline-dot{
+    width:16px;
+    height:16px;
+    border-radius:50%;
+    position:absolute;
+    left:-24px;
+    top:4px;
+}
+
+.timeline-content{
+    background:#fff;
+    border-radius:15px;
+    padding:15px;
+    box-shadow:0 5px 18px rgba(0,0,0,.05);
+    transition:.3s;
+}
+
+.timeline-content:hover{
+    transform:translateX(5px);
+    box-shadow:0 10px 25px rgba(0,0,0,.12);
+}
+
+
+/* =====================================================
+   LOAN PORTFOLIO
+===================================================== */
+
+.portfolio-card{
+    background:#fff;
+    border-radius:18px;
+    padding:22px;
+    border:1px solid #edf2f7;
+    box-shadow:0 8px 20px rgba(0,0,0,.08);
+    transition:.3s;
+    height:100%;
+}
+
+.portfolio-card:hover{
+    transform:translateY(-6px);
+    box-shadow:0 15px 35px rgba(0,0,0,.15);
+}
+
+.portfolio-icon{
+    width:60px;
+    height:60px;
+    border-radius:16px;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    color:#fff;
+    font-size:24px;
+}
+
+.portfolio-card h6{
+    color:#777;
+    margin-bottom:8px;
+    font-weight:600;
+}
+
+.portfolio-card h2{
+    font-size:34px;
+    font-weight:700;
+    margin-bottom:0;
+}
+
+.portfolio-card .progress{
+    height:8px;
+    border-radius:20px;
+    background:#ececec;
+}
+
+.portfolio-card .progress-bar{
+    border-radius:20px;
+}
+
+/* =====================================================
+   PREMIUM OUTSTANDING MEMBER CARD
+===================================================== */
+
+.loan-card{
+
+    position:relative;
+
+    background:rgba(255,255,255,.96);
+
+    backdrop-filter:blur(18px);
+
+    border-radius:24px;
+
+    padding:26px;
+
+    overflow:hidden;
+
+    height:100%;
+
+    border:none;
+
+    transition:all .35s ease;
+
+    box-shadow:
+        0 12px 35px rgba(15,23,42,.08),
+        0 2px 10px rgba(15,23,42,.05);
+
+}
+
+/* Premium Glow */
+
+.loan-card::before{
+
+    content:"";
+
+    position:absolute;
+
+    inset:0;
+
+    padding:2px;
+
+    border-radius:24px;
+
+    background:linear-gradient(
+        135deg,
+        rgba(37,99,235,.25),
+        rgba(96,165,250,.15),
+        rgba(255,255,255,0)
+    );
+
+    -webkit-mask:
+        linear-gradient(#fff 0 0) content-box,
+        linear-gradient(#fff 0 0);
+
+    -webkit-mask-composite:xor;
+
+    mask-composite:exclude;
+
+    pointer-events:none;
+
+}
+
+/* Hover */
+
+.loan-card:hover{
+
+    transform:translateY(-10px);
+
+    box-shadow:
+        0 28px 60px rgba(37,99,235,.15),
+        0 15px 25px rgba(0,0,0,.08);
+
+}
+
+
+/* Top Header */
+
+.loan-top{
+
+    display:flex;
+
+    align-items:center;
+
+    gap:18px;
+
+    margin-bottom:22px;
+
+}
+
+
+/* Avatar */
+
+.member-avatar{
+
+    width:68px;
+
+    height:68px;
+
+    border-radius:20px;
+
+    background:linear-gradient(
+        135deg,
+        #2563eb,
+        #4f46e5
+    );
+
+    display:flex;
+
+    justify-content:center;
+
+    align-items:center;
+
+    color:#fff;
+
+    font-size:24px;
+
+    font-weight:700;
+
+    letter-spacing:1px;
+
+    box-shadow:
+        0 12px 28px rgba(37,99,235,.35);
+
+}
+
+
+/* Member Name */
+
+.loan-top h5{
+
+    font-size:24px;
+
+    font-weight:700;
+
+    margin-bottom:4px;
+
+    color:#1f2937;
+
+}
+
+.loan-top small{
+
+    color:#6b7280;
+
+    font-size:14px;
+
+}
+
+
+/* Divider */
+
+.loan-card hr{
+
+    margin:20px 0;
+
+    border:none;
+
+    border-top:1px solid #edf2f7;
+
+}
+
+
+/* Loan Summary */
+
+.loan-card .row.text-center{
+
+    background:#f8fafc;
+
+    border-radius:18px;
+
+    padding:16px 10px;
+
+}
+
+.loan-card .row.text-center small{
+
+    color:#64748b;
+
+    font-size:13px;
+
+}
+
+.loan-card .row.text-center h6{
+
+    margin-top:6px;
+
+    font-size:19px;
+
+    font-weight:700;
+
+}
+
+
+/* Progress */
+
+.loan-card .progress{
+
+    height:10px;
+
+    border-radius:20px;
+
+    background:#e5e7eb;
+
+    overflow:hidden;
+
+}
+
+.loan-card .progress-bar{
+
+    border-radius:20px;
+
+    background:linear-gradient(
+        90deg,
+        #10b981,
+        #22c55e
+    );
+
+}
+
+
+/* Badge */
+
+.loan-card .badge{
+
+    border-radius:30px;
+
+    padding:8px 16px;
+
+    font-size:12px;
+
+    font-weight:600;
+
+    letter-spacing:.4px;
+
+    box-shadow:0 6px 16px rgba(239,68,68,.25);
+
+}
+
+
+/* Buttons */
+
+.loan-card .btn{
+
+    height:46px;
+
+    border-radius:14px;
+
+    font-size:15px;
+
+    font-weight:600;
+
+    transition:.3s;
+
+}
+
+.loan-card .btn-success{
+
+    background:linear-gradient(
+        135deg,
+        #16a34a,
+        #22c55e
+    );
+
+    border:none;
+
+    box-shadow:
+        0 10px 25px rgba(34,197,94,.25);
+
+}
+
+.loan-card .btn-success:hover{
+
+    transform:translateY(-2px);
+
+    box-shadow:
+        0 15px 30px rgba(34,197,94,.35);
+
+}
+
+.loan-card .btn-outline-primary{
+
+    border:2px solid #2563eb;
+
+    color:#2563eb;
+
+    background:#fff;
+
+}
+
+.loan-card .btn-outline-primary:hover{
+
+    background:#2563eb;
+
+    color:#fff;
+
+}
+
+
+/* Outstanding Section */
+
+.outstanding-section{
+
+    background:#f4f7fb;
+
+    border-radius:26px;
+
+    padding:28px;
+
+    box-shadow:
+        inset 0 1px 0 rgba(255,255,255,.9);
+
+}

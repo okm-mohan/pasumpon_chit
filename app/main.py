@@ -65,7 +65,19 @@ def login_page(request: Request):
 def pandu(request: Request):
 
     return templates.TemplateResponse(
-        request=request, name="pandu.html", context={"active_page": "dashboard"}
+        request=request,
+        name="pandu_dashboard.html",
+        context={"active_page": "dashboard", "current_year": datetime.now().year},
+    )
+
+
+@app.get("/pandu/collection", response_class=HTMLResponse)
+def pandu_collection(request: Request):
+
+    return templates.TemplateResponse(
+        request=request,
+        name="pandu.html",
+        context={"active_page": "collection", "current_year": datetime.now().year},
     )
 
 
@@ -134,7 +146,11 @@ def login(request: Request, username: str = Form(...), password: str = Form(...)
 @app.get("/dashboard")
 def dashboard(request: Request):
 
-    return templates.TemplateResponse(request=request, name="dashboard.html")
+    return templates.TemplateResponse(
+        request=request,
+        name="dashboard.html",
+        context={"active_page": "dashboard"},
+    )
 
 
 # ----------------------------------
@@ -160,16 +176,22 @@ def member_search(q: str):
                 id,
                 member_code,
                 member_name,
-                mobile
+                mobile,
+                CONCAT('XXXX XXXX ', RIGHT(REPLACE(aadhaar_no, ' ', ''), 4)) AS aadhaar_masked
             FROM members m
             WHERE
                 member_code LIKE :q
                 OR member_name LIKE :q
                 OR mobile LIKE :q
+                OR REPLACE(aadhaar_no, ' ', '') LIKE :aadhaar_q
             LIMIT 20
         """)
 
-        data = db.execute(query, {"q": f"%{q}%"}).mappings().all()
+        normalized_q = "".join(character for character in q if character.isdigit())
+        data = db.execute(
+            query,
+            {"q": f"%{q}%", "aadhaar_q": f"%{normalized_q or q}%"},
+        ).mappings().all()
 
         return JSONResponse(content=[dict(row) for row in data])
 
@@ -1386,7 +1408,12 @@ def pandu_assign(request: Request):
         return templates.TemplateResponse(
             request=request,
             name="pandu_assign.html",
-            context={"group": group, "assignments": assignments},
+            context={
+                "group": group,
+                "assignments": assignments,
+                "active_page": "assignment",
+                "current_year": datetime.now().year,
+            },
         )
 
     finally:
@@ -1753,7 +1780,7 @@ def pandu_groups(request: Request):
     return templates.TemplateResponse(
         request=request,
         name="pandu_details.html",
-        context={"active_page": "pandu_groups"},
+        context={"active_page": "pandu_groups", "current_year": datetime.now().year},
     )
 
 
@@ -1763,7 +1790,7 @@ def pandu_settlement(request: Request):
     return templates.TemplateResponse(
         request=request,
         name="pandu_settlement.html",
-        context={"active_page": "pandu_settlement"},
+        context={"active_page": "settlement_entry", "current_year": datetime.now().year},
     )
 
 
@@ -1788,6 +1815,8 @@ def member_search(q: str = ""):
 
                 mobile,
 
+                CONCAT('XXXX XXXX ', RIGHT(REPLACE(aadhaar_no, ' ', ''), 4)) AS aadhaar_masked,
+
                 village
 
             FROM members
@@ -1800,12 +1829,17 @@ def member_search(q: str = ""):
 
                 OR mobile LIKE :q
 
+                OR REPLACE(aadhaar_no, ' ', '') LIKE :aadhaar_q
+
             ORDER BY member_name
 
             LIMIT 20
 
         """),
-                {"q": f"%{q}%"},
+                {
+                    "q": f"%{q}%",
+                    "aadhaar_q": f"%{''.join(character for character in q if character.isdigit()) or q}%",
+                },
             )
             .mappings()
             .all()
@@ -5312,6 +5346,197 @@ def member_pandu_settlement(member_id: int):
         )
 
         return JSONResponse(content=data)
+
+    finally:
+
+        db.close()
+
+# ==========================================================
+# KANTHU DASHBOARD API
+# ==========================================================
+
+@app.get("/api/kanthu-dashboard")
+def kanthu_dashboard_api():
+
+    db = SessionLocal()
+
+    try:
+
+        summary = db.execute(text("""
+
+            SELECT
+
+                IFNULL(SUM(principal_amount),0)     AS total_kanthu,
+
+                IFNULL(SUM(interest_amount),0)      AS total_interest,
+
+                IFNULL(SUM(total_collected),0)      AS total_collection,
+
+                IFNULL(SUM(balance_amount),0)       AS outstanding_amount
+
+            FROM kanthu_master
+
+            WHERE status='ACTIVE'
+
+        """)).mappings().first()
+
+
+        active_loans = db.execute(text("""
+
+            SELECT COUNT(*)
+
+            FROM kanthu_master
+
+            WHERE status='ACTIVE'
+
+        """)).scalar()
+
+
+        closed_loans = db.execute(text("""
+
+            SELECT COUNT(*)
+
+            FROM kanthu_master
+
+            WHERE status='CLOSED'
+
+        """)).scalar()
+
+
+        partial_loans = db.execute(text("""
+
+            SELECT COUNT(*)
+
+            FROM kanthu_master
+
+            WHERE total_collected>0
+
+            AND balance_amount>0
+
+            AND status='ACTIVE'
+
+        """)).scalar()
+
+
+        high_risk = db.execute(text("""
+
+            SELECT COUNT(*)
+
+            FROM kanthu_master
+
+            WHERE balance_amount>0
+
+            AND due_year < YEAR(CURDATE())
+
+            AND status='ACTIVE'
+
+        """)).scalar()
+
+
+        return {
+
+            "summary":{
+
+                "total_kanthu": float(summary["total_kanthu"]),
+
+                "interest": float(summary["total_interest"]),
+
+                "collection": float(summary["total_collection"]),
+
+                "outstanding": float(summary["outstanding_amount"])
+
+            },
+
+            "portfolio":{
+
+                "active": active_loans,
+
+                "partial": partial_loans,
+
+                "closed": closed_loans,
+
+                "risk": high_risk
+
+            }
+
+        }
+
+    finally:
+
+        db.close()
+        
+# ==========================================================
+# OUTSTANDING MEMBERS
+# ==========================================================
+
+@app.get("/api/kanthu-outstanding-members")
+def kanthu_outstanding_members():
+
+    db = SessionLocal()
+
+    try:
+
+        rows = db.execute(text("""
+
+            SELECT
+
+                km.id,
+
+                km.kanthu_no,
+
+                km.principal_amount,
+
+                km.total_collected,
+
+                km.balance_amount,
+
+                km.issue_date,
+
+                km.interest_percent,
+
+                m.member_name,
+
+                m.mobile
+
+            FROM kanthu_master km
+
+            INNER JOIN members m
+                ON m.id = km.member_id
+
+            WHERE
+                km.status='ACTIVE'
+
+            ORDER BY
+                km.balance_amount DESC
+
+        """)).mappings().all()
+
+
+        result = []
+
+        for row in rows:
+
+            item = dict(row)
+
+            item["principal_amount"] = float(item["principal_amount"] or 0)
+            item["total_collected"] = float(item["total_collected"] or 0)
+            item["balance_amount"] = float(item["balance_amount"] or 0)
+
+            if item["principal_amount"] > 0:
+
+                item["progress"] = round(
+                    (item["total_collected"] /
+                     item["principal_amount"]) * 100,
+                    1
+                )
+
+            else:
+
+                item["progress"] = 0
+
+            result.append(item)
+
+        return result
 
     finally:
 

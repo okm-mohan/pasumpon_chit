@@ -1,568 +1,192 @@
 {% extends "base.html" %}
 
-{% block title %}Member Management{% endblock %}
+{% block title %}Member Management | Pasumpon{% endblock %}
+{% block page_styles %}<link rel="stylesheet" href="{{ url_for('static', path='css/members_list.css') }}">{% endblock %}
 
 {% block content %}
+{% set active_count = members|selectattr('status', 'equalto', 'ACTIVE')|list|length %}
+{% set inactive_count = members|selectattr('status', 'equalto', 'INACTIVE')|list|length %}
 
-<link rel="stylesheet" href="{{ url_for('static', path='css/members_list.css') }}">
-
-<div class="container-fluid member-page">
-
-    <!-- Page Header -->
-    <div class="page-header">
-
-        <div class="header-left">
-
-            <nav class="breadcrumb-nav">
-                <span>Dashboard</span>
-                <i class="bi bi-chevron-right"></i>
-                <span>Master</span>
-                <i class="bi bi-chevron-right"></i>
-                <span class="active">Members</span>
+<div class="members-workspace">
+    <header class="members-hero">
+        <div class="members-hero-copy">
+            <nav class="members-breadcrumb" aria-label="Breadcrumb">
+                <a href="/dashboard">Dashboard</a><i class="bi bi-chevron-right"></i>
+                <span>Member Master</span>
             </nav>
-
-            <h2 class="page-title">
-                <i class="bi bi-people-fill"></i>
-                Member Management
-            </h2>
-
-            <p class="page-subtitle">
-                Manage all registered members from one place.
-            </p>
-
+            <div class="members-title-row">
+                <span class="members-title-icon"><i class="bi bi-people-fill"></i></span>
+                <div>
+                    <span class="members-eyebrow">Community directory</span>
+                    <h1>Member Management</h1>
+                    <p>Manage member identity, contact details and financial module enrolment.</p>
+                </div>
+            </div>
         </div>
-
-        <div class="header-right">
-
-            <a href="/members/add" class="btn btn-primary btn-lg">
-                <i class="bi bi-person-plus-fill"></i>
-                Add Member
+        <div class="members-hero-actions">
+            <span class="directory-status"><i class="bi bi-shield-check"></i> Aadhaar-aware search</span>
+            <a href="/members/add" class="add-member-button">
+                <i class="bi bi-person-plus-fill"></i><span>Add New Member</span>
             </a>
-
         </div>
+    </header>
 
-    </div>
+    <section class="member-metrics" aria-label="Member statistics">
+        <article class="member-metric metric-total">
+            <span class="metric-icon"><i class="bi bi-people-fill"></i></span>
+            <div class="metric-copy"><span>Total members</span><strong>{{ members|length }}</strong><small>Registered community profiles</small></div>
+            <span class="metric-tag">Directory</span>
+        </article>
+        <article class="member-metric metric-active">
+            <span class="metric-icon"><i class="bi bi-person-check-fill"></i></span>
+            <div class="metric-copy"><span>Active members</span><strong>{{ active_count }}</strong><small>Available for transactions</small></div>
+            <span class="metric-tag">Active</span>
+        </article>
+        <article class="member-metric metric-inactive">
+            <span class="metric-icon"><i class="bi bi-person-dash-fill"></i></span>
+            <div class="metric-copy"><span>Inactive members</span><strong>{{ inactive_count }}</strong><small>Restricted member profiles</small></div>
+            <span class="metric-tag">Review</span>
+        </article>
+        <article class="member-metric metric-capacity">
+            <span class="metric-icon"><i class="bi bi-bullseye"></i></span>
+            <div class="metric-copy"><span>Community goal</span><strong>{{ ((members|length / 400) * 100)|round|int }}%</strong><small>{{ members|length }} of 400 planned members</small></div>
+            <div class="capacity-ring" style="--member-progress: {{ [((members|length / 400) * 100), 100]|min }}%"></div>
+        </article>
+    </section>
 
-    <!-- Statistics -->
-
-    <div class="row g-4 mb-4">
-
-        <div class="col-lg-4">
-
-            <div class="stat-card total">
-
-                <div class="icon">
-                    <i class="bi bi-people-fill"></i>
-                </div>
-
-                <div class="details">
-                    <h6>Total Members</h6>
-                    <h2>{{ members|length }}</h2>
-                    <small>Registered Members</small>
-                </div>
-
+    <section class="member-directory-card">
+        <div class="directory-toolbar">
+            <div class="directory-heading">
+                <span class="members-eyebrow">Member master</span>
+                <div><h2>Community Members</h2><span class="result-count" id="resultCount">{{ members|length }} records</span></div>
             </div>
-
-        </div>
-
-        <div class="col-lg-4">
-
-            <div class="stat-card active">
-
-                <div class="icon">
-                    <i class="bi bi-check-circle-fill"></i>
-                </div>
-
-                <div class="details">
-                    <h6>Active Members</h6>
-                    <h2>{{ members|selectattr("status","equalto","ACTIVE")|list|length }}</h2>
-                    <small>Currently Active</small>
-                </div>
-
-            </div>
-
-        </div>
-
-        <div class="col-lg-4">
-
-            <div class="stat-card inactive">
-
-                <div class="icon">
-                    <i class="bi bi-person-x-fill"></i>
-                </div>
-
-                <div class="details">
-                    <h6>Inactive Members</h6>
-                    <h2>{{ members|selectattr("status","equalto","INACTIVE")|list|length }}</h2>
-                    <small>Inactive Accounts</small>
-                </div>
-
-            </div>
-
-        </div>
-
-    </div>
-
-    <!-- Toolbar -->
-
-    <div class="toolbar">
-
-        <div class="row align-items-center g-3">
-
-            <div class="col-lg-5">
-
-                <div class="search-box">
-
+            <div class="directory-controls">
+                <div class="member-search-field">
                     <i class="bi bi-search"></i>
-
-                    <input type="text" id="searchBox" class="form-control"
-                        placeholder="Search by Name, Member Code, Mobile or Aadhaar">
-
+                    <input type="search" id="searchBox" autocomplete="off"
+                           placeholder="Search name, code, mobile or Aadhaar" aria-label="Search members">
+                    <button type="button" id="clearSearch" aria-label="Clear member search"><i class="bi bi-x-lg"></i></button>
                 </div>
-
+                <div class="member-status-filter">
+                    <i class="bi bi-funnel"></i>
+                    <select id="statusFilter" aria-label="Filter members by status">
+                        <option value="">All statuses</option>
+                        <option value="ACTIVE">Active members</option>
+                        <option value="INACTIVE">Inactive members</option>
+                    </select>
+                </div>
             </div>
-
-            <div class="col-lg-2">
-
-                <select class="form-select" id="statusFilter">
-
-                    <option value="">All Status</option>
-                    <option>ACTIVE</option>
-                    <option>INACTIVE</option>
-
-                </select>
-
-            </div>
-
-
-
         </div>
 
-    </div>
-
-    <!-- Member List -->
-
-    <div class="member-card mt-4">
-
-        <div class="card-header-custom">
-
-            <div>
-
-                <h5>Members</h5>
-
-                <small>Showing {{ members|length }} Members</small>
-
-            </div>
-
-        </div>
-
-        <div class="table-responsive">
-
-            <table class="table member-table align-middle" id="memberTable">
-
+        <div class="member-table-wrap">
+            <table class="member-directory-table" id="memberTable">
                 <thead>
-
-                    <tr>
-
-                        <th>Photo</th>
-                        <th>Member</th>
-                        <th>Mobile</th>
-                        <th>Aadhaar No</th>
-                        <th>Status</th>
-                        <th>Pandu</th>
-                        <th>Actions</th>
-
-                    </tr>
-
+                    <tr><th>Member</th><th>Contact</th><th>Aadhaar</th><th>Status</th><th>Pandu enrolment</th><th class="actions-heading">Actions</th></tr>
                 </thead>
-
                 <tbody>
-
                     {% for m in members %}
-                    <tr>
-
-                        <!-- Photo -->
+                    <tr data-search="{{ (m.member_name ~ ' ' ~ m.member_code ~ ' ' ~ (m.mobile or '') ~ ' ' ~ (m.aadhaar_no or ''))|lower }}">
                         <td>
-
-                            {% if m.photo %}
-                            <img src="{{ m.photo }}" class="member-photo">
-                            {% else %}
-                            <img src="/static/images/user.png" class="member-photo">
-                            {% endif %}
-
-                        </td>
-
-                        <!-- Member Details -->
-                        <td>
-
-                            <div class="member-info">
-
-                                <div class="member-name">
-                                    {{ m.member_name }}
+                            <div class="member-identity">
+                                <div class="member-avatar">
+                                    <img src="{{ m.photo if m.photo else '/static/images/user.png' }}" alt="{{ m.member_name }}">
+                                    <span class="avatar-status {% if m.status == 'ACTIVE' %}online{% endif %}"></span>
                                 </div>
-
-                                <div class="member-code">
-                                    {{ m.member_code }}
-                                </div>
-
+                                <div><strong>{{ m.member_name }}</strong><span>{{ m.member_code }}</span></div>
                             </div>
-
                         </td>
-
-                        <!-- Mobile -->
                         <td>
-
-                            <div class="mobile-no">
-
-                                <i class="bi bi-telephone-fill text-primary"></i>
-
-                                {{ m.mobile }}
-
+                            <div class="contact-detail"><i class="bi bi-telephone-fill"></i><span>{{ m.mobile or 'Not provided' }}</span></div>
+                        </td>
+                        <td>
+                            <div class="aadhaar-detail">
+                                <i class="bi bi-fingerprint"></i>
+                                <div><span>Aadhaar verified ID</span><strong>{% if m.aadhaar_no %}XXXX XXXX {{ m.aadhaar_no[-4:] }}{% else %}Not provided{% endif %}</strong></div>
                             </div>
-
                         </td>
-
-                        <!-- Aadhaar -->
                         <td>
-
-                            <div class="aadhaar-no">
-
-                                <i class="bi bi-person-vcard-fill text-secondary"></i>
-
-                                {{ m.aadhaar_no }}
-
-                            </div>
-
-                        </td>
-
-
-                        <!-- Status -->
-                        <td>
-
-                            {% if m.status == "ACTIVE" %}
-
-                            <span class="status-badge active">
-
-                                <i class="bi bi-check-circle-fill"></i>
-
-                                Active
-
+                            <span class="member-status-pill {{ m.status|lower }}">
+                                <i class="bi {% if m.status == 'ACTIVE' %}bi-check-circle-fill{% else %}bi-dash-circle-fill{% endif %}"></i>
+                                {{ m.status|title }}
                             </span>
-
-                            {% else %}
-
-                            <span class="status-badge inactive">
-
-                                <i class="bi bi-x-circle-fill"></i>
-
-                                Inactive
-
-                            </span>
-
-                            {% endif %}
-
                         </td>
-
-                        <!-- Pandu -->
-                        <td class="text-center">
-
+                        <td>
                             {% if m.current_year_pandu_count > 0 %}
-
-                            <span class="pandu-joined-badge">
-
-                                <i class="bi bi-patch-check-fill"></i>
-
-                                Joined ({{ m.current_year_pandu_count }} Pandu)
-
-                            </span>
-
+                            <span class="pandu-status joined"><i class="bi bi-patch-check-fill"></i><span><strong>{{ m.current_year_pandu_count }} Pandu</strong><small>Current year joined</small></span></span>
                             {% else %}
-
-                            <button class="join-pandu-btn" data-member-id="{{ m.id }}"
-                                data-member-name="{{ m.member_name }}">
-
-                                <i class="bi bi-person-plus-fill"></i>
-
-                                Join Pandu
-
+                            <button class="join-pandu-btn" type="button" data-member-id="{{ m.id }}" data-member-name="{{ m.member_name }}">
+                                <i class="bi bi-person-plus-fill"></i> Join Pandu
                             </button>
-
                             {% endif %}
-
                         </td>
-
-                        <!-- Actions -->
                         <td>
-                            <div class="d-flex gap-2">
-
-                                <a href="/members/view/{{ m.id }}" class="btn btn-sm btn-view">
-                                    <i class="bi bi-eye"></i>
-                                    View
-                                </a>
-
-                                <a href="/members/edit/{{ m.id }}" class="btn btn-sm btn-edit">
-                                    <i class="bi bi-pencil-square"></i>
-                                    Edit
-                                </a>
-
+                            <div class="member-actions">
+                                <a href="/members/view/{{ m.id }}" class="member-action view" title="View {{ m.member_name }}"><i class="bi bi-eye-fill"></i><span>View</span></a>
+                                <a href="/members/edit/{{ m.id }}" class="member-action edit" title="Edit {{ m.member_name }}"><i class="bi bi-pencil-square"></i><span>Edit</span></a>
                             </div>
                         </td>
-
                     </tr>
-
                     {% endfor %}
-
                 </tbody>
-
             </table>
-
+            <div class="member-empty-state" id="memberEmptyState" hidden>
+                <span><i class="bi bi-person-x"></i></span><h3>No members found</h3><p>Try a different search term or status filter.</p>
+            </div>
         </div>
 
-        <!-- Footer -->
-
-        <div class="card-footer bg-white">
-
-            <div class="d-flex justify-content-between align-items-center">
-
-                <!-- <small class="text-muted">
-
-                    Showing {{ members|length }} Members
-
-                </small> -->
-
-                <nav>
-
-                    <ul class="pagination pagination-sm mb-0">
-
-                        <li class="page-item disabled">
-
-                            <a class="page-link">Previous</a>
-
-                        </li>
-
-                        <li class="page-item active">
-
-                            <a class="page-link">1</a>
-
-                        </li>
-
-                        <li class="page-item disabled">
-
-                            <a class="page-link">Next</a>
-
-                        </li>
-
-                    </ul>
-
+        <footer class="directory-footer">
+            <div class="directory-security"><i class="bi bi-shield-lock"></i> Sensitive identity details are masked on screen.</div>
+            <div class="directory-pagination">
+                <label class="page-size-control" for="memberPageSize">
+                    <span>Rows per page</span>
+                    <select id="memberPageSize">
+                        <option value="10" selected>10</option>
+                        <option value="25">25</option>
+                        <option value="50">50</option>
+                        <option value="100">100</option>
+                    </select>
+                </label>
+                <span class="pagination-summary" id="visibleMemberCount">Showing {{ members|length }} of {{ members|length }} members</span>
+                <nav class="member-pagination" aria-label="Member list pagination">
+                    <button type="button" id="previousMemberPage" aria-label="Previous page"><i class="bi bi-chevron-left"></i></button>
+                    <div id="memberPageNumbers" class="member-page-numbers"></div>
+                    <button type="button" id="nextMemberPage" aria-label="Next page"><i class="bi bi-chevron-right"></i></button>
                 </nav>
-
             </div>
-
-        </div>
-
-    </div>
-
+        </footer>
+    </section>
 </div>
 
-<script src="{{ url_for('static', path='js/members_list.js') }}"></script>
-
-
-<!-- ==========================================
-        JOIN PANDU MODAL
-========================================== -->
-
-<div class="modal fade" id="joinPanduModal" tabindex="-1">
-
+<div class="modal fade member-pandu-modal" id="joinPanduModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-lg modal-dialog-centered">
-
-        <div class="modal-content border-0 shadow-lg rounded-4">
-
-            <!-- Header -->
-
-            <div class="modal-header bg-primary text-white">
-
-                <h4 class="modal-title fw-bold" id="joinPanduTitle">
-                    <i class="bi bi-person-plus-fill"></i>
-                    Join Pandu
-                </h4>
-
-                <small id="joinPanduSubTitle" class="text-white-50">
-                    Current Year Pandu
-                </small>
-
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title-icon"><i class="bi bi-piggy-bank-fill"></i></div>
+                <div><span>Member enrolment</span><h4 class="modal-title" id="joinPanduTitle">Join Pandu</h4><small id="joinPanduSubTitle">Current year Pandu scheme</small></div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-
-            <!-- Body -->
-
             <div class="modal-body">
-
-                <!-- Member -->
-
-                <div class="mb-4">
-
-                    <label class="form-label fw-bold">
-                        Member Name
-                    </label>
-
-                    <input type="text" id="memberName" class="form-control form-control-lg" readonly>
-
-                </div>
-
-                <!-- Pandu -->
-
-
-
-                <!-- Count -->
-
-                <div class="mb-4">
-
-                    <label class="form-label fw-bold">
-                        Pandu Count
-                    </label>
-
-                    <div class="d-flex justify-content-center align-items-center gap-3">
-
-                        <button class="btn btn-primary btn-lg" id="minusBtn">
-
-                            <i class="bi bi-dash-lg"></i>
-
-                        </button>
-
-                        <input id="panduCount" class="form-control text-center fw-bold" value="1" readonly
-                            style="width:120px;font-size:28px;">
-
-                        <button class="btn btn-primary btn-lg" id="plusBtn">
-
-                            <i class="bi bi-plus-lg"></i>
-
-                        </button>
-
+                <div class="pandu-member-field"><label for="memberName">Selected member</label><div><i class="bi bi-person-fill"></i><input type="text" id="memberName" readonly></div></div>
+                <section class="pandu-count-section">
+                    <div><span class="members-eyebrow">Pandu units</span><h5>Select the member's Pandu count</h5><p>Each unit carries a monthly due based on the active group.</p></div>
+                    <div class="pandu-stepper"><button type="button" id="minusBtn"><i class="bi bi-dash-lg"></i></button><input id="panduCount" value="1" readonly aria-label="Pandu count"><button type="button" id="plusBtn"><i class="bi bi-plus-lg"></i></button></div>
+                </section>
+                <section class="pandu-summary-card">
+                    <div class="summary-heading"><span><i class="bi bi-calculator-fill"></i> Assignment summary</span><small>12-month scheme</small></div>
+                    <div class="summary-grid">
+                        <div><span>Monthly due</span><strong id="monthlyDue">₹0</strong></div>
+                        <div><span>Yearly due</span><strong id="yearlyDue">₹0</strong></div>
+                        <div><span>Duration</span><strong id="durationValue">12 Months</strong></div>
+                        <div><span>Pandu count</span><strong id="summaryCount">1</strong></div>
+                        <div><span>Total liability</span><strong id="totalLiability">₹0</strong></div>
                     </div>
-
-                </div>
-
-                <!-- Summary -->
-
-                <div class="card shadow-sm border-0 mt-4">
-
-                    <div class="card-header bg-light">
-
-                        <h5 class="mb-0">
-                            <i class="bi bi-calculator-fill text-primary"></i>
-                            Assignment Summary
-                        </h5>
-
-                    </div>
-
-                    <div class="card-body p-4">
-
-                        <div class="d-flex justify-content-between py-2 border-bottom">
-
-                            <span class="text-muted">
-                                Monthly Due
-                            </span>
-
-                            <strong id="monthlyDue">
-                                ₹0
-                            </strong>
-
-                        </div>
-
-                        <div class="d-flex justify-content-between py-2 border-bottom">
-
-                            <span class="text-muted">
-                                Yearly Due
-                            </span>
-
-                            <strong id="yearlyDue">
-                                ₹0
-                            </strong>
-
-                        </div>
-
-                        <div class="d-flex justify-content-between py-2 border-bottom">
-
-                            <span class="text-muted">
-                                Duration
-                            </span>
-
-                            <strong id="durationValue">
-                                12 Months
-                            </strong>
-
-                        </div>
-
-                        <div class="d-flex justify-content-between py-2 border-bottom">
-
-                            <span class="text-muted">
-                                Pandu Count
-                            </span>
-
-                            <strong id="summaryCount">
-                                1
-                            </strong>
-
-                        </div>
-
-                        <div class="d-flex justify-content-between py-2 border-bottom">
-
-                            <span class="text-muted">
-                                Total Liability
-                            </span>
-
-                            <strong id="totalLiability">
-                                ₹0
-                            </strong>
-
-                        </div>
-
-                        <div class="mt-4 text-center">
-
-                            <small class="text-muted">
-
-                                Estimated Settlement
-
-                            </small>
-
-                            <h2 class="fw-bold text-success mt-2" id="settlementAmount">
-
-                                ₹0
-
-                            </h2>
-
-                        </div>
-
-                    </div>
-
-                </div>
-
+                    <div class="settlement-preview"><span>Estimated settlement</span><strong id="settlementAmount">₹0</strong></div>
+                </section>
             </div>
-
-            <!-- Footer -->
-
-            <div class="modal-footer">
-
-                <button class="btn btn-secondary" data-bs-dismiss="modal">
-
-                    Cancel
-
-                </button>
-
-                <button class="btn btn-success" id="joinPanduBtn">
-
-                    <i class="bi bi-check-circle-fill"></i>
-
-                    Join Pandu
-
-                </button>
-
-            </div>
-
+            <div class="modal-footer"><button type="button" class="modal-cancel" data-bs-dismiss="modal">Cancel</button><button type="button" class="modal-confirm" id="joinPanduBtn"><i class="bi bi-check-circle-fill"></i> Confirm Pandu</button></div>
         </div>
-
     </div>
-
 </div>
-
-
 {% endblock %}
+
+{% block page_scripts %}<script src="{{ url_for('static', path='js/members_list.js') }}"></script>{% endblock %}

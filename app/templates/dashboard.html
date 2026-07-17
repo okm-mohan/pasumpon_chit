@@ -1,280 +1,112 @@
 {% extends "base.html" %}
 
-{% block title %}Dashboard{% endblock %}
+{% block title %}Executive Dashboard | Pasumpon{% endblock %}
+{% block page_styles %}<link rel="stylesheet" href="{{ url_for('static', path='css/dashboard.css') }}">{% endblock %}
 
 {% block content %}
-
-<div class="container-fluid">
-
-    <div class="row">
-
-      
-        <!-- MAIN -->
-
-        <div class="col-md-10 p-4">
-
-            <nav class="navbar bg-white rounded shadow-sm mb-3">
-
-                <div class="container-fluid">
-
-                    <h4 class="fw-bold">
-                        Dashboard
-                    </h4>
-
-                    <div>
-
-                        <span class="clock me-3" id="clock"></span>
-
-                        <a href="/logout" class="btn btn-danger">
-                            Logout
-                        </a>
-
-                    </div>
-
-                </div>
-
-            </nav>
-
-            <!-- SCROLLING NEWS -->
-
-            <div class="alert alert-warning">
-
-                <marquee>
-
-                    🔔 Today's Collection ₹1,25,000 |
-                    🔔 Pending Dues ₹75,000 |
-                    🔔 5 Auctions Scheduled Today |
-                    🔔 New Member Registrations 3 |
-                    🔔 Backup Completed Successfully
-
-                </marquee>
-
-            </div>
-
-            <!-- QUICK ACTIONS -->
-
-            <div class="mb-3">
-
-                <button class="btn btn-primary">
-                    ➕ Add Member
-                </button>
-
-                <button class="btn btn-success">
-                    💰 Collection
-                </button>
-
-                <button class="btn btn-warning">
-                    🏆 Auction
-                </button>
-
-                <button class="btn btn-info">
-                    📄 Reports
-                </button>
-
-            </div>
-
-            <!-- KPI -->
-
-            <div class="row">
-
-                <div class="col-md-3 mb-3">
-                    <div class="card kpi-card bg-primary p-3">
-                        <h6>Total Members</h6>
-                        <h2>1250</h2>
-                    </div>
-                </div>
-
-                <div class="col-md-3 mb-3">
-                    <div class="card kpi-card bg-success p-3">
-                        <h6>Active Chits</h6>
-                        <h2>85</h2>
-                    </div>
-                </div>
-
-                <div class="col-md-3 mb-3">
-                    <div class="card kpi-card bg-warning p-3">
-                        <h6>Collection</h6>
-                        <h2>₹25L</h2>
-                    </div>
-                </div>
-
-                <div class="col-md-3 mb-3">
-                    <div class="card kpi-card bg-danger p-3">
-                        <h6>Pending Dues</h6>
-                        <h2>₹1.2L</h2>
-                    </div>
-                </div>
-
-                <div class="col-md-3 mb-3">
-                    <div class="card kpi-card bg-info p-3">
-                        <h6>Today's Receipts</h6>
-                        <h2>35</h2>
-                    </div>
-                </div>
-
-                <div class="col-md-3 mb-3">
-                    <div class="card kpi-card bg-secondary p-3">
-                        <h6>Bank Balance</h6>
-                        <h2>₹8.5L</h2>
-                    </div>
-                </div>
-
-                <div class="col-md-3 mb-3">
-                    <div class="card kpi-card bg-dark p-3">
-                        <h6>Auctions</h6>
-                        <h2>5</h2>
-                    </div>
-                </div>
-
-                <div class="col-md-3 mb-3">
-                    <div class="card kpi-card bg-primary p-3">
-                        <h6>Profit</h6>
-                        <h2>₹4L</h2>
-                    </div>
-                </div>
-
-            </div>
-
-            <!-- CHARTS -->
-
-            <div class="row">
-
-                <div class="col-md-8">
-
-                    <div class="card p-4">
-
-                        <h5>Monthly Collection</h5>
-
-                        <canvas id="collectionChart"></canvas>
-
-                    </div>
-
-                </div>
-
-                <div class="col-md-4">
-
-                    <div class="card p-4">
-
-                        <h5>Member Growth</h5>
-
-                        <canvas id="memberChart"></canvas>
-
-                    </div>
-
-                </div>
-
-            </div>
-
-            <!-- TABLE + ANNOUNCEMENT -->
-
-            <div class="row mt-4">
-
-                <div class="col-md-8">
-
-                    <div class="card p-4">
-
-                        <h5>Recent Collections</h5>
-
-                        <table class="table">
-
-                            <tr>
-                                <th>Receipt</th>
-                                <th>Member</th>
-                                <th>Amount</th>
-                            </tr>
-
-                            <tr>
-                                <td>101</td>
-                                <td>Kumar</td>
-                                <td>₹5000</td>
-                            </tr>
-
-                            <tr>
-                                <td>102</td>
-                                <td>Ravi</td>
-                                <td>₹2500</td>
-                            </tr>
-
-                            <tr>
-                                <td>103</td>
-                                <td>Mani</td>
-                                <td>₹3000</td>
-                            </tr>
-
-                        </table>
-
-                    </div>
-
-                </div>
-
-                <div class="col-md-4">
-
-                    <div class="card p-4">
-
-                        <h5>Announcements</h5>
-
-                        <marquee direction="up" height="200">
-
-                            ✔ Backup Completed<br><br>
-
-                            ✔ WhatsApp Sent<br><br>
-
-                            ✔ New Chit Created<br><br>
-
-                            ✔ Monthly Report Generated<br><br>
-
-                            ✔ Due Reminder Sent<br><br>
-
-                        </marquee>
-
-                    </div>
-
-                </div>
-
-            </div>
-
+<div class="executive-dashboard">
+    <header class="dashboard-header">
+        <div>
+            <span class="eyebrow">Community finance operations</span>
+            <h1>Executive Dashboard</h1>
+            <p>A clear view of members, collections, lending and accounts.</p>
+        </div>
+        <div class="header-tools">
+            <div class="live-indicator"><span></span> Live database</div>
+            <div class="date-card"><i class="bi bi-calendar3"></i><span id="dashboardDate">Today</span></div>
+            <a class="primary-action" href="/members/add"><i class="bi bi-person-plus-fill"></i> Add Member</a>
+        </div>
+    </header>
+
+    <section class="kpi-grid" aria-label="Key performance indicators">
+        <article class="kpi-card kpi-members">
+            <div class="kpi-top"><span class="kpi-icon"><i class="bi bi-people-fill"></i></span><span class="kpi-trend neutral">Target 400</span></div>
+            <span class="kpi-label">Community Members</span>
+            <strong class="kpi-value" id="totalMembers">—</strong>
+            <div class="kpi-progress"><span id="memberProgress"></span></div>
+            <small id="memberProgressText">Loading membership progress</small>
+        </article>
+        <article class="kpi-card kpi-today">
+            <div class="kpi-top"><span class="kpi-icon"><i class="bi bi-wallet-fill"></i></span><span class="kpi-trend positive">Today</span></div>
+            <span class="kpi-label">Today's Pandu Collection</span>
+            <strong class="kpi-value" id="todayCollection">—</strong>
+            <small>Receipts recorded for the day</small>
+        </article>
+        <article class="kpi-card kpi-month">
+            <div class="kpi-top"><span class="kpi-icon"><i class="bi bi-graph-up-arrow"></i></span><span class="kpi-trend positive">This month</span></div>
+            <span class="kpi-label">Monthly Collection</span>
+            <strong class="kpi-value" id="monthCollection">—</strong>
+            <small>Consolidated Pandu receipts</small>
+        </article>
+        <article class="kpi-card kpi-pending">
+            <div class="kpi-top"><span class="kpi-icon"><i class="bi bi-exclamation-circle-fill"></i></span><span class="kpi-trend attention">Action</span></div>
+            <span class="kpi-label">Pending Members</span>
+            <strong class="kpi-value" id="pendingMembers">—</strong>
+            <small>Follow up before the monthly due date</small>
+        </article>
+    </section>
+
+    <section class="section-block">
+        <div class="section-heading">
+            <div><span class="eyebrow">Core operations</span><h2>Financial Modules</h2></div>
+            <span class="section-note">Four dedicated workspaces, one member master</span>
         </div>
 
-    </div>
+        <div class="module-grid">
+            <article class="module-card pandu-module">
+                <div class="module-head"><span class="module-icon"><i class="bi bi-piggy-bank-fill"></i></span><span class="module-status active">Active</span></div>
+                <h3>Pandu Savings</h3>
+                <p>12-month community savings, monthly dues, arrears and maturity settlements.</p>
+                <div class="module-stat-row"><div><span>Monthly unit</span><strong>₹100</strong></div><div><span>Due by</span><strong>10th</strong></div></div>
+                <div class="module-actions"><a href="/pandu">Open Dashboard <i class="bi bi-arrow-right"></i></a><a href="/pandu/assign" title="Assign member"><i class="bi bi-person-plus"></i></a></div>
+            </article>
 
+            <article class="module-card kanthu-module">
+                <div class="module-head"><span class="module-icon"><i class="bi bi-cash-coin"></i></span><span class="module-status active">Active</span></div>
+                <h3>Kanthu Lending</h3>
+                <p>Short-term lending with interest, collections, ageing and outstanding tracking.</p>
+                <div class="module-stat-row"><div><span>Active loans</span><strong id="activeKanthu">—</strong></div><div><span>Outstanding</span><strong id="kanthuOutstanding">—</strong></div></div>
+                <div class="module-actions"><a href="/kanthu">Open Dashboard <i class="bi bi-arrow-right"></i></a><a href="/kanthu/new" title="Issue new Kanthu"><i class="bi bi-plus-lg"></i></a></div>
+            </article>
+
+            <article class="module-card ayul-module">
+                <div class="module-head"><span class="module-icon"><i class="bi bi-heart-pulse-fill"></i></span><span class="module-status planned">Planned</span></div>
+                <h3>Ayul Santha</h3>
+                <p>Interest-only monthly lending with flexible principal repayment and member ledgers.</p>
+                <div class="module-stat-row"><div><span>Interest cycle</span><strong>Monthly</strong></div><div><span>Principal</span><strong>Flexible</strong></div></div>
+                <div class="module-actions disabled"><span>Module coming soon</span><i class="bi bi-lock-fill"></i></div>
+            </article>
+
+            <article class="module-card accounts-module">
+                <div class="module-head"><span class="module-icon"><i class="bi bi-journal-check"></i></span><span class="module-status active">Active</span></div>
+                <h3>Accounts Ledger</h3>
+                <p>Credits, expenses, module income and consolidated financial reporting.</p>
+                <div class="module-stat-row"><div><span>Current balance</span><strong id="currentBalance">—</strong></div><div><span>View</span><strong>Live</strong></div></div>
+                <div class="module-actions"><a href="/accounts/summary">Open Dashboard <i class="bi bi-arrow-right"></i></a><a href="/accounts/expenses" title="Expense entry"><i class="bi bi-dash-lg"></i></a></div>
+            </article>
+        </div>
+    </section>
+
+    <section class="dashboard-lower-grid">
+        <article class="panel activity-panel">
+            <div class="panel-heading"><div><span class="eyebrow">Today's activity</span><h2>Recent Collections</h2></div><a href="/daily-report">View report <i class="bi bi-arrow-up-right"></i></a></div>
+            <div class="table-responsive">
+                <table class="activity-table">
+                    <thead><tr><th>Receipt</th><th>Member</th><th>Payment</th><th class="text-end">Amount</th></tr></thead>
+                    <tbody id="recentCollections"><tr><td colspan="4" class="empty-state">Loading today's collections…</td></tr></tbody>
+                </table>
+            </div>
+        </article>
+
+        <aside class="panel priority-panel">
+            <div class="panel-heading"><div><span class="eyebrow">Attention centre</span><h2>Today's Priorities</h2></div></div>
+            <a href="/pending-members-list" class="priority-item"><span class="priority-icon warning"><i class="bi bi-calendar-x"></i></span><span><strong>Pandu follow-up</strong><small>Review members with pending monthly dues</small></span><i class="bi bi-chevron-right"></i></a>
+            <a href="/kanthu/collection" class="priority-item"><span class="priority-icon success"><i class="bi bi-cash-stack"></i></span><span><strong>Kanthu collection</strong><small>Record repayments and update balances</small></span><i class="bi bi-chevron-right"></i></a>
+            <a href="/accounts/expenses" class="priority-item"><span class="priority-icon purple"><i class="bi bi-receipt"></i></span><span><strong>Post expenses</strong><small>Keep today's company ledger current</small></span><i class="bi bi-chevron-right"></i></a>
+            <div class="due-reminder"><span><i class="bi bi-bell-fill"></i> Pandu due date</span><strong>10th of every month</strong></div>
+        </aside>
+    </section>
 </div>
-
-<script>
-
-    setInterval(function () {
-
-        document.getElementById("clock")
-            .innerHTML =
-            new Date().toLocaleString();
-
-    }, 1000);
-
-    new Chart(
-        document.getElementById('collectionChart'),
-        {
-            type: 'bar',
-            data: {
-                labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
-                datasets: [{
-                    label: 'Collection',
-                    data: [10, 15, 12, 18, 22, 25]
-                }]
-            }
-        });
-
-    new Chart(
-        document.getElementById('memberChart'),
-        {
-            type: 'line',
-            data: {
-                labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
-                datasets: [{
-                    label: 'Members',
-                    data: [100, 150, 180, 220, 300, 350]
-                }]
-            }
-        });
-
-</script>
-
 {% endblock %}
+
+{% block page_scripts %}<script src="{{ url_for('static', path='js/dashboard.js') }}"></script>{% endblock %}

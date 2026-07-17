@@ -19,13 +19,12 @@
             </p>
         </div>
 
-        <button class="btn btn-primary btn-lg"
-                onclick="location.href='/kanthu/new'">
+        <!-- <button class="btn btn-primary btn-lg" onclick="location.href='/kanthu/new'">
 
             <i class="bi bi-plus-circle"></i>
             New Kanthu
 
-        </button>
+        </button> -->
 
     </div>
 
@@ -111,17 +110,14 @@
 
         <div class="col-md-3">
 
-            <div class="card h-100 shadow-sm action-card"
-                 onclick="location.href='/kanthu/new'"
-                 style="cursor:pointer;">
+            <div class="card h-100 shadow-sm action-card" onclick="location.href='/kanthu/new'" style="cursor:pointer;">
 
                 <div class="card-body text-center">
 
-                    <i class="bi bi-plus-circle-fill text-primary"
-                       style="font-size:50px;"></i>
+                    <i class="bi bi-plus-circle-fill text-primary" style="font-size:50px;"></i>
 
                     <h5 class="mt-3">
-                        New Entry
+                        Amount Issue
                     </h5>
 
                     <p class="text-muted">
@@ -136,21 +132,19 @@
 
         <div class="col-md-3">
 
-            <div class="card h-100 shadow-sm action-card"
-                 onclick="location.href='/kanthu/collection'"
-                 style="cursor:pointer;">
+            <div class="card h-100 shadow-sm action-card" onclick="location.href='/kanthu/collection'"
+                style="cursor:pointer;">
 
                 <div class="card-body text-center">
 
-                    <i class="bi bi-cash-stack text-success"
-                       style="font-size:50px;"></i>
+                    <i class="bi bi-cash-stack text-success" style="font-size:50px;"></i>
 
                     <h5 class="mt-3">
-                        Collection
+                        Amount Collection
                     </h5>
 
                     <p class="text-muted">
-                        Receive Collections
+                        Receive Collection Amount
                     </p>
 
                 </div>
@@ -161,14 +155,12 @@
 
         <div class="col-md-3">
 
-            <div class="card h-100 shadow-sm action-card"
-                 onclick="location.href='/kanthu/members'"
-                 style="cursor:pointer;">
+            <div class="card h-100 shadow-sm action-card" onclick="location.href='/kanthu/members'"
+                style="cursor:pointer;">
 
                 <div class="card-body text-center">
 
-                    <i class="bi bi-people-fill text-warning"
-                       style="font-size:50px;"></i>
+                    <i class="bi bi-people-fill text-warning" style="font-size:50px;"></i>
 
                     <h5 class="mt-3">
                         Member Status
@@ -186,14 +178,12 @@
 
         <div class="col-md-3">
 
-            <div class="card h-100 shadow-sm action-card"
-                 onclick="location.href='/kanthu/reports'"
-                 style="cursor:pointer;">
+            <div class="card h-100 shadow-sm action-card" onclick="location.href='/kanthu/reports'"
+                style="cursor:pointer;">
 
                 <div class="card-body text-center">
 
-                    <i class="bi bi-bar-chart-fill text-danger"
-                       style="font-size:50px;"></i>
+                    <i class="bi bi-bar-chart-fill text-danger" style="font-size:50px;"></i>
 
                     <h5 class="mt-3">
                         Reports
@@ -210,152 +200,203 @@
         </div>
 
     </div>
+</div>
 
-    <!-- RECENT KANTHU + RECENT COLLECTION -->
-    <div class="row">
 
-        <div class="col-md-6">
 
-            <div class="card">
+<!-- ================= LOAN PORTFOLIO OVERVIEW ================= -->
 
-                <div class="card-header bg-primary text-white">
+<div class="card shadow-sm border-0 rounded-4 mb-4">
 
-                    Recent Kanthu Entries
+    <div class="card-header bg-white border-0 pt-4">
 
-                </div>
+        <h4 class="fw-bold mb-0">
 
-                <div class="card-body">
+            <i class="bi bi-pie-chart-fill text-primary"></i>
 
-                    <table class="table table-bordered table-hover">
+            Loan Portfolio Overview
 
-                        <thead>
+        </h4>
 
-                            <tr>
+        <small class="text-muted">
 
-                                <th>Kanthu No</th>
-                                <th>Member</th>
-                                <th>Amount</th>
+            Overall health of Kanthu business
 
-                            </tr>
-
-                        </thead>
-
-                        <tbody id="recentKanthuTable">
-
-                            <tr>
-
-                                <td colspan="3"
-                                    class="text-center">
-
-                                    No Records
-
-                                </td>
-
-                            </tr>
-
-                        </tbody>
-
-                    </table>
-
-                </div>
-
-            </div>
-
-        </div>
-
-        <div class="col-md-6">
-
-            <div class="card">
-
-                <div class="card-header bg-success text-white">
-
-                    Recent Collections
-
-                </div>
-
-                <div class="card-body">
-
-                    <table class="table table-bordered table-hover">
-
-                        <thead>
-
-                            <tr>
-
-                                <th>Date</th>
-                                <th>Member</th>
-                                <th>Amount</th>
-
-                            </tr>
-
-                        </thead>
-
-                        <tbody id="recentCollectionTable">
-
-                            <tr>
-
-                                <td colspan="3"
-                                    class="text-center">
-
-                                    No Records
-
-                                </td>
-
-                            </tr>
-
-                        </tbody>
-
-                    </table>
-
-                </div>
-
-            </div>
-
-        </div>
+        </small>
 
     </div>
 
-    <!-- OUTSTANDING MEMBERS -->
-    <div class="card mt-4">
+    <div class="card-body">
 
-        <div class="card-header bg-danger text-white">
+        <div class="row g-4">
 
-            Outstanding Members
+            <!-- Active Loans -->
 
-        </div>
+            <div class="col-lg-3 col-md-6">
 
-        <div class="card-body">
+                <div class="portfolio-card">
 
-            <table class="table table-striped table-hover">
+                    <div class="d-flex justify-content-between">
 
-                <thead>
+                        <div>
 
-                    <tr>
+                            <h6>Active Loans</h6>
 
-                        <th>Member Name</th>
-                        <th>Total Given</th>
-                        <th>Collected</th>
-                        <th>Outstanding</th>
+                            <h2 id="activeLoans">0</h2>
 
-                    </tr>
+                        </div>
 
-                </thead>
+                        <div class="portfolio-icon bg-primary">
 
-                <tbody id="outstandingMembersTable">
+                            <i class="bi bi-wallet2"></i>
 
-                    <tr>
+                        </div>
 
-                        <td colspan="4"
-                            class="text-center">
+                    </div>
 
-                            No Records
+                    <div class="progress mt-3">
 
-                        </td>
+                        <div class="progress-bar bg-primary" id="activeProgress" style="width:75%">
 
-                    </tr>
+                        </div>
 
-                </tbody>
+                    </div>
 
-            </table>
+                    <small class="text-muted">
+
+                        75% of Total Loans
+
+                    </small>
+
+                </div>
+
+            </div>
+
+            <!-- Partial Paid -->
+
+            <div class="col-lg-3 col-md-6">
+
+                <div class="portfolio-card">
+
+                    <div class="d-flex justify-content-between">
+
+                        <div>
+
+                            <h6>Partial Paid</h6>
+
+                            <h2 id="partialLoans">0</h2>
+
+                        </div>
+
+                        <div class="portfolio-icon bg-warning">
+
+                            <i class="bi bi-hourglass-split"></i>
+
+                        </div>
+
+                    </div>
+
+                    <div class="progress mt-3">
+
+                        <div class="progress-bar bg-warning" id="partialProgress" style="width:48%">
+
+                        </div>
+
+                    </div>
+
+                    <small class="text-muted">
+
+                        Members paying in installments
+
+                    </small>
+
+                </div>
+
+            </div>
+
+            <!-- Closed Loans -->
+
+            <div class="col-lg-3 col-md-6">
+
+                <div class="portfolio-card">
+
+                    <div class="d-flex justify-content-between">
+
+                        <div>
+
+                            <h6>Closed Loans</h6>
+
+                            <h2 id="closedLoans">0</h2>
+
+                        </div>
+
+                        <div class="portfolio-icon bg-success">
+
+                            <i class="bi bi-check-circle-fill"></i>
+
+                        </div>
+
+                    </div>
+
+                    <div class="progress mt-3">
+
+                        <div class="progress-bar bg-success" id="closedProgress" style="width:62%">
+
+                        </div>
+
+                    </div>
+
+                    <small class="text-muted">
+
+                        Successfully Completed
+
+                    </small>
+
+                </div>
+
+            </div>
+
+            <!-- High Risk -->
+
+            <div class="col-lg-3 col-md-6">
+
+                <div class="portfolio-card">
+
+                    <div class="d-flex justify-content-between">
+
+                        <div>
+
+                            <h6>High Risk</h6>
+
+                            <h2 id="riskLoans">0</h2>
+
+                        </div>
+
+                        <div class="portfolio-icon bg-danger">
+
+                            <i class="bi bi-exclamation-triangle-fill"></i>
+
+                        </div>
+
+                    </div>
+
+                    <div class="progress mt-3">
+
+                        <div class="progress-bar bg-danger" id="riskProgress" style="width:15%">
+
+                        </div>
+
+                    </div>
+
+                    <small class="text-danger">
+
+                        Needs Immediate Follow-up
+
+                    </small>
+
+                </div>
+
+            </div>
 
         </div>
 
@@ -363,26 +404,57 @@
 
 </div>
 
-<style>
+<!-- ================= PAYMENT DUE + RECENT COLLECTION ================= -->
 
-.action-card {
-    transition: 0.3s;
-}
+<!-- ================= OUTSTANDING MEMBERS ================= -->
 
-.action-card:hover {
+<div class="card shadow-sm border-0 rounded-4 mb-4">
 
-    transform: translateY(-5px);
+    <div class="card-header bg-white border-0 pt-4 d-flex justify-content-between align-items-center">
 
-    box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+        <div>
 
-}
+            <h4 class="fw-bold mb-0">
 
-.card-header {
+                <i class="bi bi-people-fill text-danger"></i>
 
-    font-weight: 600;
+                Outstanding Members
 
-}
+            </h4>
 
-</style>
+            <small class="text-muted">
+
+                Members with active Kanthu balance
+
+            </small>
+
+        </div>
+
+        <button class="btn btn-outline-primary">
+
+            View All
+
+        </button>
+
+    </div>
+
+    <div class="card-body">
+
+        <div class="row g-4" id="outstandingMembers">
+
+            <!-- MEMBER CARD -->
+
+            
+
+            
+            <!-- Repeat cards using Jinja loop -->
+
+        </div>
+
+    </div>
+
+</div>
+
+<script src="/static/js/kanthu_dashboard.js"></script>
 
 {% endblock %}

@@ -1,518 +1,184 @@
 {% extends "pandu_base.html" %}
 
-{% block title %}
-Pandu Collection Entry
+{% block title %}Pandu Collection Entry | Pasumpon{% endblock %}
+
+{% block page_styles %}
+<link rel="stylesheet" href="/static/css/pandu_collection.css">
 {% endblock %}
 
 {% block content %}
-
-            <!-- 
-            <div class="page-header">
-
-                <h1>Monthly Collection</h1>
-
+<div class="pandu-collection-page">
+    <header class="collection-page-header">
+        <div class="collection-heading">
+            <span class="collection-heading-icon"><i class="bi bi-wallet2"></i></span>
+            <div>
+                <span class="collection-eyebrow">Pandu operations</span>
+                <h1>Collection Entry</h1>
+                <p>Find a member, review pending dues and record the monthly payment.</p>
             </div>
- -->
+        </div>
+        <div class="collection-date-panel">
+            <i class="bi bi-calendar3"></i>
+            <div><span>Today</span><strong id="currentDate">13 Jul 2026</strong></div>
+        </div>
+    </header>
 
-
-            <!-- TOP HEADER -->
-
-            <div class="top-header">
-
-                <div class="page-title">
-
-                    <i class="fas fa-money-check-dollar"></i>
-
-                    <h1>Pandu Collection Entry</h1>
-
-                </div>
-
-                <div class="header-right">
-
-                    <span id="currentDate">
-                        06/06/2026
-                    </span>
-
-                </div>
-
+    <section class="collection-search-card" aria-labelledby="memberSearchTitle">
+        <div class="search-card-heading">
+            <span class="search-card-icon"><i class="bi bi-person-search"></i></span>
+            <div>
+                <h2 id="memberSearchTitle">Find community member</h2>
+                <p>Search using name, member code, mobile number or Aadhaar number.</p>
             </div>
-
-            <!-- TOP ROW -->
-
-            <div class="top-grid">
-
-                <!-- SEARCH MEMBER -->
-
-                <div class="card search-card">
-
-                    <h3>
-                        SEARCH MEMBER
-                    </h3>
-
-                    <div class="search-box">
-
-                        <input type="text" id="searchMember" placeholder="Search by Code / Name / Mobile">
-
-                        <button type="button" class="search-clear-btn" onclick="clearMemberSearch()">
-
-                            <i class="fas fa-times"></i>
-
-                        </button>
-
-
-                        <button type="button" class="voice-btn">
-
-                            <i class="fas fa-microphone"></i>
-
-                        </button>
-
-                        <div id="memberDropdown" class="member-dropdown">
-                        </div>
-
-                    </div>
-
-                    <p>
-                        Example:
-                        M00125,
-                        Murugan,
-                        9876543210
-                    </p>
-
-
-                    <div id="assignWarning" class="assign-warning" style="display:none;">
-
-                        <div class="assign-warning-icon">
-                            ⚠
-                        </div>
-
-                        <h2>
-                            MEMBER NOT ASSIGNED TO ANY PANDU GROUP
-                        </h2>
-
-                        <p>
-                            This member has not been assigned to a Pandu Group yet.
-                            Please assign Pandu before collecting payment.
-                        </p>
-
-                        <button type="button" class="assign-pandu-btn" onclick="goAssignPandu()">
-
-                            <i class="fas fa-plus-circle"></i>
-                            Assign Pandu
-
-                        </button>
-
-                    </div>
-
-
-                </div>
-
-
-
-                <!-- MEMBER DETAILS -->
-
-                <div class="card member-card">
-
-                    <h3>
-                        MEMBER DETAILS
-                    </h3>
-
-                    <table class="info-table">
-
-                        <tr>
-                            <td>Member Code</td>
-                            <td id="memberCode">-</td>
-                        </tr>
-
-                        <tr>
-                            <td>Member Name</td>
-                            <td id="memberName">-</td>
-                        </tr>
-
-                        <tr>
-                            <td>Mobile</td>
-                            <td id="memberMobile">-</td>
-                        </tr>
-
-                        <tr>
-                            <td>Group</td>
-                            <td id="memberGroup">-</td>
-                        </tr>
-
-                        <tr>
-                            <td>Pandu Count</td>
-                            <td id="panduCount">-</td>
-                        </tr>
-
-                        <tr>
-                            <td>Monthly Due</td>
-                            <td id="memberDue">₹0</td>
-                        </tr>
-
-                        <tr>
-                            <td>Maturity Amount</td>
-                            <td id="maturityAmount">₹0</td>
-                        </tr>
-
-                        <tr>
-                            <td>Status</td>
-                            <td>
-                                <span class="badge success">
-                                    ACTIVE
-                                </span>
-                            </td>
-                        </tr>
-
-                    </table>
-
-                </div>
-
-                <!-- QUICK INFO -->
-
-                <div class="card">
-
-                    <h3>
-                        QUICK INFO
-                    </h3>
-
-                    <div class="quick-info">
-
-                        <div class="quick-item">
-                            <label>Last Payment Date</label>
-                            <strong id="lastPaymentDate">
-                                -
-                            </strong>
-                        </div>
-                        <div class="quick-item">
-
-                            <label>
-                                Last Receipt No
-                            </label>
-
-                            <strong id="lastReceiptNo">
-                                -
-                            </strong>
-
-                        </div>
-
-                        <div class="quick-item">
-
-                            <label>
-                                Pending Months
-                            </label>
-
-                            <strong class="danger" id="pendingMonths">
-                                0
-                            </strong>
-
-                        </div>
-
-                        <div class="quick-item">
-
-                            <label>
-                                Pending Due
-                            </label>
-
-                            <strong class="danger" id="pendingDue">
-                                ₹0
-                            </strong>
-
-                        </div>
-
-                    </div>
-
-                </div>
-
+        </div>
+        <div class="collection-search-controls">
+            <div class="collection-search-field">
+                <i class="bi bi-search"></i>
+                <input type="text" id="searchMember" name="pandu_member_lookup_query"
+                       autocomplete="new-password" autocorrect="off" autocapitalize="none" spellcheck="false"
+                       data-form-type="other" data-1p-ignore data-lpignore="true" data-bwignore="true"
+                       role="combobox" aria-autocomplete="list" aria-controls="memberDropdown" aria-expanded="false"
+                       placeholder="Enter name, member code, mobile or Aadhaar number"
+                       aria-label="Search member by name, code, mobile or Aadhaar">
+                <button type="button" class="search-clear-btn" onclick="clearMemberSearch()" aria-label="Clear member search">
+                    <i class="bi bi-x-lg"></i>
+                </button>
+                <div id="memberDropdown" class="member-dropdown" role="listbox"></div>
             </div>
-
-            <!-- PART 2 WILL COME BELOW -->
-
-            <!-- =========================================
-     CURRENT YEAR DUE STATUS
-========================================= -->
-
-            <div class="middle-grid">
-
-                <div class="card due-card">
-
-                    <h3>
-                        CURRENT YEAR DUE STATUS (2026)
-                    </h3>
-
-                    <table class="due-table">
-
-                        <thead>
-
-                            <tr>
-                                <th>Month</th>
-                                <th>Due Amount</th>
-                                <th>Paid Amount</th>
-                                <th>Status</th>
-                                <th>Payment Date</th>
-                                <th>Receipt No</th>
-                            </tr>
-
-                        </thead>
-
-                        <tbody id="dueTableBody">
-
-                            <tr>
-                                <td></td>
-                                <td></td>
-                                <td></td>
-                                <td>
-                                    <span class="status-paid">
-
-                                    </span>
-                                </td>
-                                <td></td>
-                                <td></td>
-                            </tr>
-
-                            <tr>
-                                <td></td>
-                                <td>₹0</td>
-                                <td>₹0</td>
-                                <td>
-                                    <span class="status-paid">
-
-                                    </span>
-                                </td>
-                                <td></td>
-                                <td></td>
-                            </tr>
-
-                            <tr>
-                                <td></td>
-                                <td>₹0</td>
-                                <td>₹0</td>
-                                <td>
-                                    <span class="status-pending">
-
-                                    </span>
-                                </td>
-                                <td>-</td>
-                                <td>-</td>
-                            </tr>
-
-                            <tr>
-                                <td></td>
-                                <td>₹0</td>
-                                <td>₹0</td>
-                                <td>
-                                    <span class="status-pending">
-
-                                    </span>
-                                </td>
-                                <td>-</td>
-                                <td>-</td>
-                            </tr>
-
-                            <tr>
-                                <td></td>
-                                <td>₹0</td>
-                                <td>₹0</td>
-                                <td>
-                                    <span class="status-pending">
-
-                                    </span>
-                                </td>
-                                <td>-</td>
-                                <td>-</td>
-                            </tr>
-
-                            <tr>
-                                <td></td>
-                                <td>₹0</td>
-                                <td>₹0</td>
-                                <td>
-                                    <span class="status-pending">
-
-                                    </span>
-                                </td>
-                                <td>-</td>
-                                <td>-</td>
-                            </tr>
-
-                        </tbody>
-
-                    </table>
-
-                    <div class="due-summary">
-
-                        <div>
-                            <strong>Total Paid :</strong>
-                            <span id="totalPaid">₹0</span>
-                        </div>
-
-                        <div>
-                            <strong>Total Due :</strong>
-                            <span id="totalDue">₹0</span>
-                        </div>
-
-                        <div>
-                            <strong>Pending :</strong>
-                            <span id="totalPending">₹0</span>
-                        </div>
-
-                    </div>
-                </div>
-
-                <!-- PAYMENT ENTRY -->
-
-                <div class="card payment-card">
-
-                    <h3>
-                        PAYMENT ENTRY
-                    </h3>
-
-                    <form>
-
-                        <div class="form-group">
-
-                            <label>
-                                Collection Month
-                            </label>
-
-                            <select id="collectionMonth">
-                            </select>
-
-                        </div>
-
-                        <div class="form-group">
-
-                            <label>
-                                Amount
-                            </label>
-
-                            <input type="text" id="amount" placeholder="₹0" value="0" inputmode="numeric">
-
-                        </div>
-
-                        <div class="form-group">
-
-                            <label>
-                                Receipt No
-                            </label>
-
-                            <input type="text" value="">
-
-                        </div>
-
-                        <div class="form-group">
-
-                            <label>
-                                Collection Date
-                            </label>
-
-                            <input type="date">
-
-                        </div>
-
-                        <div class="form-group">
-
-                            <label>
-                                Payment Mode
-                            </label>
-
-                            <select id="paymentMode">
-
-                                <option>Cash</option>
-                                <option>UPI</option>
-                                <option>Bank Transfer</option>
-
-                            </select>
-
-                        </div>
-
-                        <div class="form-group">
-
-                            <label>
-                                Remarks
-                            </label>
-
-                            <textarea rows="4"></textarea>
-
-                        </div>
-
-                        <div class="action-buttons">
-
-                            <button type="button" class="save-btn" onclick="savePayment()">
-
-                                Save Payment
-
-                            </button>
-
-                            <input type="hidden" id="memberId">
-
-                        </div>
-
-                    </form>
-
-                </div>
-
+            <button type="button" class="voice-btn" aria-label="Search by voice"><i class="bi bi-mic-fill"></i></button>
+        </div>
+        <div id="assignWarning" class="assign-warning" style="display:none;" role="alert">
+            <span class="assign-warning-icon"><i class="bi bi-exclamation-triangle-fill"></i></span>
+            <div class="assign-warning-copy">
+                <strong>Member is not enrolled in Pandu</strong>
+                <span>This member cannot make a Pandu collection until an active Pandu scheme is assigned.</span>
             </div>
+            <a href="/pandu/assign" class="assign-warning-action"><i class="bi bi-person-plus-fill"></i> Enrol member</a>
+        </div>
+    </section>
 
-            <!-- RESTRICTION MESSAGE -->
-
-            <div class="restriction-box">
-
-                <i class="fas fa-lock"></i>
-
-                Collection Entry Closed
-                After 10th Of Every Month
-
+    <section class="member-overview-card" aria-labelledby="memberOverviewTitle">
+        <div class="section-heading-row">
+            <div>
+                <span class="section-kicker">Selected member</span>
+                <h2 id="memberOverviewTitle">Member and Pandu overview</h2>
             </div>
-
-            <!-- BOTTOM STATS -->
-
-            <div class="stats-row">
-
-                <div class="stat-card blue">
-                    <h4>Today's Collection</h4>
-                    <h2 id="todayCollection">₹0</h2>
-                </div>
-
-                <div class="stat-card green">
-                    <h4>Total Members</h4>
-                    <h2 id="totalMembers">0</h2>
-                </div>
-
-                <div class="stat-card orange">
-                    <h4>Pending Members</h4>
-                    <h2 id="pendingMembers">0</h2>
-                </div>
-
-                <div class="stat-card purple">
-                    <h4>This Month Collection</h4>
-                    <h2 id="monthCollection">₹0</h2>
-                </div>
-
-            </div>
-
-
-    <script src="/static/js/pandu.js"></script>
-
-
-
-    <div id="successPopup" class="success-popup">
-
-        <div class="popup-content">
-
-            <div class="popup-icon">
-                ✓
-            </div>
-
-            <h3>Payment Saved Successfully</h3>
-
-            <p id="popupReceiptNo"></p>
-
-            <button onclick="closeSuccessPopup()">
-                OK
-            </button>
-
+            <span class="member-status-pill awaiting-selection" id="memberStatusPill"><i class="bi bi-patch-check-fill"></i> <span id="memberStatusText">Awaiting selection</span></span>
         </div>
 
+        <div class="member-overview-grid">
+            <div class="member-identity-panel">
+                <div class="member-avatar"><i class="bi bi-person-fill"></i></div>
+                <div class="member-primary">
+                    <span>Member name</span>
+                    <strong id="memberName">Select a member</strong>
+                    <small><span id="memberCode">—</span> · <span id="memberMobile">—</span></small>
+                </div>
+                <div class="member-group-detail">
+                    <span>Pandu group</span>
+                    <strong id="memberGroup">—</strong>
+                </div>
+            </div>
+
+            <div class="member-finance-metrics">
+                <div class="finance-metric">
+                    <span class="metric-icon blue"><i class="bi bi-collection-fill"></i></span>
+                    <div><span>Pandu count</span><strong id="panduCount">—</strong></div>
+                </div>
+                <div class="finance-metric">
+                    <span class="metric-icon gold"><i class="bi bi-calendar2-week-fill"></i></span>
+                    <div><span>Monthly due</span><strong id="memberDue">₹0</strong></div>
+                </div>
+                <div class="finance-metric">
+                    <span class="metric-icon violet"><i class="bi bi-trophy-fill"></i></span>
+                    <div><span>Maturity amount</span><strong id="maturityAmount">₹0</strong></div>
+                </div>
+                <div class="finance-metric danger">
+                    <span class="metric-icon red"><i class="bi bi-exclamation-circle-fill"></i></span>
+                    <div><span>Pending due</span><strong id="pendingDue">₹0</strong></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="member-activity-strip">
+            <div><span>Last payment</span><strong id="lastPaymentDate">—</strong></div>
+            <div><span>Last receipt</span><strong id="lastReceiptNo">—</strong></div>
+            <div><span>Pending months</span><strong id="pendingMonths">0</strong></div>
+            <div class="collection-rule"><i class="bi bi-shield-check"></i><span>Monthly due date: on or before the 10th</span></div>
+        </div>
+    </section>
+
+    <div class="collection-workspace-grid">
+        <section class="due-history-card" aria-labelledby="dueHistoryTitle">
+            <div class="section-heading-row due-heading">
+                <div>
+                    <span class="section-kicker">Payment history</span>
+                    <h2 id="dueHistoryTitle">{{ current_year }} due status</h2>
+                </div>
+                <span class="year-badge"><i class="bi bi-calendar3"></i> {{ current_year }}</span>
+            </div>
+
+            <div class="due-table-wrap">
+                <table class="due-table">
+                    <thead><tr><th>Month</th><th>Due amount</th><th>Paid amount</th><th>Status</th><th>Payment date</th><th>Receipt no.</th></tr></thead>
+                    <tbody id="dueTableBody">
+                        <tr class="empty-due-row"><td colspan="6"><i class="bi bi-person-check"></i><strong>Select a member to view due history</strong><span>Monthly payment information will appear here.</span></td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="due-summary">
+                <div><span>Total due</span><strong id="totalDue">₹0</strong></div>
+                <div><span>Total paid</span><strong id="totalPaid">₹0</strong></div>
+                <div class="pending"><span>Pending balance</span><strong id="totalPending">₹0</strong></div>
+            </div>
+        </section>
+
+        <aside class="payment-entry-card" aria-labelledby="paymentEntryTitle">
+            <div class="payment-card-heading">
+                <span><i class="bi bi-receipt-cutoff"></i></span>
+                <div><span class="section-kicker">New transaction</span><h2 id="paymentEntryTitle">Record payment</h2></div>
+            </div>
+
+            <form class="payment-form" onsubmit="return false;">
+                <div class="form-group">
+                    <label for="collectionMonth">Collection month</label>
+                    <select id="collectionMonth"></select>
+                </div>
+                <div class="form-group amount-group">
+                    <label for="amount">Amount received</label>
+                    <div class="amount-input"><span>₹</span><input type="text" id="amount" value="0" inputmode="numeric" aria-describedby="amountHelp"></div>
+                    <small id="amountHelp">Partial or combined pending payment is allowed.</small>
+                </div>
+                <div class="form-row">
+                    <div class="form-group"><label for="receiptReference">Receipt no.</label><input id="receiptReference" type="text" placeholder="Auto-generated"></div>
+                    <div class="form-group"><label for="collectionDate">Collection date</label><input id="collectionDate" type="date"></div>
+                </div>
+                <div class="form-group">
+                    <label for="paymentMode">Payment mode</label>
+                    <select id="paymentMode"><option>Cash</option><option>UPI</option><option>Bank Transfer</option></select>
+                </div>
+                <div class="form-group"><label for="paymentRemarks">Remarks <span>(optional)</span></label><textarea id="paymentRemarks" rows="3" placeholder="Add a note about this payment"></textarea></div>
+                <input type="hidden" id="memberId">
+                <button type="button" class="save-btn" onclick="savePayment()"><i class="bi bi-check2-circle"></i><span>Save collection</span></button>
+                <p class="secure-entry-note"><i class="bi bi-shield-lock-fill"></i> Payment is recorded against the selected member.</p>
+            </form>
+        </aside>
     </div>
 
+    <section class="collection-summary-row" aria-label="Collection summary">
+        <div class="collection-summary-item"><span class="summary-icon blue"><i class="bi bi-cash-stack"></i></span><div><span>Today's collection</span><strong id="todayCollection">₹0</strong></div></div>
+        <div class="collection-summary-item"><span class="summary-icon green"><i class="bi bi-people-fill"></i></span><div><span>Total members</span><strong id="totalMembers">0</strong></div></div>
+        <div class="collection-summary-item"><span class="summary-icon red"><i class="bi bi-person-exclamation"></i></span><div><span>Pending members</span><strong id="pendingMembers">0</strong></div></div>
+        <div class="collection-summary-item"><span class="summary-icon violet"><i class="bi bi-graph-up-arrow"></i></span><div><span>This month's collection</span><strong id="monthCollection">₹0</strong></div></div>
+    </section>
+</div>
 
+<div id="successPopup" class="success-popup">
+    <div class="popup-content"><div class="popup-icon">✓</div><h3>Payment saved successfully</h3><p id="popupReceiptNo"></p><button onclick="closeSuccessPopup()">Done</button></div>
+</div>
+{% endblock %}
+
+{% block page_scripts %}
+<script src="/static/js/pandu.js"></script>
 {% endblock %}

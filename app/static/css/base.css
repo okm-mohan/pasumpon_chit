@@ -1,0 +1,108 @@
+:root {
+    --shell-sidebar: 284px;
+    --shell-navy: #07182f;
+    --shell-navy-2: #0b2444;
+    --shell-text: #172033;
+    --shell-muted: #6b7890;
+    --shell-border: #e4e9f1;
+    --shell-bg: #f4f7fb;
+    --shell-blue: #246bfd;
+}
+
+* { box-sizing: border-box; }
+
+body.app-layout {
+    margin: 0;
+    min-height: 100vh;
+    overflow-x: hidden;
+    color: var(--shell-text);
+    background: var(--shell-bg);
+    font-family: Inter, "Segoe UI", sans-serif;
+}
+
+.app-sidebar {
+    position: fixed;
+    inset: 0 auto 0 0;
+    z-index: 1040;
+    display: flex;
+    flex-direction: column;
+    width: var(--shell-sidebar);
+    height: 100vh;
+    padding: 20px 16px 16px;
+    color: #fff;
+    background:
+        radial-gradient(circle at 0 0, rgba(46, 118, 255, .22), transparent 34%),
+        linear-gradient(180deg, var(--shell-navy) 0%, var(--shell-navy-2) 100%);
+    box-shadow: 12px 0 36px rgba(16, 35, 65, .12);
+}
+
+.sidebar-brand { display: flex; align-items: center; gap: 12px; padding: 2px 4px 18px; }
+.sidebar-brand img { width: 48px; height: 48px; object-fit: contain; padding: 4px; border-radius: 14px; background: #fff; }
+.sidebar-brand strong { display: block; font-size: 20px; line-height: 1.1; letter-spacing: -.3px; }
+.sidebar-brand span { display: block; margin-top: 4px; color: #8fa9cb; font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
+.sidebar-close { margin-left: auto; border: 0; color: #fff; background: transparent; font-size: 20px; }
+
+.sidebar-context {
+    display: flex; align-items: center; gap: 10px; margin: 0 2px 14px; padding: 11px 12px;
+    border: 1px solid rgba(255,255,255,.08); border-radius: 12px; background: rgba(255,255,255,.055);
+}
+.context-dot { width: 9px; height: 9px; border-radius: 50%; background: #34d399; box-shadow: 0 0 0 5px rgba(52,211,153,.12); }
+.sidebar-context strong, .sidebar-context small { display: block; }
+.sidebar-context strong { font-size: 14px; }
+.sidebar-context small { margin-top: 2px; color: #8fa5c1; font-size: 11px; }
+
+.sidebar-nav { flex: 1; min-height: 0; overflow-y: auto; padding-right: 4px; scrollbar-width: thin; scrollbar-color: #2b486a transparent; }
+.nav-section-label { padding: 17px 11px 8px; color: #7189a8; font-size: 10.5px; font-weight: 800; letter-spacing: .13em; text-transform: uppercase; }
+.sidebar-nav .nav-item {
+    display: flex; align-items: center; width: 100%; min-height: 42px; gap: 11px; margin: 2px 0; padding: 8px 10px;
+    border: 0; border-radius: 10px; color: #b8c9de; background: transparent; text-align: left;
+    text-decoration: none; font-size: 14.5px; font-weight: 650; transition: .18s ease;
+}
+.sidebar-nav a.nav-item:hover, .sidebar-nav button.nav-item:hover { color: #fff; background: rgba(255,255,255,.07); transform: none; }
+.sidebar-nav .nav-item.active { color: #fff; background: linear-gradient(135deg, #246bfd, #4387ff); box-shadow: 0 8px 22px rgba(36,107,253,.25); }
+.sidebar-nav .nav-item.active-parent { color: #fff; background: rgba(255,255,255,.07); }
+.nav-icon { display: grid; flex: 0 0 27px; width: 27px; height: 27px; place-items: center; border-radius: 8px; color: #8cb5ee; background: rgba(97,157,239,.11); font-size: 14px; }
+.nav-item.active .nav-icon { color: #fff; background: rgba(255,255,255,.16); }
+.module-pandu { color: #f5b942; background: rgba(245,185,66,.12); }
+.module-kanthu { color: #55d6be; background: rgba(85,214,190,.12); }
+.module-ayul { color: #fb7185; background: rgba(251,113,133,.12); }
+.module-accounts { color: #a78bfa; background: rgba(167,139,250,.12); }
+.nav-end { margin-left: auto; font-size: 11px; transition: transform .18s ease; }
+.nav-toggle[aria-expanded="true"] .nav-end { transform: rotate(180deg); }
+.nav-disabled { cursor: default; opacity: .62; }
+.nav-badge { margin-left: auto; padding: 2px 7px; border-radius: 10px; color: #8fa9cb; background: rgba(255,255,255,.08); font-size: 9px; text-transform: uppercase; }
+
+.nav-submenu { margin: 2px 0 5px 39px; padding-left: 11px; border-left: 1px solid rgba(255,255,255,.1); }
+.sidebar-nav .nav-submenu a {
+    position: relative; display: block; margin: 1px 0; padding: 7px 9px; border-radius: 7px;
+    color: #9ab0cb; text-decoration: none; font-size: 12.5px; font-weight: 600; transition: .18s ease;
+}
+.sidebar-nav .nav-submenu a:hover, .sidebar-nav .nav-submenu a.active { color: #fff; background: rgba(255,255,255,.07); transform: none; }
+.sidebar-nav .nav-submenu a.active::before { position: absolute; top: 12px; left: -15px; width: 6px; height: 6px; border-radius: 50%; background: #4f8cff; content: ""; }
+
+.sidebar-footer { display: flex; align-items: center; gap: 10px; margin-top: 12px; padding: 12px 8px 2px; border-top: 1px solid rgba(255,255,255,.08); }
+.user-avatar { display: grid; width: 34px; height: 34px; place-items: center; border-radius: 10px; color: #fff; background: #246bfd; font-size: 12px; font-weight: 800; }
+.user-copy { min-width: 0; flex: 1; }
+.user-copy strong, .user-copy span { display: block; }
+.user-copy strong { color: #eef5ff; font-size: 13px; }
+.user-copy span { margin-top: 2px; color: #8399b5; font-size: 10.5px; }
+.logout-button { display: grid; width: 30px; height: 30px; place-items: center; border-radius: 8px; color: #8fa9cb; text-decoration: none; }
+.logout-button:hover { color: #fff; background: rgba(255,255,255,.08); }
+
+.app-main { width: calc(100% - var(--shell-sidebar)); min-height: 100vh; margin-left: var(--shell-sidebar); }
+.mobile-menu-button { align-items: center; gap: 7px; margin: 12px 16px 0; padding: 8px 12px; border: 1px solid var(--shell-border); border-radius: 9px; color: var(--shell-text); background: #fff; font-size: 12px; font-weight: 700; }
+.app-overlay { display: none; }
+
+body.auth-layout { margin: 0; min-height: 100vh; }
+
+@media (max-width: 991.98px) {
+    .app-sidebar { transform: translateX(-105%); transition: transform .24s ease; }
+    .app-main { width: 100%; margin-left: 0; }
+    .mobile-menu-button { display: inline-flex !important; }
+    body.sidebar-open .app-sidebar { transform: translateX(0); }
+    body.sidebar-open .app-overlay { position: fixed; inset: 0; z-index: 1035; display: block; background: rgba(4,16,34,.55); backdrop-filter: blur(2px); }
+}
+
+@media (max-width: 575.98px) {
+    :root { --shell-sidebar: min(88vw, 300px); }
+}

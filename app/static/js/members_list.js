@@ -41,61 +41,209 @@ function initializeSearch() {
 
     const table = document.getElementById("memberTable");
 
+    const clearSearch = document.getElementById("clearSearch");
+
+    const searchField = searchBox?.closest(".member-search-field");
+
+    const pageSizeSelect = document.getElementById("memberPageSize");
+
+    const previousPage = document.getElementById("previousMemberPage");
+
+    const nextPage = document.getElementById("nextMemberPage");
+
+    const pageNumbers = document.getElementById("memberPageNumbers");
+
     if (!table) return;
 
-    function filterTable() {
+    const rows = Array.from(table.querySelectorAll("tbody tr"));
 
-        const keyword = searchBox.value.toLowerCase();
+    let currentPage = 1;
+
+    let pageSize = Number(pageSizeSelect?.value || 10);
+
+    function renderTable(resetPage = false) {
+
+        const keyword = searchBox.value.trim().toLowerCase();
 
         const status = statusFilter.value.toLowerCase();
 
-        let visible = 0;
+        const filteredRows = rows.filter(row => {
 
-        table.querySelectorAll("tbody tr").forEach(row => {
+            const text = row.dataset.search || row.innerText.toLowerCase();
 
-            const text = row.innerText.toLowerCase();
-
-            const badge = row.querySelector(".status-badge");
+            const badge = row.querySelector(".member-status-pill");
 
             const rowStatus = badge
                 ? badge.innerText.toLowerCase()
                 : "";
 
-            const okSearch = text.includes(keyword);
-
-            const okStatus =
-                status === "" ||
-                rowStatus.includes(status);
-
-            if (okSearch && okStatus) {
-
-                row.style.display = "";
-
-                visible++;
-
-            } else {
-
-                row.style.display = "none";
-
-            }
+            return text.includes(keyword) && (status === "" || rowStatus.includes(status));
 
         });
 
-        const info =
-            document.querySelector(".card-header-custom small");
+        if (resetPage) currentPage = 1;
 
-        if (info) {
+        const pageCount = Math.max(1, Math.ceil(filteredRows.length / pageSize));
 
-            info.innerHTML =
-                `Showing <strong>${visible}</strong> Members`;
+        currentPage = Math.min(currentPage, pageCount);
+
+        const startIndex = (currentPage - 1) * pageSize;
+
+        const endIndex = Math.min(startIndex + pageSize, filteredRows.length);
+
+        const pageRows = new Set(filteredRows.slice(startIndex, endIndex));
+
+        rows.forEach(row => {
+
+            row.style.display = pageRows.has(row) ? "" : "none";
+
+        });
+
+        const resultCount = document.getElementById("resultCount");
+
+        const visibleCount = document.getElementById("visibleMemberCount");
+
+        const emptyState = document.getElementById("memberEmptyState");
+
+        if (resultCount) resultCount.textContent = `${filteredRows.length} record${filteredRows.length === 1 ? "" : "s"}`;
+
+        if (visibleCount) {
+
+            visibleCount.textContent = filteredRows.length
+                ? `Showing ${startIndex + 1}–${endIndex} of ${filteredRows.length}`
+                : "Showing 0 members";
 
         }
 
+        if (emptyState) emptyState.hidden = filteredRows.length !== 0;
+
+        searchField?.classList.toggle("has-value", keyword.length > 0);
+
+        renderPagination(pageCount);
+
     }
 
-    searchBox?.addEventListener("keyup", filterTable);
+    function renderPagination(pageCount) {
 
-    statusFilter?.addEventListener("change", filterTable);
+        if (previousPage) previousPage.disabled = currentPage <= 1;
+
+        if (nextPage) nextPage.disabled = currentPage >= pageCount;
+
+        if (!pageNumbers) return;
+
+        pageNumbers.innerHTML = "";
+
+        getVisiblePages(pageCount, currentPage).forEach(page => {
+
+            if (page === "ellipsis") {
+
+                const ellipsis = document.createElement("span");
+
+                ellipsis.className = "page-ellipsis";
+
+                ellipsis.textContent = "…";
+
+                pageNumbers.appendChild(ellipsis);
+
+                return;
+
+            }
+
+            const button = document.createElement("button");
+
+            button.type = "button";
+
+            button.textContent = page;
+
+            button.className = page === currentPage ? "active" : "";
+
+            button.setAttribute("aria-label", `Page ${page}`);
+
+            if (page === currentPage) button.setAttribute("aria-current", "page");
+
+            button.addEventListener("click", () => {
+
+                currentPage = page;
+
+                renderTable();
+
+            });
+
+            pageNumbers.appendChild(button);
+
+        });
+
+    }
+
+    function getVisiblePages(pageCount, activePage) {
+
+        if (pageCount <= 5) {
+
+            return Array.from({ length: pageCount }, (_, index) => index + 1);
+
+        }
+
+        const pages = new Set([1, pageCount, activePage - 1, activePage, activePage + 1]);
+
+        const sorted = Array.from(pages).filter(page => page > 0 && page <= pageCount).sort((a, b) => a - b);
+
+        const result = [];
+
+        sorted.forEach((page, index) => {
+
+            if (index > 0 && page - sorted[index - 1] > 1) result.push("ellipsis");
+
+            result.push(page);
+
+        });
+
+        return result;
+
+    }
+
+    searchBox?.addEventListener("input", () => renderTable(true));
+
+    statusFilter?.addEventListener("change", () => renderTable(true));
+
+    pageSizeSelect?.addEventListener("change", () => {
+
+        pageSize = Number(pageSizeSelect.value);
+
+        renderTable(true);
+
+    });
+
+    previousPage?.addEventListener("click", () => {
+
+        if (currentPage > 1) {
+
+            currentPage--;
+
+            renderTable();
+
+        }
+
+    });
+
+    nextPage?.addEventListener("click", () => {
+
+        currentPage++;
+
+        renderTable();
+
+    });
+
+    clearSearch?.addEventListener("click", () => {
+
+        searchBox.value = "";
+
+        searchBox.focus();
+
+        renderTable(true);
+
+    });
+
+    renderTable();
 
 }
 
