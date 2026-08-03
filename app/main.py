@@ -216,6 +216,7 @@ def member_details(member_id: int):
                     m.member_code,
                     m.member_name,
                     m.mobile,
+                    CONCAT('XXXX XXXX ', RIGHT(REPLACE(m.aadhaar_no, ' ', ''), 4)) AS aadhaar_masked,
                     m.address,
 
                     pg.group_name,

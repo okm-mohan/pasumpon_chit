@@ -268,3 +268,180 @@
     .assign-warning-action { width: 100%; justify-content: center; }
     .member-identity-panel { grid-template-columns: 48px 1fr; }
 }
+
+/* Collection workflow: search, payment, member snapshot, then history. */
+.collection-page-header { order: 1; }
+.collection-left-column { order: 2; }
+.collection-search-card {
+    order: 2;
+    display: flex;
+    justify-content: flex-start;
+    padding: 16px 20px;
+}
+.collection-search-card .collection-search-controls { width: min(760px, 100%); }
+.collection-workspace-grid { display: contents; }
+.payment-entry-card { order: 3; }
+.member-overview-card { order: 4; }
+.due-history-card { order: 5; }
+.collection-summary-row { order: 6; }
+
+.payment-entry-card {
+    position: static;
+    display: grid;
+    grid-template-columns: 245px minmax(0, 1fr);
+}
+.payment-card-heading { padding: 22px; }
+.payment-form {
+    grid-template-columns: 1.1fr 1.1fr 1.35fr .9fr 1.25fr auto;
+    align-items: end;
+    gap: 12px;
+    padding: 16px 18px;
+}
+.payment-form .form-group { min-width: 0; }
+.payment-form textarea { min-height: 46px; height: 46px; }
+.payment-form > .save-btn { min-width: 154px; min-height: 46px; white-space: nowrap; }
+.payment-form > .secure-entry-note { display: none; }
+
+/* Keep the selected member as a compact confirmation snapshot. */
+.member-overview-card { padding: 15px 18px 0; border-top-width: 3px; }
+.member-overview-card .section-heading-row h2 { font-size: 17px; }
+.member-overview-card .section-kicker { margin-bottom: 2px; font-size: 10px; }
+.member-overview-grid { grid-template-columns: minmax(250px, .8fr) minmax(0, 2fr); gap: 12px; margin-top: 12px; padding-bottom: 13px; }
+.member-identity-panel { min-height: 72px; padding: 10px 12px; grid-template-columns: 42px minmax(120px, 1fr) minmax(90px, .65fr); gap: 10px; }
+.member-identity-panel .member-avatar { width: 40px; height: 40px; border-radius: 12px; font-size: 19px; }
+.member-primary span,.member-group-detail span,.finance-metric div span { font-size: 11px; }
+.member-primary strong { margin: 1px 0; font-size: 15px; }
+.member-primary small { font-size: 11px; }
+.member-group-detail { padding-left: 10px; }
+.member-group-detail strong { margin-top: 2px; font-size: 12px; }
+.member-finance-metrics { gap: 8px; }
+.finance-metric { min-height: 72px; gap: 8px; padding: 9px; border-radius: 11px; }
+.metric-icon { width: 31px; height: 31px; flex-basis: 31px; border-radius: 9px; font-size: 13px; }
+.finance-metric div strong { margin-top: 2px; font-size: 14px; }
+.member-activity-strip { margin: 0 -18px; }
+.member-activity-strip > div { min-height: 48px; padding: 9px 14px; }
+.member-activity-strip div > span { font-size: 11px; }
+.member-activity-strip strong { margin-top: 1px; font-size: 12px; }
+.collection-rule i { font-size: 16px; }
+.collection-rule span { font-size: 11px !important; }
+
+/* The activity details are retained in the DOM for collection logic, but not shown. */
+.member-activity-strip { display: none; }
+.member-identity-panel { grid-template-columns: 42px minmax(0, 1fr) minmax(112px, .7fr); }
+.member-primary,.member-group-detail { min-width: 0; }
+.member-primary strong,.member-group-detail span,.member-group-detail strong {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.member-identity-panel { display: none; }
+.member-overview-grid { grid-template-columns: 1fr; }
+.member-contact-line {
+    display: flex;
+    gap: 14px;
+    margin-top: 3px;
+    color: #687b98;
+    font-size: 11px;
+    font-weight: 650;
+}
+.member-contact-line span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.member-overview-card .section-heading-row h2,
+.member-overview-card .section-heading-row h2 span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* Compact member snapshot adjustments. */
+.member-group-detail { display: none; }
+.member-identity-panel { grid-template-columns: 42px minmax(0, 1fr); }
+.finance-metric {
+    flex-direction: column;
+    justify-content: center;
+    text-align: center;
+}
+.finance-metric div { text-align: center; }
+
+/* Override the legacy circular red clear action with an input-contained control. */
+.search-clear-btn {
+    top: 10px;
+    right: 10px;
+    width: 32px;
+    height: 32px;
+    margin: 0;
+    border: 1px solid #dfe7f1;
+    border-radius: 9px;
+    color: #718096;
+    background: #f5f8fc;
+    transform: none;
+}
+.search-clear-btn:hover {
+    color: #246bfd;
+    background: #eaf2ff;
+    transform: none;
+}
+
+@media (max-width: 1300px) {
+    .payment-entry-card { grid-template-columns: 210px minmax(0, 1fr); }
+    .payment-form { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .member-overview-grid { grid-template-columns: 1fr; }
+}
+@media (max-width: 700px) {
+    .collection-search-card .collection-search-controls { width: 100%; }
+    .payment-entry-card { display: block; }
+    .payment-form { grid-template-columns: 1fr; }
+    .member-overview-card { padding: 15px 18px 0; }
+}
+
+/* Desktop collection workspace: lookup at left, payment entry at right. */
+@media (min-width: 1101px) {
+    .pandu-collection-page {
+        grid-template-columns: minmax(0, 1.35fr) minmax(360px, .8fr);
+        align-items: start;
+    }
+    .collection-page-header { grid-column: 1 / -1; }
+    .collection-left-column {
+        grid-column: 1;
+        grid-row: 2;
+        display: grid;
+        align-content: start;
+        gap: 20px;
+    }
+    .collection-search-card { align-items: flex-start; }
+    .collection-search-card .collection-search-controls { width: 100%; }
+    .payment-entry-card {
+        grid-column: 2;
+        grid-row: 2 / span 2;
+        display: block;
+        position: fixed;
+        top: auto;
+        bottom: 4px;
+        right: 24px;
+        z-index: 1030;
+        width: calc((100vw - var(--pandu-sidebar-width) - 48px) * .3721);
+    }
+    .payment-card-heading { padding: 18px 20px; }
+    .payment-form {
+        grid-template-columns: 1fr;
+        gap: 13px;
+        padding: 18px 20px;
+    }
+    .payment-form .form-row { grid-template-columns: 1fr 1fr; }
+    .payment-form textarea { min-height: 52px; height: 52px; }
+    .payment-form > .save-btn { width: 100%; min-width: 0; min-height: 50px; }
+    .payment-form > .secure-entry-note { display: flex; margin: 0; }
+    .due-history-card {
+        grid-column: 1;
+        grid-row: 3;
+    }
+    .collection-summary-row {
+        grid-column: 1;
+        grid-row: 4;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}

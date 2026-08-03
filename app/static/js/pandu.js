@@ -93,7 +93,7 @@ function setupVoiceSearch() {
 
     const searchInput =
         document.querySelector(
-            ".search-box input"
+            ".collection-search-field input"
         );
 
     if (
@@ -621,6 +621,13 @@ async function loadMember(id) {
 
     const member =
         await response.json();
+
+    const memberAadhaar = document.getElementById("memberAadhaar");
+    if (memberAadhaar) {
+        memberAadhaar.textContent = member.aadhaar_masked
+            ? `Aadhaar: ${member.aadhaar_masked}`
+            : "Aadhaar: —";
+    }
 
     const warningBox =
         document.getElementById("assignWarning");
