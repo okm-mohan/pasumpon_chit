@@ -43,6 +43,24 @@ class KanthuSaveRequest(BaseModel):
     remarks: str = ""
 
 
+class AyulSanthaIssueRequest(BaseModel):
+    member_id: int
+    issue_date: str
+    principal_amount: float
+    monthly_interest_rate: float = 2
+    monthly_interest_amount: float
+    remarks: str = ""
+
+
+class AyulSanthaCollectionRequest(BaseModel):
+    ayul_santha_id: int
+    collection_date: str
+    interest_amount: float = 0
+    principal_amount: float = 0
+    payment_mode: str = "CASH"
+    remarks: str = ""
+
+
 # Static Files
 app.mount("/static", StaticFiles(directory="app/static"), name="static")
 
@@ -151,6 +169,190 @@ def dashboard(request: Request):
         name="dashboard.html",
         context={"active_page": "dashboard"},
     )
+
+
+@app.get("/ayul-santha")
+def ayul_santha_dashboard(request: Request):
+    return templates.TemplateResponse(request=request, name="ayul_dashboard.html", context={"active_page": "ayul_dashboard"})
+
+@app.get("/ayul-santha/issue")
+def ayul_santha_issue(request: Request):
+    return templates.TemplateResponse(request=request, name="ayul_issue.html", context={"active_page": "ayul_issue"})
+
+@app.get("/ayul-santha/collection")
+def ayul_santha_collection(request: Request):
+    return templates.TemplateResponse(request=request, name="ayul_collection.html", context={"active_page": "ayul_collection"})
+
+@app.get("/ayul-santha/summary")
+def ayul_santha_summary(request: Request):
+    return templates.TemplateResponse(request=request, name="ayul_summary.html", context={"active_page": "ayul_summary"})
+
+
+@app.get("/api/ayul-santha/dashboard")
+def ayul_santha_dashboard_data():
+    db = SessionLocal()
+    try:
+        db.execute(text("""
+            CREATE TABLE IF NOT EXISTS ayul_santha_master (
+              id INT AUTO_INCREMENT PRIMARY KEY, member_id INT NOT NULL, issue_date DATE NOT NULL,
+              principal_amount DECIMAL(14,2) NOT NULL, monthly_interest_amount DECIMAL(14,2) NOT NULL DEFAULT 0,
+              total_interest_received DECIMAL(14,2) NOT NULL DEFAULT 0, balance_principal DECIMAL(14,2) NOT NULL,
+              status VARCHAR(20) NOT NULL DEFAULT 'ACTIVE'
+            )
+        """))
+        rows = db.execute(text("""
+          SELECT m.member_name,m.member_code,m.mobile,COUNT(a.id) loan_count,SUM(a.principal_amount) principal,
+          SUM(a.monthly_interest_amount) monthly_interest,SUM(a.total_interest_received) interest_received,SUM(a.balance_principal) balance
+          FROM ayul_santha_master a JOIN members m ON m.id=a.member_id WHERE a.status='ACTIVE'
+          GROUP BY m.id,m.member_name,m.member_code,m.mobile ORDER BY balance DESC
+        """)).mappings().all()
+        members=[{**dict(r),**{k:float(r[k] or 0) for k in ('principal','monthly_interest','interest_received','balance')}} for r in rows]
+        summary={k:sum(m[k] for m in members) for k in ('principal','monthly_interest','interest_received','balance')}
+        return {'summary':summary,'members':members}
+    finally:
+        db.commit(); db.close()
+
+
+@app.post("/api/ayul-santha/issue")
+def issue_ayul_santha(data: AyulSanthaIssueRequest):
+    if data.principal_amount <= 0:
+        return {"success": False, "message": "Principal amount must be greater than zero."}
+    if data.monthly_interest_amount < 0:
+        return {"success": False, "message": "Monthly interest amount cannot be negative."}
+
+    try:
+        with engine.begin() as conn:
+            conn.execute(text("""
+                CREATE TABLE IF NOT EXISTS ayul_santha_master (
+                  id INT AUTO_INCREMENT PRIMARY KEY, member_id INT NOT NULL, issue_date DATE NOT NULL,
+                  principal_amount DECIMAL(14,2) NOT NULL, monthly_interest_amount DECIMAL(14,2) NOT NULL DEFAULT 0,
+                  total_interest_received DECIMAL(14,2) NOT NULL DEFAULT 0, balance_principal DECIMAL(14,2) NOT NULL,
+                  status VARCHAR(20) NOT NULL DEFAULT 'ACTIVE'
+                )
+            """))
+            member = conn.execute(text("SELECT member_name FROM members WHERE id=:member_id"), {"member_id": data.member_id}).scalar()
+            if not member:
+                return {"success": False, "message": "Selected member was not found."}
+
+            issue = conn.execute(text("""
+                INSERT INTO ayul_santha_master
+                  (member_id, issue_date, principal_amount, monthly_interest_amount, total_interest_received, balance_principal, status)
+                VALUES
+                  (:member_id, :issue_date, :principal_amount, :monthly_interest_amount, 0, :principal_amount, 'ACTIVE')
+            """), {
+                "member_id": data.member_id,
+                "issue_date": data.issue_date,
+                "principal_amount": data.principal_amount,
+                "monthly_interest_amount": data.monthly_interest_amount,
+            })
+            ayul_id = issue.lastrowid
+
+            conn.execute(text("""
+                INSERT INTO accounts_transactions
+                  (transaction_date, transaction_type, category, amount, payment_mode, reference_module, reference_id, remarks)
+                VALUES
+                  (:transaction_date, 'DEBIT', 'Ayul Santha Issue', :amount, 'CASH', 'AYUL SANTHA', :reference_id, :remarks)
+            """), {
+                "transaction_date": data.issue_date,
+                "amount": data.principal_amount,
+                "reference_id": ayul_id,
+                "remarks": f"Ayul Santha issued to {member}. {data.remarks}".strip(),
+            })
+
+        return {"success": True, "message": "Ayul Santha issued successfully.", "ayul_santha_id": ayul_id}
+    except Exception as error:
+        return {"success": False, "message": str(error)}
+
+
+def _ensure_ayul_collection_table(conn):
+    conn.execute(text("""
+        CREATE TABLE IF NOT EXISTS ayul_santha_collections (
+          id INT AUTO_INCREMENT PRIMARY KEY, ayul_santha_id INT NOT NULL, collection_date DATE NOT NULL,
+          interest_amount DECIMAL(14,2) NOT NULL DEFAULT 0, principal_amount DECIMAL(14,2) NOT NULL DEFAULT 0,
+          payment_mode VARCHAR(20) NOT NULL DEFAULT 'CASH', remarks TEXT NULL, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    """))
+
+
+@app.get("/api/member-active-ayul-santha/{member_id}")
+def member_active_ayul_santha(member_id: int):
+    db = SessionLocal()
+    try:
+        rows = db.execute(text("""
+            SELECT id, CONCAT('AYUL-', LPAD(id, 5, '0')) AS ayul_no, issue_date, principal_amount,
+                   total_interest_received, balance_principal, monthly_interest_amount, status
+            FROM ayul_santha_master
+            WHERE member_id=:member_id AND status='ACTIVE' AND balance_principal > 0
+            ORDER BY issue_date, id
+        """), {"member_id": member_id}).mappings().all()
+        return [{**dict(row), **{key: float(row[key] or 0) for key in ('principal_amount', 'total_interest_received', 'balance_principal', 'monthly_interest_amount')}} for row in rows]
+    finally:
+        db.close()
+
+
+@app.get("/api/member-ayul-collections/{member_id}")
+def member_ayul_collections(member_id: int):
+    db = SessionLocal()
+    try:
+        _ensure_ayul_collection_table(db.connection())
+        rows = db.execute(text("""
+            SELECT c.collection_date, CONCAT('AYUL-', LPAD(a.id, 5, '0')) AS ayul_no,
+                   c.interest_amount, c.principal_amount, c.remarks
+            FROM ayul_santha_collections c INNER JOIN ayul_santha_master a ON a.id=c.ayul_santha_id
+            WHERE a.member_id=:member_id ORDER BY c.collection_date DESC, c.id DESC LIMIT 8
+        """), {"member_id": member_id}).mappings().all()
+        db.commit()
+        return [{**dict(row), "interest_amount": float(row["interest_amount"] or 0), "principal_amount": float(row["principal_amount"] or 0)} for row in rows]
+    finally:
+        db.close()
+
+
+@app.post("/api/ayul-santha/collection")
+def save_ayul_collection(data: AyulSanthaCollectionRequest):
+    interest_amount = float(data.interest_amount or 0)
+    principal_amount = float(data.principal_amount or 0)
+    if interest_amount < 0 or principal_amount < 0 or (interest_amount + principal_amount) <= 0:
+        return {"success": False, "message": "Enter an interest or principal collection amount."}
+    try:
+        with engine.begin() as conn:
+            _ensure_ayul_collection_table(conn)
+            loan = conn.execute(text("""
+                SELECT a.id, a.balance_principal, a.monthly_interest_amount, m.member_name
+                FROM ayul_santha_master a INNER JOIN members m ON m.id=a.member_id
+                WHERE a.id=:id AND a.status='ACTIVE'
+            """), {"id": data.ayul_santha_id}).mappings().first()
+            if not loan:
+                return {"success": False, "message": "Active Ayul Santha loan was not found."}
+            if principal_amount > float(loan["balance_principal"] or 0):
+                return {"success": False, "message": "Principal amount cannot exceed the outstanding balance."}
+
+            conn.execute(text("""
+                INSERT INTO ayul_santha_collections
+                  (ayul_santha_id, collection_date, interest_amount, principal_amount, payment_mode, remarks)
+                VALUES (:id, :date, :interest, :principal, :mode, :remarks)
+            """), {"id": data.ayul_santha_id, "date": data.collection_date, "interest": interest_amount, "principal": principal_amount, "mode": data.payment_mode.upper(), "remarks": data.remarks})
+            conn.execute(text("""
+                UPDATE ayul_santha_master SET total_interest_received=total_interest_received+:interest,
+                  balance_principal=balance_principal-:principal,
+                  status=CASE WHEN balance_principal-:principal <= 0 THEN 'CLOSED' ELSE 'ACTIVE' END
+                WHERE id=:id
+            """), {"id": data.ayul_santha_id, "interest": interest_amount, "principal": principal_amount})
+            account_values = {"date": data.collection_date, "mode": data.payment_mode.upper(), "id": data.ayul_santha_id, "member": loan["member_name"], "remarks": data.remarks}
+            if interest_amount:
+                conn.execute(text("""
+                    INSERT INTO accounts_transactions
+                      (transaction_date, transaction_type, category, amount, payment_mode, reference_module, reference_id, remarks)
+                    VALUES (:date, 'CREDIT', 'Ayul Santha Interest Income', :amount, :mode, 'AYUL SANTHA', :id, :remarks)
+                """), {**account_values, "amount": interest_amount, "remarks": f"Ayul monthly interest from {loan['member_name']}. {data.remarks}".strip()})
+            if principal_amount:
+                conn.execute(text("""
+                    INSERT INTO accounts_transactions
+                      (transaction_date, transaction_type, category, amount, payment_mode, reference_module, reference_id, remarks)
+                    VALUES (:date, 'CREDIT', 'Ayul Santha Principal Return', :amount, :mode, 'AYUL SANTHA', :id, :remarks)
+                """), {**account_values, "amount": principal_amount, "remarks": f"Ayul principal returned by {loan['member_name']}. {data.remarks}".strip()})
+        return {"success": True, "message": "Ayul Santha collection saved successfully."}
+    except Exception as error:
+        return {"success": False, "message": str(error)}
 
 
 # ----------------------------------
@@ -898,6 +1100,25 @@ def monthly_collection_summary(year: int = Query(default=datetime.now().year)):
 
     finally:
 
+        db.close()
+
+
+@app.get("/api/ayul-santha/member-search")
+def ayul_santha_member_search(q: str):
+    db = SessionLocal()
+    try:
+        normalized_q = "".join(character for character in q if character.isdigit())
+        rows = db.execute(text("""
+            SELECT m.id, m.member_code, m.member_name, m.mobile,
+              CONCAT('XXXX XXXX ', RIGHT(REPLACE(m.aadhaar_no, ' ', ''), 4)) AS aadhaar_masked,
+              EXISTS(SELECT 1 FROM ayul_santha_master a WHERE a.member_id=m.id AND a.status='ACTIVE' AND a.balance_principal>0) AS has_active_ayul
+            FROM members m
+            WHERE m.member_code LIKE :query OR m.member_name LIKE :query OR m.mobile LIKE :query
+              OR REPLACE(m.aadhaar_no, ' ', '') LIKE :aadhaar_query
+            LIMIT 20
+        """), {"query": f"%{q}%", "aadhaar_query": f"%{normalized_q or q}%"}).mappings().all()
+        return [dict(row) for row in rows]
+    finally:
         db.close()
 
 
@@ -3612,12 +3833,44 @@ async def current_balance():
                 0
             )
             FROM accounts_transactions
-            WHERE transaction_type='DEBIT'
+            WHERE transaction_type IN ('DEBIT', 'EXPENSE')
         """)).scalar()
 
     balance = float(credits or 0) - float(debits or 0)
 
     return {"balance": balance}
+
+
+@app.get("/api/accounts/company-dashboard")
+def company_account_dashboard():
+    db = SessionLocal()
+    try:
+        totals = db.execute(text("""
+            SELECT
+              COALESCE(SUM(CASE WHEN transaction_type='CREDIT' THEN amount ELSE 0 END),0) AS credits,
+              COALESCE(SUM(CASE WHEN transaction_type IN ('DEBIT','EXPENSE') THEN amount ELSE 0 END),0) AS debits,
+              COALESCE(SUM(CASE WHEN transaction_date=CURDATE() AND transaction_type='CREDIT' THEN amount WHEN transaction_date=CURDATE() AND transaction_type IN ('DEBIT','EXPENSE') THEN -amount ELSE 0 END),0) AS today_net,
+              COALESCE(SUM(CASE WHEN YEAR(transaction_date)=YEAR(CURDATE()) AND MONTH(transaction_date)=MONTH(CURDATE()) AND transaction_type='CREDIT' THEN amount WHEN YEAR(transaction_date)=YEAR(CURDATE()) AND MONTH(transaction_date)=MONTH(CURDATE()) AND transaction_type IN ('DEBIT','EXPENSE') THEN -amount ELSE 0 END),0) AS month_net
+            FROM accounts_transactions
+        """)).mappings().first()
+        modes = db.execute(text("""
+            SELECT COALESCE(payment_mode,'CASH') AS payment_mode,
+              COALESCE(SUM(CASE WHEN transaction_type='CREDIT' THEN amount WHEN transaction_type IN ('DEBIT','EXPENSE') THEN -amount ELSE 0 END),0) AS balance
+            FROM accounts_transactions GROUP BY COALESCE(payment_mode,'CASH')
+        """)).mappings().all()
+        recent = db.execute(text("""
+            SELECT transaction_date, transaction_type, category, amount, payment_mode
+            FROM accounts_transactions ORDER BY transaction_date DESC, id DESC LIMIT 6
+        """)).mappings().all()
+        credits, debits = float(totals['credits'] or 0), float(totals['debits'] or 0)
+        mode_values = {'CASH':0, 'UPI':0, 'BANK':0}
+        for row in modes:
+            key = str(row['payment_mode'] or 'CASH').upper()
+            if key in ('GPAY','G-PAY'): key = 'UPI'
+            if key in mode_values: mode_values[key] += float(row['balance'] or 0)
+        return {'credits':credits, 'debits':debits, 'balance':credits-debits, 'today_net':float(totals['today_net'] or 0), 'month_net':float(totals['month_net'] or 0), 'modes':mode_values, 'recent':[dict(row) for row in recent]}
+    finally:
+        db.close()
 
 
 @app.get("/api/kanthu/default-interest")

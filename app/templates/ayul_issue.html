@@ -1,0 +1,50 @@
+{% extends "ayul_base.html" %}
+{% block title %}Issue Ayul Santha{% endblock %}
+{% block page_styles %}
+<link rel="stylesheet" href="/static/css/ayul_workspaces.css">
+<link rel="stylesheet" href="/static/css/ayul_issue_search.css?v=2">
+{% endblock %}
+{% block content %}
+<main class="aw-page">
+  <header class="aw-hero">
+    <span><i class="bi bi-cash-stack"></i></span>
+    <div><small>Ayul Santha operations</small><h1>Issue Ayul Santha</h1><p>Select a member, configure the long-term principal and monthly interest.</p></div>
+  </header>
+
+  <div class="aw-grid aw-issue-grid">
+    <section class="aw-card aw-search-card">
+      <span class="aw-step">Step 1</span><h2>Find member</h2>
+      <div class="aw-search aw-member-search">
+        <i class="bi bi-search"></i>
+        <input id="ayulMemberSearch" autocomplete="off" placeholder="Enter name, member code, mobile or Aadhaar">
+        <button id="ayulClearSearch" type="button" aria-label="Clear search"><i class="bi bi-x-lg"></i></button>
+        <div id="ayulMemberDropdown" class="aw-member-dropdown"></div>
+      </div>
+      <div id="ayulSearchHint" class="aw-empty">Start typing to search community members.</div>
+    </section>
+
+    <section class="aw-card aw-details-card">
+      <span class="aw-step">Step 2</span><h2>Loan details</h2>
+      <div class="aw-fields">
+        <label>Issue date<input type="date" id="ayulIssueDate"></label>
+        <label class="aw-principal-field">Principal amount<input type="number" id="ayulPrincipal" placeholder="₹ Enter amount"></label>
+        <label class="aw-rate-field">Monthly interest rate<input type="number" id="ayulInterestRate" value="2" min="0" step="0.1"><small>per month</small></label>
+        <label class="aw-interest-field">Monthly interest amount<input type="number" id="ayulInterestAmount" placeholder="₹ Auto calculated" readonly></label>
+        <label class="wide">Remarks<textarea id="ayulRemarks" placeholder="Add loan notes"></textarea></label>
+      </div>
+    </section>
+
+    <section class="aw-card aw-summary">
+      <div class="aw-summary-head"><div><span class="aw-step">Step 3</span><h2>Disbursement summary</h2></div></div>
+      <div><span>Selected member</span><strong id="ayulSelectedMember">Choose a member</strong></div>
+      <div><span>Principal payable</span><strong id="ayulPrincipalPayable">₹0</strong></div>
+      <div><span>Monthly interest</span><strong id="ayulMonthlyInterest">₹0</strong></div>
+      <button id="ayulIssueButton" type="button" disabled><i class="bi bi-check2-circle"></i> Select member first</button>
+    </section>
+  </div>
+  <div id="ayulSuccessModal" class="aw-success-modal" aria-hidden="true">
+    <div class="aw-success-dialog" role="status"><i class="bi bi-check-circle-fill"></i><p>The Amount is issued successfully</p></div>
+  </div>
+</main>
+{% endblock %}
+{% block page_scripts %}<script src="/static/js/ayul_issue.js"></script>{% endblock %}

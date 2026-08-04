@@ -1,0 +1,248 @@
+# Pasumpon Community Chit Management System – Module Overview
+
+## Introduction
+
+**Pasumpon** is a community-based financial management system designed to manage the savings and lending activities of approximately **400 community members**. The system consists of four primary financial modules along with accounting, reporting, and analytics features.
+
+---
+
+# 1. Pandu (Monthly Savings Scheme)
+
+The **Pandu** module is a monthly savings scheme that encourages members to save a fixed amount every month.
+
+### Scheme Details
+
+* Scheme Duration: **12 Months**
+* Monthly Contribution per Pandu: **₹100**
+* A member may subscribe to one or multiple Pandu schemes.
+
+**Example:**
+
+* 4 Pandu subscriptions = ₹400 monthly contribution
+* Total contribution after 12 months:
+
+  * ₹400 × 12 = ₹4,800
+* On successful completion of the scheme, the member receives:
+
+  * Total Savings + One Additional Month Contribution
+  * ₹4,800 + ₹400 = **₹5,200**
+
+### Features
+
+* Separate **Pandu Collection Screen**
+* Easy member selection
+* Monthly due entry
+* View active Pandu subscriptions for each member
+* Automatic calculation of payable and receivable amounts
+* Due date management
+
+### Payment Rules
+
+* Monthly dues must be paid **on or before the 10th of every month**.
+* If a member misses a payment, they may pay the pending amount in the following month.
+* The system should support:
+
+  * Full payment of outstanding dues
+  * Partial payment of outstanding dues
+* Outstanding balances must be tracked automatically.
+
+### Reports
+
+* Member-wise Pandu Report
+* Collection Report
+* Pending Due Report
+* Monthly Collection Summary
+* Completed Pandu Report
+* Outstanding Balance Report
+
+---
+
+# 2. Kanthu (Short-Term Loan)
+
+The **Kanthu** module is a short-term lending system where the company provides loans to members with interest.
+
+### Loan Rules
+
+* Loans are issued with a predefined interest rate.
+* At the time of loan disbursement, the **first month's interest is deducted** before releasing the amount to the member.
+
+Example:
+
+Loan Amount: ₹10,000
+
+First Month Interest: ₹500
+
+Amount Paid to Member: ₹9,500
+
+### Repayment Rules
+
+* Members can repay the loan balance at any time during the current financial year.
+* If the member settles the loan within **four months**, no additional interest is charged after the first month's deduction.
+* If the loan remains unpaid after four months, the system should automatically calculate and apply interest on the outstanding balance according to the configured interest rate.
+
+### Features
+
+* Loan Disbursement
+* Interest Calculation
+* Balance Tracking
+* Partial Repayment
+* Full Settlement
+* Outstanding Loan Management
+* Interest History
+
+### Reports
+
+* Loan Register
+* Outstanding Loans
+* Interest Collection Report
+* Member Loan History
+* Settlement Report
+
+---
+
+# 3. Ayul Santha (Long-Term Loan)
+
+The **Ayul Santha** module is a long-term lending scheme.
+
+Unlike Kanthu, members are **not required to repay the principal within a fixed period**.
+
+### Loan Rules
+
+* Members pay **only the monthly interest** on the outstanding principal amount.
+* The principal amount may be repaid:
+
+  * Fully
+  * Partially
+  * At any time, based on the member's convenience.
+* Interest should always be calculated based on the current outstanding principal.
+
+### Features
+
+* Long-Term Loan Management
+* Monthly Interest Collection
+* Partial Principal Repayment
+* Full Principal Settlement
+* Outstanding Balance Calculation
+* Interest Tracking
+
+### Reports
+
+* Monthly Interest Collection
+* Outstanding Principal Report
+* Member Loan Statement
+* Loan History
+* Interest Ledger
+
+---
+
+# 4. Accounts (Income & Expenses)
+
+The system should include a complete accounting module similar to **Tally**, enabling the company to manage all financial transactions.
+
+### Expense Management
+
+* Office Expenses
+* Salary
+* Rent
+* Electricity
+* Maintenance
+* Miscellaneous Expenses
+* Cash Payments
+
+### Income Management
+
+Income should automatically include:
+
+* Pandu Profit
+* Kanthu Interest Income
+* Ayul Santha Interest Income
+
+### Accounting Features
+
+* Ledger Management
+* Cash Book
+* Income & Expense Statement
+* Day Book
+* Voucher Entry
+* Trial Balance
+* Profit & Loss Summary
+* Account-wise Reports
+
+When loans are issued (Kanthu or Ayul Santha), the disbursed amount should be recorded as a cash outflow. Interest income earned from these modules should automatically appear under Income.
+
+---
+
+# Dashboard Requirements
+
+Each of the four modules should have its own dedicated dashboard.
+
+The dashboard should display:
+
+* Total Collections
+* Total Outstanding Amount
+* Monthly Collections
+* Active Members
+* Pending Payments
+* Recent Transactions
+* Monthly Income
+* Monthly Expenses
+* Basic Charts and Analytics
+* Quick Access Shortcuts
+
+Although each dashboard should focus on its respective module, the sidebar should provide access to all reports across the system.
+
+---
+
+# Member Search
+
+Every module should use a **common, premium-quality member search component**.
+
+The search should provide:
+
+* Fast autocomplete search
+* Search by Member Name
+* Search by Member ID
+* Search by Mobile Number
+* Search by Village
+* Keyboard-friendly navigation
+* Easy-to-use dropdown selection
+* Consistent design across all modules
+
+---
+
+# Member Master
+
+The Member Master screen should be designed with a modern, premium user experience.
+
+It should include:
+
+* Complete member profile
+* Personal details
+* Contact information
+* Address
+* Community details
+* Photo upload
+* Nominee information
+* Active Pandu subscriptions
+* Active Kanthu loans
+* Active Ayul Santha loans
+* Payment history
+* Account summary
+
+The Member Master should provide an attractive dashboard-style profile with quick access to all member-related information from a single screen.
+
+---
+
+# General Requirements
+
+* Premium and modern UI/UX
+* Responsive design
+* Fast navigation
+* Easy-to-use forms
+* Advanced search functionality
+* Role-based user access
+* Complete reporting system
+* Basic analytics for every module
+* Export reports to Excel and PDF
+* Audit log for important transactions
+* Secure data management and backup support

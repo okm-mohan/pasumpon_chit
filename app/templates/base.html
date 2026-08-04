@@ -69,11 +69,11 @@
                 <i class="bi bi-chevron-right nav-end"></i>
             </a>
 
-            <div class="nav-item nav-disabled" aria-disabled="true">
+            <a class="nav-item {% if path.startswith('/ayul-santha') %}active{% endif %}" href="/ayul-santha">
                 <span class="nav-icon module-ayul"><i class="bi bi-heart-pulse-fill"></i></span>
                 <span>Ayul Santha</span>
-                <span class="nav-badge">Soon</span>
-            </div>
+                <i class="bi bi-chevron-right nav-end"></i>
+            </a>
 
             <button class="nav-item nav-toggle {% if accounts_open %}active-parent{% endif %}" type="button"
                     data-bs-toggle="collapse" data-bs-target="#accountsMenu" aria-expanded="{{ 'true' if accounts_open else 'false' }}">
