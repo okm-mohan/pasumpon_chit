@@ -420,18 +420,6 @@ ${badge}
 
 </td>
 
-<td class="text-center">
-
-<button
-class="action-btn"
-onclick="viewMember(${member.id})">
-
-<i class="bi bi-eye-fill"></i>
-
-</button>
-
-</td>
-
 </tr>
 
 `;

@@ -63,19 +63,11 @@
                 <i class="bi bi-chevron-right nav-end"></i>
             </a>
 
-            <button class="nav-item nav-toggle {% if kanthu_open %}active-parent{% endif %}" type="button"
-                    data-bs-toggle="collapse" data-bs-target="#kanthuMenu" aria-expanded="{{ 'true' if kanthu_open else 'false' }}">
+            <a class="nav-item {% if kanthu_open %}active{% endif %}" href="/kanthu">
                 <span class="nav-icon module-kanthu"><i class="bi bi-cash-coin"></i></span>
                 <span>Kanthu Lending</span>
-                <i class="bi bi-chevron-down nav-end"></i>
-            </button>
-            <div class="collapse nav-submenu {% if kanthu_open %}show{% endif %}" id="kanthuMenu">
-                <a href="/kanthu" class="{% if path == '/kanthu' %}active{% endif %}">Kanthu Dashboard</a>
-                <a href="/kanthu/new" class="{% if path == '/kanthu/new' %}active{% endif %}">Issue New Kanthu</a>
-                <a href="/kanthu/collection" class="{% if path == '/kanthu/collection' %}active{% endif %}">Receive Collection</a>
-                <a href="/kanthu/members" class="{% if path == '/kanthu/members' %}active{% endif %}">Member Portfolio</a>
-                <a href="/kanthu/reports" class="{% if path == '/kanthu/reports' %}active{% endif %}">Kanthu Reports</a>
-            </div>
+                <i class="bi bi-chevron-right nav-end"></i>
+            </a>
 
             <div class="nav-item nav-disabled" aria-disabled="true">
                 <span class="nav-icon module-ayul"><i class="bi bi-heart-pulse-fill"></i></span>

@@ -11,6 +11,7 @@
 .assignment-page .panel-kicker{font-size:14px!important}.assignment-page .panel-heading h2,.assignment-page .assignments-head h2{font-size:22px}.assignment-page .step-number{font-size:14px}.assignment-page .member-search-field input{font-size:17px}.assignment-page .selected-copy strong{font-size:19px}.assignment-page .selected-copy span{font-size:15px}.assignment-page .selected-copy small,.assignment-page .new-member-link{font-size:14px}.assignment-page .panel-note{font-size:16px}.assignment-page .count-control button,.assignment-page .count-control input{font-size:22px}.assignment-page .count-caption{font-size:15px}.assignment-page .scheme-facts span{font-size:14px}.assignment-page .scheme-facts strong{font-size:18px}.assignment-page .total-highlight span{font-size:17px}.assignment-page .total-highlight strong{font-size:34px}.assignment-page .total-highlight small{font-size:15px}.assignment-page .total-lines span{font-size:15px}.assignment-page .total-lines strong{font-size:16px}.assignment-page .enrol-button{font-size:17px}.assignment-page .secure-note{font-size:14px}.assignment-page .assignment-filter input{font-size:16px}.assignment-page .assignments-card th{font-size:14px}.assignment-page .assignments-card td{font-size:16px}.assignment-page .table-member strong{font-size:16px}.assignment-page .table-member span,.assignment-page .assignment-status{font-size:14px}
 .count-control button{color:#fff!important;background:linear-gradient(135deg,#246bfd,#174fc5)!important;border-color:#246bfd!important}.count-control button:hover{background:#174fc5!important}.count-control input{color:#173d78!important;font-size:30px!important;font-weight:900!important}
 .total-panel .total-lines span{font-size:19px!important;font-weight:800!important}.total-panel .total-lines strong{font-size:20px!important;font-weight:900!important}
+.enrol-feedback{position:fixed;inset:0;z-index:2000;display:none;place-items:center;padding:20px;background:rgba(8,24,47,.48);backdrop-filter:blur(3px)}.enrol-feedback.show{display:grid}.enrol-feedback-card{width:min(420px,100%);padding:28px;border-radius:20px;background:#fff;box-shadow:0 24px 60px rgba(7,24,47,.25);text-align:center}.enrol-feedback-icon{display:grid;width:58px;height:58px;place-items:center;margin:0 auto 14px;border-radius:50%;color:#fff;background:#118a64;font-size:26px}.enrol-feedback-card h2{margin:0;color:#173050;font-size:23px}.enrol-feedback-card p{margin:8px 0 20px;color:#6b7a91;font-size:14px}.enrol-feedback-card button{width:100%;min-height:45px;border:0;border-radius:11px;color:#fff;background:#246bfd;font-size:14px;font-weight:800}
 </style>
 {% endblock %}
 
@@ -58,6 +59,31 @@
         <div class="assignments-table-wrap"><table><thead><tr><th>Member</th><th>Pandus</th><th>Monthly due</th><th>Total liability</th><th>Paid</th><th>Balance</th><th>Status</th></tr></thead><tbody id="assignmentTable">{% for a in assignments %}<tr data-search="{{ (a.member_name ~ ' ' ~ a.member_code)|lower }}"><td><div class="table-member"><img src="{{ a.photo if a.photo else '/static/images/user.png' }}" alt=""><div><strong>{{ a.member_name }}</strong><span>{{ a.member_code }}</span></div></div></td><td>{{ a.pandu_count }}</td><td>₹{{ "{:,.0f}".format(a.monthly_due or 0) }}</td><td>₹{{ "{:,.0f}".format(a.total_amount) }}</td><td class="amount-paid">₹{{ "{:,.0f}".format(a.paid_amount) }}</td><td class="amount-pending">₹{{ "{:,.0f}".format(a.balance_amount) }}</td><td><span class="assignment-status {{ a.status|lower }}">{{ a.status|title }}</span></td></tr>{% else %}<tr class="empty-assignment"><td colspan="7">No members are enrolled in this Pandu group yet.</td></tr>{% endfor %}</tbody></table></div>
     </section>
 </div>
+<div class="enrol-feedback" id="enrolFeedback" role="dialog" aria-modal="true" aria-labelledby="enrolFeedbackTitle"><div class="enrol-feedback-card"><div class="enrol-feedback-icon"><i class="bi bi-check-lg"></i></div><h2 id="enrolFeedbackTitle">Member enrolled successfully</h2><p id="enrolFeedbackMessage">The Pandu membership has been created.</p><button type="button" id="enrolFeedbackClose">Done</button></div></div>
 {% endblock %}
 
-{% block page_scripts %}<script src="/static/js/pandu_assign.js"></script>{% endblock %}
+{% block page_scripts %}
+<script src="/static/js/pandu_assign.js"></script>
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+    const form = document.getElementById("assignmentForm"), feedback = document.getElementById("enrolFeedback"), feedbackMessage = document.getElementById("enrolFeedbackMessage"), close = document.getElementById("enrolFeedbackClose"), submit = document.getElementById("assignButton");
+    form?.addEventListener("submit", async event => {
+        event.preventDefault();
+        submit.disabled = true;
+        submit.querySelector("span").textContent = "Saving enrolment...";
+        try {
+            const response = await fetch(form.action, { method: "POST", body: new FormData(form), headers: { "Accept": "application/json" } });
+            const result = await response.json();
+            if (!response.ok || !result.success) throw new Error(result.message || "Unable to enrol this member.");
+            feedbackMessage.textContent = result.message || "The Pandu membership has been created.";
+            feedback.classList.add("show");
+        } catch (error) {
+            alert(error.message || "Unable to enrol this member.");
+            submit.disabled = false;
+            submit.querySelector("span").textContent = "Enrol member in Pandu";
+        }
+    });
+    close?.addEventListener("click", () => window.location.assign("/pandu/assign"));
+});
+</script>
+{% endblock %}

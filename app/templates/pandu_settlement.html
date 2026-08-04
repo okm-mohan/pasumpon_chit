@@ -1,201 +1,40 @@
 {% extends "pandu_base.html" %}
-
-{% block title %}Pandu Settlement{% endblock %}
-
+{% block title %}Pandu Settlement | Pasumpon{% endblock %}
+{% block page_styles %}<link rel="stylesheet" href="/static/css/pandu_settlement.css?v=6">{% endblock %}
 {% block content %}
-
-<link rel="stylesheet" href="/static/css/pandu_settlement.css">
-
-<div class="container-fluid">
-
-
-
-    <!-- HEADER -->
-
-    <div class="settlement-hero">
-
-            <div class="mb-3">
-
-        <a href="/dashboard" class="btn btn-outline-primary back-btn">
-
-            <i class="bi bi-arrow-left-circle-fill"></i>
-            Back to Dashboard
-
-        </a>
-
+<main class="settlement-page">
+  <header class="settlement-header">
+    <span class="settlement-icon"><i class="bi bi-cash-coin"></i></span>
+    <div><span class="eyebrow">Pandu operations</span><h1>Pandu Settlement</h1><p>Search a Pandu member to begin the settlement process.</p></div>
+  </header>
+  <section class="settlement-search-card" aria-label="Find Pandu member">
+    <div class="search-heading"><span class="step-badge">Step 1</span><h2>Find member</h2><p>Search by name, member code, mobile number or Aadhaar number.</p></div>
+    <div class="collection-search-controls">
+      <div class="collection-search-field">
+        <i class="bi bi-search"></i>
+        <input id="settlementSearch" name="pandu_member_lookup_query" type="text" autocomplete="new-password" autocorrect="off" autocapitalize="none" spellcheck="false" data-form-type="other" data-1p-ignore="true" data-lpignore="true" data-bwignore="true" placeholder="Enter name, member code, mobile or Aadhaar number" role="combobox" aria-autocomplete="list" aria-controls="settlementDropdown" aria-expanded="false">
+        <button id="clearSettlementSearch" class="search-clear-btn" type="button" aria-label="Clear search"><i class="bi bi-x-lg"></i></button>
+        <div id="settlementDropdown" class="member-dropdown" role="listbox"></div>
+      </div>
+      <button class="voice-btn" type="button" aria-label="Search by voice"><i class="bi bi-mic-fill"></i></button>
     </div>
-    
-        <div>
-
-            <h1>
-                Pandu Settlement Center
-            </h1>
-
-            <p>
-                Process Final Settlement & Closure
-            </p>
-
-        </div>
-
-        <div class="hero-badge">
-
-            Settlement Module
-
-        </div>
-
+    <div class="eligible-members-section">
+      <div class="eligible-heading"><div><span class="step-badge">Ready for settlement</span><h2>Eligible members</h2></div><span id="eligibleMemberCount">0 members</span></div>
+      <div class="eligible-table-wrap"><table class="eligible-table"><thead><tr><th>Member</th><th>Pandu group</th><th>Contribution</th><th>Maturity</th><th></th></tr></thead><tbody id="eligibleMembersBody"><tr><td colspan="5" class="eligible-empty">Loading eligible members…</td></tr></tbody></table></div>
     </div>
-
-    <!-- SEARCH -->
-
-    <div class="card settlement-card mt-4">
-
-        <div class="card-body">
-
-            <div class="row">
-
-                <div class="col-md-10">
-
-                    <input type="text" id="searchMember" class="form-control form-control-lg"
-                        placeholder="Search Member Name">
-
-                </div>
-
-                <div class="col-md-2">
-
-                    <button class="btn btn-primary btn-lg w-100" onclick="searchMembers()">
-
-                        Search
-
-                    </button>
-
-                </div>
-
-            </div>
-
-        </div>
-
-    </div>
-
-    <!-- SEARCH RESULTS -->
-
-    <div id="memberResults" class="mt-4">
-
-    </div>
-
-    <!-- MEMBER DETAILS -->
-
-    <div id="settlementSection" style="display:none;">
-
-        <div class="row mt-4">
-
-            <div class="col-lg-4">
-
-                <div class="profile-card">
-
-                    <img src="/static/images/user.png" class="member-photo">
-
-                    <h3 id="memberName"></h3>
-
-                    <p id="memberMobile"></p>
-
-                    <p id="memberVillage"></p>
-
-                    <span class="ready-badge">
-                        READY FOR SETTLEMENT
-                    </span>
-
-                </div>
-
-            </div>
-
-            <div class="col-lg-8">
-
-                <div class="calculation-card">
-
-                    <h3>
-                        Settlement Calculation
-                    </h3>
-
-                    <div class="calc-row">
-
-                        <span>Total Amount</span>
-
-                        <strong id="totalAmount"></strong>
-
-                    </div>
-
-                    <div class="calc-row">
-
-                        <span>Paid Amount</span>
-
-                        <strong id="paidAmount"></strong>
-
-                    </div>
-
-                    <div class="calc-row">
-
-                        <span>Monthly Due</span>
-
-                        <strong id="monthlyDue"></strong>
-
-                    </div>
-
-                    <div class="calc-row">
-
-                        <span>Settlement Bonus</span>
-
-                        <strong id="bonusAmount"></strong>
-
-                    </div>
-
-                    <hr>
-
-                    <div class="settlement-total">
-
-                        <label>
-                            Settlement Amount
-                        </label>
-
-                        <h1 id="settlementAmount">
-
-                        </h1>
-
-                    </div>
-
-                </div>
-
-            </div>
-
-        </div>
-
-        <!-- REMARKS -->
-
-        <div class="card settlement-card mt-4">
-
-            <div class="card-body">
-
-                <h4>
-                    Settlement Remarks
-                </h4>
-
-                <textarea id="remarks" class="form-control" rows="4">
-
-                </textarea>
-
-                <button class="btn btn-success btn-lg mt-4" onclick="processSettlement()">
-
-                    Process Settlement
-
-                </button>
-
-            </div>
-
-        </div>
-
-    </div>
-
-</div>
-
-<script src="/static/js/pandu_settlement.js"></script>
-
+  </section>
+  <section class="settlement-details-card settlement-summary-card" aria-labelledby="settlementDetailsTitle">
+    <div class="details-heading"><div><span class="step-badge">Step 2</span><h2 id="settlementDetailsTitle"><i class="bi bi-receipt"></i> Settlement summary</h2><p id="settlementMemberLabel">Select a member to review the payable amount.</p></div><span id="settlementStatus" class="settlement-status">Awaiting member</span></div>
+    <div class="summary-line"><span id="contributionLabel">Total contribution</span><strong id="totalAmount">₹0</strong></div>
+    <div class="summary-line"><span>Extra month benefit (1 month)</span><strong id="benefitAmount">₹0</strong></div>
+    <div class="summary-divider"></div>
+    <div class="summary-line maturity"><span>Maturity amount</span><strong id="maturityAmount">₹0</strong></div>
+    <div class="summary-line"><span>Total paid</span><strong id="paidAmount">₹0</strong></div>
+    <div class="summary-line balance"><span>Balance amount</span><strong id="balanceAmount">₹0</strong></div>
+    <div class="payable-now"><span>Payable now</span><strong id="payableNow">₹0</strong></div>
+    <p class="summary-rule" id="settlementRule">Member selection is required before settlement.</p>
+    <button id="settlePandu" class="settle-pandu-button" type="button" disabled><i class="bi bi-cash-coin"></i><span>Settle Pandu</span></button>
+  </section>
+</main>
 {% endblock %}
+{% block page_scripts %}<script src="/static/js/pandu_settlement.js?v=5"></script>{% endblock %}

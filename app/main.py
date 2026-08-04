@@ -840,9 +840,169 @@ def daily_report():
 
 # ----------------------------------------------------------------------------
 @app.get("/monthly-report")
-def monthly_report():
+def monthly_report(request: Request):
 
-    return FileResponse("app/static/monthly_report.html")
+    return templates.TemplateResponse(
+        request=request,
+        name="reports/monthly_collection_report.html",
+        context={"active_page": "monthly_report", "current_year": datetime.now().year},
+    )
+
+
+@app.get("/api/monthly-collection-summary")
+def monthly_collection_summary(year: int = Query(default=datetime.now().year)):
+
+    db = SessionLocal()
+
+    try:
+
+        rows = db.execute(
+            text("""
+                SELECT
+                    c.collection_month AS month_number,
+                    COUNT(*) AS transactions,
+                    COUNT(DISTINCT c.member_id) AS members,
+                    COALESCE(SUM(CASE WHEN c.payment_mode = 'Cash' THEN c.amount ELSE 0 END), 0) AS cash_collection,
+                    COALESCE(SUM(CASE WHEN c.payment_mode <> 'Cash' OR c.payment_mode IS NULL THEN c.amount ELSE 0 END), 0) AS upi_collection,
+                    COALESCE(SUM(c.amount), 0) AS total_collection
+                FROM collections c
+                WHERE c.collection_year = :year
+                  AND c.collection_month BETWEEN 1 AND MONTH(CURDATE())
+                GROUP BY c.collection_month
+                ORDER BY c.collection_month
+            """),
+            {"year": year},
+        ).mappings().all()
+
+        result = [
+            {
+                **dict(row),
+                "cash_collection": float(row["cash_collection"] or 0),
+                "upi_collection": float(row["upi_collection"] or 0),
+                "total_collection": float(row["total_collection"] or 0),
+            }
+            for row in rows
+        ]
+
+        total_members = db.execute(
+            text("""
+                SELECT COUNT(DISTINCT member_id)
+                FROM collections
+                WHERE collection_year = :year
+                  AND collection_month BETWEEN 1 AND MONTH(CURDATE())
+            """),
+            {"year": year},
+        ).scalar()
+
+        return {"rows": result, "total_members": int(total_members or 0)}
+
+    finally:
+
+        db.close()
+
+
+@app.get("/api/kanthu/monthly-view")
+def kanthu_monthly_view():
+    year = datetime.now().year
+    db = SessionLocal()
+    try:
+        issue_rows = db.execute(text("""
+            SELECT m.id AS member_id, m.member_name, m.member_code, m.mobile,
+                   MONTH(km.issue_date) AS month_number, SUM(km.principal_amount) AS amount
+            FROM kanthu_master km INNER JOIN members m ON m.id = km.member_id
+            WHERE YEAR(km.issue_date) = :year
+            GROUP BY m.id, m.member_name, m.member_code, m.mobile, MONTH(km.issue_date)
+        """), {"year": year}).mappings().all()
+        collection_rows = db.execute(text("""
+            SELECT m.id AS member_id, MONTH(kt.transaction_date) AS month_number, SUM(kt.amount) AS amount
+            FROM kanthu_transactions kt
+            INNER JOIN kanthu_master km ON km.id = kt.kanthu_id
+            INNER JOIN members m ON m.id = km.member_id
+            WHERE kt.transaction_type = 'COLLECTION' AND YEAR(kt.transaction_date) = :year
+              AND YEAR(km.issue_date) = :year
+            GROUP BY m.id, MONTH(kt.transaction_date)
+        """), {"year": year}).mappings().all()
+        members = {}
+        for row in issue_rows:
+            member = members.setdefault(row["member_id"], {"member_name": row["member_name"], "member_code": row["member_code"], "mobile": row["mobile"], "months": [{"issue": 0, "collection": 0} for _ in range(12)], "total_returned": 0})
+            member["months"][int(row["month_number"]) - 1]["issue"] = float(row["amount"] or 0)
+        for row in collection_rows:
+            if row["member_id"] in members:
+                amount = float(row["amount"] or 0)
+                members[row["member_id"]]["months"][int(row["month_number"]) - 1]["collection"] = amount
+                members[row["member_id"]]["total_returned"] += amount
+        return {"year": year, "members": sorted(members.values(), key=lambda item: item["member_name"].lower())}
+    finally:
+        db.close()
+
+
+@app.get("/api/kanthu/pending-members")
+def kanthu_pending_members():
+    db = SessionLocal()
+    try:
+        members = db.execute(text("""
+            SELECT m.id AS member_id, m.member_name, m.member_code, m.mobile,
+                   COUNT(km.id) AS loan_count,
+                   COALESCE(SUM(km.principal_amount), 0) AS principal_amount,
+                   COALESCE(SUM(km.total_collected), 0) AS total_collected,
+                   COALESCE(SUM(km.balance_amount), 0) AS balance_amount
+            FROM kanthu_master km INNER JOIN members m ON m.id = km.member_id
+            WHERE km.status = 'ACTIVE' AND km.balance_amount > 0
+            GROUP BY m.id, m.member_name, m.member_code, m.mobile
+            ORDER BY balance_amount DESC, m.member_name
+        """)).mappings().all()
+        summary = db.execute(text("""
+            SELECT COUNT(DISTINCT member_id) AS pending_members, COUNT(*) AS active_loans,
+                   COALESCE(SUM(total_collected), 0) AS total_received,
+                   COALESCE(SUM(balance_amount), 0) AS total_balance
+            FROM kanthu_master WHERE status = 'ACTIVE' AND balance_amount > 0
+        """)).mappings().first()
+        amount_keys = ("principal_amount", "total_collected", "balance_amount")
+        return {"members": [{**dict(row), **{key: float(row[key] or 0) for key in amount_keys}} for row in members], "summary": {**dict(summary), "total_received": float(summary["total_received"] or 0), "total_balance": float(summary["total_balance"] or 0)}}
+    finally:
+        db.close()
+
+
+@app.get("/api/kanthu/year-summary")
+def kanthu_year_summary():
+    year = datetime.now().year
+    db = SessionLocal()
+    try:
+        totals = db.execute(text("""
+            SELECT
+                COUNT(*) AS loan_count,
+                COALESCE(SUM(principal_amount), 0) AS principal_issued,
+                COALESCE(SUM(interest_amount), 0) AS interest_income,
+                COALESCE(SUM(total_collected), 0) AS collection_received,
+                COALESCE(SUM(balance_amount), 0) AS balance_to_receive,
+                COALESCE(SUM(CASE WHEN status = 'ACTIVE' THEN 1 ELSE 0 END), 0) AS active_loans,
+                COUNT(DISTINCT CASE WHEN status = 'ACTIVE' THEN member_id END) AS active_members
+            FROM kanthu_master
+            WHERE YEAR(issue_date) = :year
+        """), {"year": year}).mappings().first()
+        members = db.execute(text("""
+            SELECT m.member_name, m.member_code, m.mobile, COUNT(*) AS loan_count,
+                   COALESCE(SUM(km.principal_amount), 0) AS principal_issued,
+                   COALESCE(SUM(km.interest_amount), 0) AS interest_income,
+                   COALESCE(SUM(km.total_collected), 0) AS collection_received,
+                   COALESCE(SUM(km.balance_amount), 0) AS balance_to_receive
+            FROM kanthu_master km INNER JOIN members m ON m.id = km.member_id
+            WHERE YEAR(km.issue_date) = :year
+            GROUP BY m.id, m.member_name, m.member_code, m.mobile
+            ORDER BY balance_to_receive DESC, m.member_name
+        """), {"year": year}).mappings().all()
+        months = db.execute(text("""
+            SELECT DATE_FORMAT(km.issue_date, '%b') AS month, MONTH(km.issue_date) AS month_number,
+                   COUNT(*) AS loan_count, COALESCE(SUM(km.principal_amount), 0) AS principal_issued,
+                   COALESCE(SUM(km.total_collected), 0) AS collection_received
+            FROM kanthu_master km WHERE YEAR(km.issue_date) = :year
+            GROUP BY MONTH(km.issue_date), DATE_FORMAT(km.issue_date, '%b')
+            ORDER BY month_number
+        """), {"year": year}).mappings().all()
+        convert = lambda row: {**dict(row), **{key: float(row[key] or 0) for key in ('principal_issued', 'interest_income', 'collection_received', 'balance_to_receive') if key in row}}
+        return {"year": year, "summary": convert(totals), "members": [convert(row) for row in members], "months": [convert(row) for row in months]}
+    finally:
+        db.close()
 
 
 @app.get("/api/reports/monthly-collections")
@@ -3337,17 +3497,19 @@ def kanthu_member_search(search: str = ""):
             db.execute(
                 text("""
                 SELECT
-                    id,
-                    member_code,
-                    member_name,
-                    mobile,
-                    village
-                FROM members
+                    m.id,
+                    m.member_code,
+                    m.member_name,
+                    m.mobile,
+                    m.village,
+                    CONCAT('XXXX XXXX ', RIGHT(REPLACE(m.aadhaar_no, ' ', ''), 4)) AS aadhaar_masked,
+                    EXISTS(SELECT 1 FROM kanthu_master km WHERE km.member_id = m.id AND km.status = 'ACTIVE') AS has_active_kanthu
+                FROM members m
                 WHERE
-                    member_name LIKE :search
-                    OR member_code LIKE :search
-                    OR mobile LIKE :search
-                ORDER BY member_name
+                    m.member_name LIKE :search
+                    OR m.member_code LIKE :search
+                    OR m.mobile LIKE :search
+                ORDER BY m.member_name
                 LIMIT 20
             """),
                 {"search": f"%{search}%"},
@@ -5352,6 +5514,46 @@ def member_pandu_settlement(member_id: int):
 
         db.close()
 
+
+@app.get("/api/pandu-settlement-eligible-members")
+def pandu_settlement_eligible_members():
+
+    db = SessionLocal()
+
+    try:
+
+        rows = db.execute(
+            text("""
+                SELECT
+                    m.id AS member_id,
+                    m.member_code,
+                    m.member_name,
+                    pg.group_name,
+                    pa.total_amount,
+                    pa.settlement_amount
+                FROM pandu_assignments pa
+                INNER JOIN members m ON m.id = pa.member_id
+                INNER JOIN pandu_groups pg ON pg.id = pa.group_id
+                WHERE pa.status = 'ACTIVE'
+                  AND COALESCE(pa.balance_amount, 0) <= 0
+                  AND COALESCE(pa.is_settled, 0) = 0
+                ORDER BY m.member_name
+            """)
+        ).mappings().all()
+
+        return [
+            {
+                **dict(row),
+                "total_amount": float(row["total_amount"] or 0),
+                "settlement_amount": float(row["settlement_amount"] or 0),
+            }
+            for row in rows
+        ]
+
+    finally:
+
+        db.close()
+
 # ==========================================================
 # KANTHU DASHBOARD API
 # ==========================================================
@@ -5465,7 +5667,49 @@ def kanthu_dashboard_api():
     finally:
 
         db.close()
-        
+
+
+@app.get("/api/kanthu-issued-persons")
+def kanthu_issued_persons():
+
+    db = SessionLocal()
+
+    try:
+
+        rows = db.execute(text("""
+            SELECT
+                COUNT(*) AS loan_count,
+                MAX(km.issue_date) AS latest_issue_date,
+                SUM(km.principal_amount) AS principal_amount,
+                SUM(km.interest_amount) AS interest_amount,
+                SUM(km.total_collected) AS total_collected,
+                SUM(km.balance_amount) AS balance_amount,
+                CASE WHEN SUM(CASE WHEN km.status = 'ACTIVE' THEN 1 ELSE 0 END) > 0 THEN 'ACTIVE' ELSE 'CLOSED' END AS status,
+                m.member_code,
+                m.member_name,
+                m.mobile,
+                REPLACE(m.aadhaar_no, ' ', '') AS aadhaar_no
+            FROM kanthu_master km
+            INNER JOIN members m ON m.id = km.member_id
+            GROUP BY m.id, m.member_code, m.member_name, m.mobile, m.aadhaar_no
+            ORDER BY CASE WHEN SUM(CASE WHEN km.status = 'ACTIVE' THEN 1 ELSE 0 END) > 0 THEN 0 ELSE 1 END, latest_issue_date DESC
+        """)).mappings().all()
+
+        return [
+            {
+                **dict(row),
+                "principal_amount": float(row["principal_amount"] or 0),
+                "interest_amount": float(row["interest_amount"] or 0),
+                "total_collected": float(row["total_collected"] or 0),
+                "balance_amount": float(row["balance_amount"] or 0),
+            }
+            for row in rows
+        ]
+
+    finally:
+
+        db.close()
+
 # ==========================================================
 # OUTSTANDING MEMBERS
 # ==========================================================

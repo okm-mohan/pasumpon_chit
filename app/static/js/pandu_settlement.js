@@ -1,730 +1,125 @@
-let selectedAssignmentId = null;
-let selectedSettlementAmount = 0;
+document.addEventListener('DOMContentLoaded', () => {
+  const input = document.getElementById('settlementSearch');
+  const dropdown = document.getElementById('settlementDropdown');
+  const clear = document.getElementById('clearSettlementSearch');
+  const settleButton = document.getElementById('settlePandu');
+  const eligibleBody = document.getElementById('eligibleMembersBody');
+  const eligibleCount = document.getElementById('eligibleMemberCount');
+  let requestNumber = 0;
+  let assignmentId = null;
+  let payableAmount = 0;
 
-/* ==========================================
-   FORMAT MONEY
-========================================== */
-
-function money(value){
-
-    return "₹" +
-        Number(value || 0)
-        .toLocaleString("en-IN");
-}
-
-/* ==========================================
-   SEARCH MEMBERS
-========================================== */
-
-async function searchMembers(){
-
-    const search =
-        document.getElementById(
-            "searchMember"
-        ).value.trim();
-
-    if(search === ""){
-
-        alert(
-            "Enter Member Name"
-        );
-
+  const updateClearButton = () => clear.classList.toggle('visible', Boolean(input.value));
+  const hide = () => { dropdown.style.display = 'none'; input.setAttribute('aria-expanded', 'false'); };
+  const show = () => { dropdown.style.display = 'block'; input.setAttribute('aria-expanded', 'true'); };
+  const render = members => {
+    dropdown.replaceChildren();
+    if (!members.length) {
+      dropdown.innerHTML = '<div class="member-item"><strong>No members found</strong><span>Try a different search term.</span></div>';
+    } else {
+      members.forEach(member => {
+        const item = document.createElement('button');
+        item.type = 'button'; item.className = 'member-item'; item.setAttribute('role', 'option');
+        item.innerHTML = `<strong>${member.member_name}</strong><span>${member.member_code} · ${member.mobile || 'No mobile'}${member.aadhaar_masked ? ` · Aadhaar ${member.aadhaar_masked}` : ''}</span>`;
+        item.addEventListener('click', () => selectMember(member));
+        dropdown.appendChild(item);
+      });
+    }
+    show();
+  };
+  const search = async () => {
+    updateClearButton();
+    const query = input.value.trim(); const currentRequest = ++requestNumber;
+    if (!query) { hide(); return; }
+    dropdown.innerHTML = '<div class="member-item"><strong>Searching members…</strong></div>'; show();
+    try {
+      const response = await fetch(`/api/member-search?q=${encodeURIComponent(query)}`, { cache: 'no-store' });
+      if (!response.ok) throw new Error();
+      const members = await response.json();
+      if (currentRequest === requestNumber) render(members);
+    } catch {
+      if (currentRequest === requestNumber) { dropdown.innerHTML = '<div class="member-item"><strong>Unable to search members</strong><span>Please try again.</span></div>'; show(); }
+    }
+  };
+  const selectMember = async member => {
+    input.value = member.member_name;
+    updateClearButton();
+    hide();
+    document.getElementById('settlementMemberLabel').textContent = `${member.member_name} (${member.member_code})`;
+    document.getElementById('settlementStatus').textContent = 'Checking eligibility';
+    document.getElementById('settlementStatus').className = 'settlement-status';
+    try {
+      const response = await fetch(`/api/member/${member.id}/pandu-settlement`, { cache: 'no-store' });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.message || 'No active Pandu assignment found.');
+      const money = value => `₹${Number(value || 0).toLocaleString('en-IN')}`;
+      assignmentId = data.assignment_id;
+      payableAmount = data.settlement_amount || 0;
+      document.getElementById('contributionLabel').textContent = `Total contribution (${money(data.group_monthly_due / data.pandu_count)} × ${data.pandu_count} × ${data.duration_months})`;
+      document.getElementById('totalAmount').textContent = money(data.total_amount);
+      document.getElementById('benefitAmount').textContent = money(payableAmount - data.total_amount);
+      document.getElementById('paidAmount').textContent = money(data.paid_amount);
+      document.getElementById('balanceAmount').textContent = money(data.balance_amount);
+      document.getElementById('maturityAmount').textContent = money(payableAmount);
+      const ready = Boolean(data.ready_to_settle);
+      document.getElementById('payableNow').textContent = money(ready ? payableAmount : 0);
+      document.getElementById('settlementStatus').textContent = ready ? 'Ready to settle' : 'Pending balance';
+      document.getElementById('settlementStatus').className = `settlement-status ${ready ? 'ready' : 'pending'}`;
+      document.getElementById('settlementRule').textContent = ready ? 'All dues are cleared. This maturity amount can be settled now.' : 'Clear the balance amount before settlement.';
+      settleButton.disabled = !ready;
+    } catch (error) {
+      assignmentId = null;
+      payableAmount = 0;
+      settleButton.disabled = true;
+      document.getElementById('payableNow').textContent = '₹0';
+      document.getElementById('settlementStatus').textContent = 'Settlement unavailable';
+      document.getElementById('settlementStatus').className = 'settlement-status pending';
+      document.getElementById('settlementRule').textContent = error.message;
+    }
+  };
+  const loadEligibleMembers = async () => {
+    try {
+      const response = await fetch('/api/pandu-settlement-eligible-members', { cache: 'no-store' });
+      if (!response.ok) throw new Error();
+      const members = await response.json();
+      eligibleCount.textContent = `${members.length} ${members.length === 1 ? 'member' : 'members'}`;
+      if (!members.length) {
+        eligibleBody.innerHTML = '<tr><td colspan="5" class="eligible-empty">No members are currently eligible for settlement.</td></tr>';
         return;
+      }
+      const money = value => `₹${Number(value || 0).toLocaleString('en-IN')}`;
+      eligibleBody.innerHTML = '';
+      members.forEach(member => {
+        const row = document.createElement('tr');
+        row.innerHTML = `<td><span class="eligible-member-name">${member.member_name}</span><span class="eligible-member-code">${member.member_code}</span></td><td>${member.group_name}</td><td class="amount">${money(member.total_amount)}</td><td class="amount">${money(member.settlement_amount)}</td><td class="action"><button type="button" class="eligible-select">Select</button></td>`;
+        row.querySelector('button').addEventListener('click', () => selectMember({ id: member.member_id, member_name: member.member_name, member_code: member.member_code }));
+        eligibleBody.appendChild(row);
+      });
+    } catch {
+      eligibleCount.textContent = 'Unavailable';
+      eligibleBody.innerHTML = '<tr><td colspan="5" class="eligible-empty">Unable to load eligible members.</td></tr>';
     }
-
-    try{
-
-        const response =
-            await fetch(
-
-                `/api/pandu-settlement/search?search=${encodeURIComponent(search)}`
-
-            );
-
-        const data =
-            await response.json();
-
-        let html = "";
-
-        if(data.length === 0){
-
-            html = `
-
-                <div class="alert alert-warning">
-
-                    No Eligible Members Found
-
-                </div>
-
-            `;
-        }
-        else{
-
-            data.forEach(row => {
-
-                html += `
-
-                    <div class="member-result">
-
-                        <div class="member-info">
-
-                            <h5>
-                                ${row.member_name}
-                            </h5>
-
-                            <small>
-
-                                Mobile :
-                                ${row.mobile || '-'}
-
-                                |
-                                Village :
-                                ${row.village || '-'}
-
-                            </small>
-
-                        </div>
-
-                        <button
-
-                            class="btn btn-primary"
-
-                            onclick='loadMember(${JSON.stringify(row)})'>
-
-                            Select
-
-                        </button>
-
-                    </div>
-
-                `;
-            });
-        }
-
-        document.getElementById(
-            "memberResults"
-        ).innerHTML = html;
-
+  };
+  input.addEventListener('input', search);
+  input.addEventListener('focus', () => { if (input.value.trim()) search(); });
+  clear.addEventListener('click', () => { input.value = ''; updateClearButton(); hide(); input.focus(); });
+  settleButton.addEventListener('click', async () => {
+    if (!assignmentId || settleButton.disabled) return;
+    settleButton.disabled = true;
+    settleButton.querySelector('span').textContent = 'Processing…';
+    try {
+      const response = await fetch(`/api/pandu-settlement/${assignmentId}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ amount: payableAmount }) });
+      const result = await response.json();
+      if (!result.success) throw new Error(result.message || 'Settlement failed.');
+      alert(result.message || 'Pandu settled successfully.');
+      window.location.reload();
+    } catch (error) {
+      alert(error.message || 'Settlement failed.');
+      settleButton.disabled = false;
+      settleButton.querySelector('span').textContent = 'Settle Pandu';
     }
-    catch(error){
-
-        console.error(error);
-
-        alert(
-            "Error Loading Members"
-        );
-    }
-}
-
-/* ==========================================
-   LOAD MEMBER
-========================================== */
-
-function loadMember(row){
-
-    selectedAssignmentId =
-        row.id;
-
-    selectedSettlementAmount =
-        row.settlement_amount;
-
-    document.getElementById(
-        "settlementSection"
-    ).style.display = "block";
-
-    document.getElementById(
-        "memberName"
-    ).innerHTML =
-        row.member_name;
-
-    document.getElementById(
-        "memberMobile"
-    ).innerHTML =
-        row.mobile || "-";
-
-    document.getElementById(
-        "memberVillage"
-    ).innerHTML =
-        row.village || "-";
-
-    document.getElementById(
-        "totalAmount"
-    ).innerHTML =
-        money(
-            row.total_amount
-        );
-
-    document.getElementById(
-        "paidAmount"
-    ).innerHTML =
-        money(
-            row.paid_amount
-        );
-
-    document.getElementById(
-        "monthlyDue"
-    ).innerHTML =
-        money(
-            row.group_monthly_due
-        );
-
-    document.getElementById(
-        "bonusAmount"
-    ).innerHTML =
-        money(
-            row.group_monthly_due
-        );
-
-    document.getElementById(
-        "settlementAmount"
-    ).innerHTML =
-        money(
-            row.settlement_amount
-        );
-
-    window.scrollTo({
-
-        top:
-        document.getElementById(
-            "settlementSection"
-        ).offsetTop - 100,
-
-        behavior:"smooth"
-
-    });
-}
-
-/* ==========================================
-   PROCESS SETTLEMENT
-========================================== */
-
-async function processSettlement(){
-
-    if(
-        selectedAssignmentId === null
-    ){
-
-        alert(
-            "Select Member First"
-        );
-
-        return;
-    }
-
-    const remarks =
-        document.getElementById(
-            "remarks"
-        ).value;
-
-    const confirmSettlement =
-        confirm(
-
-            `Process Settlement Amount ${money(selectedSettlementAmount)} ?`
-
-        );
-
-    if(!confirmSettlement){
-
-        return;
-    }
-
-    try{
-
-        const response =
-            await fetch(
-
-                `/api/pandu-settlement/${selectedAssignmentId}`,
-
-                {
-
-                    method:"POST",
-
-                    headers:{
-                        "Content-Type":
-                        "application/json"
-                    },
-
-                    body:JSON.stringify({
-
-                        amount:
-                        selectedSettlementAmount,
-
-                        remarks:
-                        remarks
-
-                    })
-
-                }
-
-            );
-
-        const result =
-            await response.json();
-
-        if(result.success){
-
-            alert(
-
-                "Settlement Processed Successfully"
-
-            );
-
-            document.getElementById(
-                "remarks"
-            ).value = "";
-
-            document.getElementById(
-                "settlementSection"
-            ).style.display = "none";
-
-            document.getElementById(
-                "memberResults"
-            ).innerHTML = "";
-
-            document.getElementById(
-                "searchMember"
-            ).value = "";
-
-            selectedAssignmentId = null;
-
-            selectedSettlementAmount = 0;
-        }
-        else{
-
-            alert(
-
-                result.message ||
-                "Settlement Failed"
-
-            );
-        }
-
-    }
-    catch(error){
-
-        console.error(error);
-
-        alert(
-
-            "Error Processing Settlement"
-
-        );
-    }
-}
-
-/* ==========================================
-   ENTER KEY SEARCH
-========================================== */
-
-document.addEventListener(
-
-    "DOMContentLoaded",
-
-    function(){
-
-        document
-        .getElementById(
-            "searchMember"
-        )
-        .addEventListener(
-
-            "keypress",
-
-            function(e){
-
-                if(
-                    e.key === "Enter"
-                ){
-
-                    searchMembers();
-                }
-
-            }
-
-        );
-
-    }
-
-);
-
-let memberModal;
-
-function openMemberSearch(){
-
-    memberModal =
-        new bootstrap.Modal(
-
-            document.getElementById(
-                "memberSearchModal"
-            )
-
-        );
-
-    memberModal.show();
-
-    setTimeout(()=>{
-
-        document
-        .getElementById(
-            "memberSearchInput"
-        )
-        .focus();
-
-    },300);
-}
-
-document.addEventListener(
-
-    "DOMContentLoaded",
-
-    function(){
-
-        document
-        .getElementById(
-            "memberSearchInput"
-        )
-        .addEventListener(
-
-            "keyup",
-
-            searchMembersLive
-
-        );
-
-    }
-
-);
-
-async function searchMembersLive(){
-
-    const q =
-        document
-        .getElementById(
-            "memberSearchInput"
-        )
-        .value.trim();
-
-    if(q.length < 2){
-
-        document
-        .getElementById(
-            "memberSearchResults"
-        )
-        .innerHTML = "";
-
-        return;
-    }
-
-    const response =
-        await fetch(
-            `/api/member-search?q=${q}`
-        );
-
-    const members =
-        await response.json();
-
-    let html = "";
-
-    members.forEach(m=>{
-
-        html += `
-
-            <div
-                class="search-member-card"
-
-                onclick="selectMember(${m.id})">
-
-                <div>
-
-                    <span class="member-code">
-
-                        ${m.member_code}
-
-                    </span>
-
-                </div>
-
-                <h5 class="mt-2">
-
-                    ${m.member_name}
-
-                </h5>
-
-                <small>
-
-                    📱 ${m.mobile || '-'}
-
-                </small>
-
-                <br>
-
-                <small>
-
-                    📍 ${m.village || '-'}
-
-                </small>
-
-            </div>
-
-        `;
-    });
-
-    document
-    .getElementById(
-        "memberSearchResults"
-    )
-    .innerHTML = html;
-}
-
-async function selectMember(memberId){
-
-    memberModal.hide();
-
-    await loadSettlementMember(
-        memberId
-    );
-}
-
-async function loadSettlementMember(
-    memberId
-){
-
-    const res =
-        await fetch(
-
-            `/api/settlement-member/${memberId}`
-
-        );
-
-    const row =
-        await res.json();
-
-    loadMember(row);
-}
-
-async function loadSettlementMember(memberId){
-
-    console.log("Selected Member ID:", memberId);
-
-    const res =
-        await fetch(
-            `/api/settlement-member/${memberId}`
-        );
-
-    const row =
-        await res.json();
-
-    console.log("API Result:", row);
-
-    loadMember(row);
-}
-
-document.addEventListener("DOMContentLoaded", function () {
-
-    let selectedSettlementId = null;
-
-    const modalElement = document.getElementById("settlementModal");
-    const settlementModal = new bootstrap.Modal(modalElement);
-
-    /* =========================================
-       SEARCH
-    ========================================= */
-
-    const searchBox = document.getElementById("searchSettlement");
-
-    if (searchBox) {
-
-        searchBox.addEventListener("keyup", function () {
-
-            const value = this.value.toLowerCase();
-
-            document.querySelectorAll("tbody tr").forEach(row => {
-
-                const text = row.innerText.toLowerCase();
-
-                row.style.display =
-                    text.includes(value)
-                        ? ""
-                        : "none";
-
-            });
-
-        });
-
-    }
-
-    /* =========================================
-       STATUS FILTER
-    ========================================= */
-
-    const statusFilter =
-        document.getElementById("statusFilter");
-
-    if (statusFilter) {
-
-        statusFilter.addEventListener("change", function () {
-
-            const status =
-                this.value.toLowerCase();
-
-            document.querySelectorAll("tbody tr")
-                .forEach(row => {
-
-                    if (!status) {
-
-                        row.style.display = "";
-                        return;
-                    }
-
-                    const badge =
-                        row.querySelector(".badge");
-
-                    if (!badge) return;
-
-                    const rowStatus =
-                        badge.innerText
-                            .trim()
-                            .toLowerCase();
-
-                    row.style.display =
-                        rowStatus === status
-                            ? ""
-                            : "none";
-
-                });
-
-        });
-
-    }
-
-    /* =========================================
-       OPEN SETTLEMENT MODAL
-    ========================================= */
-
-    document.addEventListener("click", function (e) {
-
-        const btn =
-            e.target.closest(".settlement-btn");
-
-        if (!btn) return;
-
-        selectedSettlementId =
-            btn.dataset.id;
-
-        document.getElementById(
-            "modalMemberName"
-        ).value =
-            btn.dataset.name;
-
-        document.getElementById(
-            "modalTotal"
-        ).value =
-            "₹" + btn.dataset.total;
-
-        document.getElementById(
-            "modalPaid"
-        ).value =
-            "₹" + btn.dataset.paid;
-
-        document.getElementById(
-            "modalBalance"
-        ).value =
-            "₹" + btn.dataset.balance;
-
-        document.getElementById(
-            "modalSettlement"
-        ).value =
-            "₹" + btn.dataset.settlement;
-
-        settlementModal.show();
-
-    });
-
-    /* =========================================
-       COMPLETE SETTLEMENT
-    ========================================= */
-
-    const completeBtn =
-        document.getElementById(
-            "completeSettlementBtn"
-        );
-
-    if (completeBtn) {
-
-        completeBtn.addEventListener(
-            "click",
-            function () {
-
-                const remarks =
-                    document.getElementById(
-                        "settlementRemarks"
-                    ).value;
-
-                if (!confirm(
-                    "Are you sure you want to complete settlement?"
-                )) {
-                    return;
-                }
-
-                fetch(
-                    "/complete-settlement",
-                    {
-                        method: "POST",
-
-                        headers: {
-                            "Content-Type":
-                                "application/json"
-                        },
-
-                        body: JSON.stringify({
-
-                            assignment_id:
-                                selectedSettlementId,
-
-                            remarks:
-                                remarks
-
-                        })
-
-                    }
-                )
-
-                .then(res => res.json())
-
-                .then(data => {
-
-                    if (data.success) {
-
-                        alert(
-                            "Settlement Completed Successfully"
-                        );
-
-                        location.reload();
-
-                    } else {
-
-                        alert(
-                            data.message ||
-                            "Failed"
-                        );
-
-                    }
-
-                })
-
-                .catch(error => {
-
-                    console.error(error);
-
-                    alert(
-                        "Server Error"
-                    );
-
-                });
-
-            }
-        );
-
-    }
-
+  });
+  document.addEventListener('click', event => { if (!event.target.closest('.collection-search-field')) hide(); });
+  updateClearButton();
+  loadEligibleMembers();
 });

@@ -1,0 +1,13 @@
+{% extends "pandu_base.html" %}
+{% block title %}Monthly Collection Report | Pasumpon{% endblock %}
+{% block content %}
+<link rel="stylesheet" href="/static/css/datewise_collection_list.css?v=1">
+<div class="report-container">
+  <div class="page-header"><div><h2><i class="fas fa-calendar-alt"></i> Monthly Collection Report</h2><p>Consolidated Pandu collections from January to the current month</p></div></div>
+  <div class="filter-card"><div class="filter-row"><div class="form-group"><label>Collection period</label><div class="monthly-period"><i class="fas fa-calendar-check"></i><span id="monthlyPeriod">January – Current Month</span></div></div><div class="form-group button-group"><button onclick="loadMonthlyReport()" class="btn-search"><i class="fas fa-sync-alt"></i> Refresh</button><button onclick="window.print()" class="btn-print"><i class="fas fa-print"></i> Print</button></div></div></div>
+  <div class="cards-grid"><div class="summary-card total"><h4>Total Collection</h4><h2 id="totalCollection">₹0</h2></div><div class="summary-card members"><h4>Total Members</h4><h2 id="totalMembers">0</h2></div><div class="summary-card cash"><h4>Cash Collection</h4><h2 id="cashCollection">₹0</h2></div><div class="summary-card upi"><h4>UPI Collection</h4><h2 id="upiCollection">₹0</h2></div></div>
+  <div class="table-card"><div class="table-title"><i class="fas fa-list"></i> Consolidated Monthly Collections</div><table><thead><tr><th>S.No</th><th>Month</th><th>Transactions</th><th>Members</th><th>Cash Collection</th><th>UPI Collection</th><th>Total Collection</th></tr></thead><tbody id="reportBody"><tr><td colspan="7">Loading monthly collections…</td></tr></tbody></table></div>
+</div>
+<style>.monthly-period{display:flex;align-items:center;gap:9px;min-width:260px;height:44px;padding:0 14px;border:1px solid #d4dde9;border-radius:8px;color:#263b59;background:#fbfdff;font-weight:700}.monthly-period i{color:#246bfd}@media(max-width:700px){.monthly-period{min-width:0;width:100%}}</style>
+<script src="/static/js/monthly_collection_report.js?v=1"></script>
+{% endblock %}

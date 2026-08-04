@@ -7,6 +7,9 @@ Pandu Details
 {% block content %}
 
 <link rel="stylesheet" href="/static/css/pandu_details.css">
+<style>
+.member-panel .table-responsive{overflow-x:hidden}.member-table{min-width:0!important;width:100%!important;table-layout:fixed}.member-table th,.member-table td{padding:10px 8px!important;font-size:12px!important}.member-table th:nth-child(1){width:5%!important}.member-table th:nth-child(2){width:30%!important}.member-table th:nth-child(3){width:8%!important}.member-table th:nth-child(4),.member-table th:nth-child(5){width:14%!important}.member-table th:nth-child(6){width:16%!important}.member-table th:nth-child(7){width:13%!important}.member-table .member-name{gap:8px}.member-table .member-avatar{width:34px;height:34px;flex:0 0 34px;font-size:11px}.member-table .member-info h6{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px}.member-table .member-info small{font-size:10px}
+</style>
 
 <div class="container-fluid pandu-page">
 
@@ -395,32 +398,28 @@ Pandu Details
 
                     <tr>
 
-                        <th style="width:60px;">#</th>
+                        <th>#</th>
 
-                        <th style="width:320px;">Member</th>
+                        <th>Member</th>
 
-                        <th style="width:100px;" class="text-center">
+                        <th class="text-center">
                             Pandu
                         </th>
 
-                        <th style="width:150px;" class="text-end">
+                        <th class="text-end">
                             Total
                         </th>
 
-                        <th style="width:150px;" class="text-end">
+                        <th class="text-end">
                             Paid
                         </th>
 
-                        <th style="width:150px;" class="text-end">
+                        <th class="text-end">
                             Balance
                         </th>
 
-                        <th style="width:120px;" class="text-center">
+                        <th class="text-center">
                             Status
-                        </th>
-
-                        <th style="width:80px;" class="text-center">
-                            Action
                         </th>
 
                     </tr>
@@ -431,7 +430,7 @@ Pandu Details
 
                     <tr>
 
-                        <td colspan="8" class="text-center py-5">
+                        <td colspan="7" class="text-center py-5">
 
                             <div class="loading-box">
 
