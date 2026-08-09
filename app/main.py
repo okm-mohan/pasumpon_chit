@@ -2,6 +2,7 @@ from fastapi import FastAPI, Request, Form
 from fastapi.responses import RedirectResponse
 from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
+from starlette.middleware.sessions import SessionMiddleware
 from sqlalchemy import text
 from app.database import SessionLocal, engine
 import time
@@ -11,11 +12,14 @@ from fastapi import Query
 from fastapi import UploadFile, File
 import shutil
 import os
+import hashlib
+import secrets
 from fastapi.responses import JSONResponse, FileResponse
 from datetime import datetime, date
 from fastapi import Request
 
 app = FastAPI()
+app.add_middleware(SessionMiddleware, secret_key=os.getenv("MEMBER_PORTAL_SESSION_SECRET", "change-this-member-portal-secret"))
 
 from pydantic import BaseModel
 
@@ -96,6 +100,183 @@ def public_portal_page(request: Request):
         "contact": ("தொடர்பு", "எங்களைத் தொடர்புகொள்ளுங்கள்", "உங்கள் கருத்து எங்களுக்கு முக்கியம்", "அலுவலகம், உதவி மையம் மற்றும் அங்கீகரிக்கப்பட்ட ஒருங்கிணைப்பாளர்களை தொடர்புகொள்ளலாம்."),
     }
     return templates.TemplateResponse(request=request, name="portal_page.html", context={"page_key": page, "content": page_content[page]})
+
+
+def _member_portal_ready(db):
+    db.execute(text("""CREATE TABLE IF NOT EXISTS member_portal_accounts (
+        member_id INT PRIMARY KEY, password_salt VARCHAR(64) NOT NULL,
+        password_hash VARCHAR(128) NOT NULL, created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )"""))
+    db.commit()
+
+
+def _portal_hash(password: str, salt: str) -> str:
+    return hashlib.pbkdf2_hmac("sha256", password.encode(), salt.encode(), 120000).hex()
+
+
+@app.get("/member/login")
+def member_login_page(request: Request):
+    return templates.TemplateResponse(request=request, name="member_portal/login.html", context={})
+
+
+@app.post("/member/login")
+def member_login(request: Request, member_code: str = Form(...), password: str = Form(...)):
+    db = SessionLocal()
+    try:
+        _member_portal_ready(db)
+        member = db.execute(text("""SELECT m.id,m.member_code,m.member_name,m.mobile,a.password_salt,a.password_hash
+            FROM members m LEFT JOIN member_portal_accounts a ON a.member_id=m.id
+            WHERE m.member_code=:code AND COALESCE(m.status,'ACTIVE')='ACTIVE'"""), {"code": member_code.strip().upper()}).mappings().first()
+        if not member:
+            return templates.TemplateResponse(request=request, name="member_portal/login.html", context={"error":"Member ID is not correct."})
+        if not member["password_hash"]:
+            return templates.TemplateResponse(request=request, name="member_portal/login.html", context={"error":"Your portal password has not been activated. Please contact the administrator."})
+        if not secrets.compare_digest(member["password_hash"], _portal_hash(password, member["password_salt"])):
+            return templates.TemplateResponse(request=request, name="member_portal/login.html", context={"error":"Password is not correct. Please try again."})
+        request.session["member_portal_id"] = int(member["id"])
+        return RedirectResponse("/member/dashboard", status_code=303)
+    finally:
+        db.close()
+
+
+def _portal_member(request: Request, db):
+    member_id = request.session.get("member_portal_id")
+    if not member_id:
+        return None
+    return db.execute(text("SELECT id,member_code,member_name,mobile,village,address,photo FROM members WHERE id=:id"), {"id": member_id}).mappings().first()
+
+
+@app.get("/member/dashboard")
+def member_dashboard(request: Request):
+    db = SessionLocal()
+    try:
+        member = _portal_member(request, db)
+        if not member:
+            return RedirectResponse("/member/login", status_code=303)
+        mid = member["id"]
+        pandu = db.execute(text("SELECT COALESCE(SUM(total_amount),0) total,COALESCE(SUM(paid_amount),0) paid,COALESCE(SUM(balance_amount),0) balance FROM pandu_assignments WHERE member_id=:id"), {"id": mid}).mappings().one()
+        kanthu = db.execute(text("SELECT COALESCE(SUM(principal_amount),0) total,COALESCE(SUM(total_collected),0) paid,COALESCE(SUM(balance_amount),0) balance FROM kanthu_master WHERE member_id=:id"), {"id": mid}).mappings().one()
+        ayul = db.execute(text("SELECT COALESCE(SUM(am.principal_amount),0) total,COALESCE(SUM(am.balance_principal),0) balance,COALESCE(SUM(ac.interest_amount),0) interest FROM ayul_santha_master am LEFT JOIN ayul_santha_collections ac ON ac.ayul_santha_id=am.id WHERE am.member_id=:id"), {"id": mid}).mappings().one()
+        company_balance = db.execute(text("SELECT COALESCE(SUM(CASE WHEN transaction_type='CREDIT' THEN amount ELSE -amount END),0) FROM accounts_transactions")).scalar()
+        company_recent = db.execute(text("SELECT transaction_date,transaction_type,category,amount FROM accounts_transactions ORDER BY transaction_date DESC,id DESC LIMIT 5")).mappings().all()
+        notifications = [
+          {"title":"Welcome to your Member Portal", "text":"Your personal savings, lending and payment information is ready to view.", "type":"info"},
+          {"title":"Pandu balance update", "text":f"Your current Pandu balance is ₹{float(pandu['balance'] or 0):,.0f}.", "type":"pandu"},
+          {"title":"Payment reminders", "text":"Pandu monthly dues are payable on or before the 10th.", "type":"alert"},
+        ]
+        return templates.TemplateResponse(request=request, name="member_portal/dashboard.html", context={"member": member, "pandu": pandu, "kanthu": kanthu, "ayul": ayul, "company_balance": company_balance or 0, "company_recent": company_recent, "notifications": notifications, "active_member_page":"dashboard"})
+    finally:
+        db.close()
+
+
+@app.get("/member/profile")
+def member_profile(request: Request):
+    db = SessionLocal()
+    try:
+        member = _portal_member(request, db)
+        return RedirectResponse("/member/login", status_code=303) if not member else templates.TemplateResponse(request=request, name="member_portal/profile.html", context={"member": member, "active_member_page":"profile"})
+    finally:
+        db.close()
+
+
+@app.post("/member/profile")
+def update_member_profile(request: Request, mobile: str = Form(...), village: str = Form(""), address: str = Form(""), photo: str = Form("")):
+    db = SessionLocal()
+    try:
+        member = _portal_member(request, db)
+        if not member:
+            return RedirectResponse("/member/login", status_code=303)
+        db.execute(text("UPDATE members SET mobile=:mobile,village=:village,address=:address,photo=CASE WHEN :photo='' THEN photo ELSE :photo END WHERE id=:id"), {"id":member["id"],"mobile":mobile.strip(),"village":village.strip(),"address":address.strip(),"photo":photo.strip()})
+        db.commit()
+        return RedirectResponse("/member/profile?updated=1", status_code=303)
+    finally:
+        db.close()
+
+
+@app.get("/member/inbox")
+def member_inbox(request: Request):
+    db = SessionLocal()
+    try:
+        member = _portal_member(request, db)
+        if not member:
+            return RedirectResponse("/member/login", status_code=303)
+        messages = _portal_messages()
+        return templates.TemplateResponse(request=request, name="member_portal/inbox.html", context={"member":member,"messages":messages,"active_member_page":"inbox"})
+    finally:
+        db.close()
+
+
+def _portal_messages():
+    return [{"id":1,"sender":"Pasumpon Finance", "when":"Today", "title":"Your Member Portal is active", "text":"You can now review your personal balances, transactions and notices online.", "body":"Welcome to the Pasumpon Member Portal. This private space brings your Pandu, Kanthu and Ayul Santha information together. You can review your balances, collection history and notices at any time.", "new":True}, {"id":2,"sender":"Accounts Team", "when":"This month", "title":"Pandu due reminder", "text":"Please pay your monthly Pandu due on or before the 10th.", "body":"This is a friendly reminder from the Accounts Team. Please make your Pandu payment on or before the 10th of the month. If you have already paid, no further action is needed.", "new":False}, {"id":3,"sender":"System Notification", "when":"This year", "title":"Transaction receipts available", "text":"Your saved collections are visible in your personal finance summary.", "body":"Every verified collection is recorded in your personal payment history. You can use the Monthly Statement, Yearly Statement and Payment Summary reports to review your account.", "new":False}]
+
+
+@app.get("/member/inbox/{message_id}")
+def member_message_detail(request: Request, message_id: int):
+    db = SessionLocal()
+    try:
+        member = _portal_member(request, db)
+        if not member:
+            return RedirectResponse("/member/login", status_code=303)
+        message = next((item for item in _portal_messages() if item["id"] == message_id), None)
+        if not message:
+            return RedirectResponse("/member/inbox", status_code=303)
+        return templates.TemplateResponse(request=request, name="member_portal/message_detail.html", context={"member":member,"message":message,"active_member_page":"inbox"})
+    finally:
+        db.close()
+
+
+@app.post("/member/password")
+def member_password_change(request: Request, current_password: str = Form(...), new_password: str = Form(...)):
+    db = SessionLocal()
+    try:
+        member = _portal_member(request, db)
+        if not member:
+            return RedirectResponse("/member/login", status_code=303)
+        account = db.execute(text("SELECT password_salt,password_hash FROM member_portal_accounts WHERE member_id=:id"), {"id":member["id"]}).mappings().first()
+        if not account or not secrets.compare_digest(account["password_hash"], _portal_hash(current_password, account["password_salt"])):
+            return RedirectResponse("/member/profile?password=invalid", status_code=303)
+        if len(new_password) < 6:
+            return RedirectResponse("/member/profile?password=short", status_code=303)
+        salt = secrets.token_hex(16)
+        db.execute(text("UPDATE member_portal_accounts SET password_salt=:salt,password_hash=:hash WHERE member_id=:id"), {"id":member["id"],"salt":salt,"hash":_portal_hash(new_password,salt)})
+        db.commit()
+        return RedirectResponse("/member/profile?password=updated", status_code=303)
+    finally:
+        db.close()
+
+
+@app.get("/member/{feature}")
+def member_feature(request: Request, feature: str):
+    features = {
+      "maturity": ("Maturity", "Track your Pandu maturity amount and settlement readiness.", "bi-award-fill"),
+      "calendar": ("Calendar", "Review upcoming due dates, payments and community dates.", "bi-calendar3-event-fill"),
+      "announcements": ("Announcements", "Important notices from Pasumpon Community Finance.", "bi-megaphone-fill"),
+      "documents": ("Documents", "Download your available receipts and member documents.", "bi-folder2-open"),
+      "benefits": ("Member Benefits", "Discover exclusive community support and member benefits.", "bi-gift-fill"),
+      "support": ("Help & Support", "Get assistance from the Pasumpon support team.", "bi-headset"),
+      "monthly-statement": ("Monthly Statement", "Your personal month-wise savings and payment statement.", "bi-calendar2-week-fill"),
+      "yearly-statement": ("Yearly Statement", "Your consolidated yearly finance statement.", "bi-journal-bookmark-fill"),
+      "payment-summary": ("Payment Summary", "A clear summary of your collections and pending balances.", "bi-receipt-cutoff"),
+      "community": ("Community", "Stay connected with Pasumpon community updates and events.", "bi-people-fill"),
+      "settings": ("Settings", "Manage notification settings, language and display preferences.", "bi-gear-fill"),
+    }
+    if feature not in features:
+        return RedirectResponse("/member/dashboard", status_code=303)
+    db = SessionLocal()
+    try:
+        member = _portal_member(request, db)
+        if not member:
+            return RedirectResponse("/member/login", status_code=303)
+        title, subtitle, icon = features[feature]
+        return templates.TemplateResponse(request=request, name="member_portal/feature.html", context={"member":member,"title":title,"subtitle":subtitle,"icon":icon,"feature":feature,"active_member_page":feature})
+    finally:
+        db.close()
+
+
+@app.get("/member/logout")
+def member_logout(request: Request):
+    request.session.pop("member_portal_id", None)
+    return RedirectResponse("/member/login", status_code=303)
 
 
 @app.get("/pandu", response_class=HTMLResponse)
