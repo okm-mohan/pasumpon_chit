@@ -1,11 +1,11 @@
 {% extends "base.html" %}
 {% block title %}Executive Dashboard | Pasumpon{% endblock %}
-{% block page_styles %}<link rel="stylesheet" href="/static/css/dashboard.css?v=8">{% endblock %}
+{% block page_styles %}<link rel="stylesheet" href="/static/css/dashboard.css?v=9">{% endblock %}
 {% block content %}
 <main class="edash">
   <section class="edash-hero">
     <div class="hero-glow glow-one"></div><div class="hero-glow glow-two"></div>
-    <div class="hero-copy"><span class="hero-kicker"><i class="bi bi-stars"></i> Pasumpon community finance</span><h1>Executive <em>Dashboard</em></h1><p>Your live command centre for savings, lending, collections and the company account.</p><div class="hero-status"><span><i class="bi bi-check2-circle"></i> All modules connected</span><span><i class="bi bi-lightning-charge-fill"></i> Live financial view</span></div></div>
+    <div class="hero-copy"><span class="hero-kicker"><i class="bi bi-stars"></i> Pasumpon community finance</span><h1>Executive <em>Dashboard</em></h1><p>Your live command centre for savings, lending, collections and the company account.</p><div class="hero-balance"><span><i class="bi bi-bank2"></i> Company account balance</span><strong id="heroCompanyBalance">₹0</strong><small>Live balance across all modules</small></div><div class="hero-status"><span><i class="bi bi-check2-circle"></i> All modules connected</span><span><i class="bi bi-lightning-charge-fill"></i> Live financial view</span></div></div>
     <aside class="digital-clock" aria-label="Current date and time"><span class="clock-live"><i></i> LIVE OPERATIONS</span><strong id="clockTime">00:00:00</strong><span id="clockDate">Loading date</span><div><i class="bi bi-calendar3"></i> <b id="clockMonth">August 2026</b></div></aside>
   </section>
 
@@ -27,4 +27,4 @@
   </section>
 </main>
 {% endblock %}
-{% block page_scripts %}<script src="/static/js/dashboard.js?v=7"></script>{% endblock %}
+{% block page_scripts %}<script src="/static/js/dashboard.js?v=8"></script>{% endblock %}

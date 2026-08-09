@@ -12,7 +12,7 @@ from fastapi import UploadFile, File
 import shutil
 import os
 from fastapi.responses import JSONResponse, FileResponse
-from datetime import datetime
+from datetime import datetime, date
 from fastapi import Request
 
 app = FastAPI()
@@ -1077,45 +1077,23 @@ def monthly_collection_summary(year: int = Query(default=datetime.now().year)):
 
     try:
 
-        rows = db.execute(
-            text("""
-                SELECT
-                    c.collection_month AS month_number,
-                    COUNT(*) AS transactions,
-                    COUNT(DISTINCT c.member_id) AS members,
-                    COALESCE(SUM(CASE WHEN c.payment_mode = 'Cash' THEN c.amount ELSE 0 END), 0) AS cash_collection,
-                    COALESCE(SUM(CASE WHEN c.payment_mode <> 'Cash' OR c.payment_mode IS NULL THEN c.amount ELSE 0 END), 0) AS upi_collection,
-                    COALESCE(SUM(c.amount), 0) AS total_collection
-                FROM collections c
-                WHERE c.collection_year = :year
-                  AND c.collection_month BETWEEN 1 AND MONTH(CURDATE())
-                GROUP BY c.collection_month
-                ORDER BY c.collection_month
-            """),
-            {"year": year},
-        ).mappings().all()
-
-        result = [
-            {
-                **dict(row),
-                "cash_collection": float(row["cash_collection"] or 0),
-                "upi_collection": float(row["upi_collection"] or 0),
-                "total_collection": float(row["total_collection"] or 0),
-            }
-            for row in rows
-        ]
-
-        total_members = db.execute(
-            text("""
-                SELECT COUNT(DISTINCT member_id)
-                FROM collections
-                WHERE collection_year = :year
-                  AND collection_month BETWEEN 1 AND MONTH(CURDATE())
-            """),
-            {"year": year},
-        ).scalar()
-
-        return {"rows": result, "total_members": int(total_members or 0)}
+        rows = db.execute(text("""
+            SELECT m.month_no,
+              COALESCE(p.transactions,0)+COALESCE(k.transactions,0)+COALESCE(a.transactions,0) transactions,
+              COALESCE(p.members,0)+COALESCE(k.members,0)+COALESCE(a.members,0) members,
+              COALESCE(p.cash,0)+COALESCE(k.cash,0)+COALESCE(a.cash,0) cash_collection,
+              COALESCE(p.digital,0)+COALESCE(k.digital,0)+COALESCE(a.digital,0) digital_collection,
+              COALESCE(p.amount,0) pandu_collection, COALESCE(k.amount,0) kanthu_collection,
+              COALESCE(a.amount,0) ayul_collection,
+              COALESCE(p.amount,0)+COALESCE(k.amount,0)+COALESCE(a.amount,0) total_collection
+            FROM (SELECT 1 month_no UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4 UNION ALL SELECT 5 UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8 UNION ALL SELECT 9 UNION ALL SELECT 10 UNION ALL SELECT 11 UNION ALL SELECT 12) m
+            LEFT JOIN (SELECT collection_month month_no,COUNT(*) transactions,COUNT(DISTINCT member_id) members,SUM(CASE WHEN UPPER(COALESCE(payment_mode,'CASH'))='CASH' THEN amount ELSE 0 END) cash,SUM(CASE WHEN UPPER(COALESCE(payment_mode,'CASH'))<>'CASH' THEN amount ELSE 0 END) digital,SUM(amount) amount FROM collections WHERE collection_year=:year GROUP BY collection_month) p ON p.month_no=m.month_no
+            LEFT JOIN (SELECT MONTH(kt.transaction_date) month_no,COUNT(*) transactions,COUNT(DISTINCT km.member_id) members,SUM(kt.amount) cash,0 digital,SUM(kt.amount) amount FROM kanthu_transactions kt INNER JOIN kanthu_master km ON km.id=kt.kanthu_id WHERE kt.transaction_type='COLLECTION' AND YEAR(kt.transaction_date)=:year GROUP BY MONTH(kt.transaction_date)) k ON k.month_no=m.month_no
+            LEFT JOIN (SELECT MONTH(ac.collection_date) month_no,COUNT(*) transactions,COUNT(DISTINCT am.member_id) members,SUM(CASE WHEN UPPER(COALESCE(ac.payment_mode,'CASH'))='CASH' THEN ac.interest_amount+ac.principal_amount ELSE 0 END) cash,SUM(CASE WHEN UPPER(COALESCE(ac.payment_mode,'CASH'))<>'CASH' THEN ac.interest_amount+ac.principal_amount ELSE 0 END) digital,SUM(ac.interest_amount+ac.principal_amount) amount FROM ayul_santha_collections ac INNER JOIN ayul_santha_master am ON am.id=ac.ayul_santha_id WHERE YEAR(ac.collection_date)=:year GROUP BY MONTH(ac.collection_date)) a ON a.month_no=m.month_no
+            WHERE m.month_no<=MONTH(CURDATE()) ORDER BY m.month_no
+        """), {"year": year}).mappings().all()
+        result = [{key: float(value or 0) if key.endswith('collection') else int(value or 0) for key, value in dict(row).items()} for row in rows]
+        return {"rows": result, "year": year, "grand_total": sum(row["total_collection"] for row in result)}
 
     finally:
 
@@ -2585,51 +2563,30 @@ def api_datewise_collection_list(from_date: str, to_date: str):
 
     try:
 
-        rows = (
-            db.execute(
-                text("""
-
-            SELECT
-
-                c.id,
-                c.member_id,
-                c.receipt_no,
-
-                DATE_FORMAT(
-                    c.collection_date,
-                    '%d-%m-%Y'
-                ) AS collection_date,
-
-                c.amount,
-                c.payment_mode,
-
-                m.member_code,
-                m.member_name,
-
-                IFNULL(pg.group_name,'-') AS group_name
-
-            FROM collections c
-
-            INNER JOIN members m
-                ON m.id = c.member_id
-
-            LEFT JOIN pandu_groups pg
-                ON pg.id = c.group_id
-
-            WHERE DATE(c.collection_date)
-                  BETWEEN :from_date
-                  AND :to_date
-
-            ORDER BY
-                c.collection_date,
-                c.id
-
-        """),
-                {"from_date": from_date, "to_date": to_date},
-            )
-            .mappings()
-            .all()
-        )
+        rows = db.execute(text("""
+            SELECT * FROM (
+              SELECT c.id, c.member_id, c.receipt_no, DATE(c.collection_date) AS collection_date, c.amount,
+                     COALESCE(c.payment_mode,'CASH') AS payment_mode, m.member_code, m.member_name,
+                     COALESCE(pg.group_name,'Pandu') AS detail, 'Pandu' AS module
+              FROM collections c INNER JOIN members m ON m.id=c.member_id
+              LEFT JOIN pandu_groups pg ON pg.id=c.group_id
+              WHERE DATE(c.collection_date) BETWEEN :from_date AND :to_date
+              UNION ALL
+              SELECT kt.id, km.member_id, CONCAT('KAN-RCPT-',LPAD(kt.id,5,'0')), DATE(kt.transaction_date), kt.amount,
+                     COALESCE(km.payment_mode,'CASH'), m.member_code, m.member_name, km.kanthu_no, 'Kanthu'
+              FROM kanthu_transactions kt INNER JOIN kanthu_master km ON km.id=kt.kanthu_id
+              INNER JOIN members m ON m.id=km.member_id
+              WHERE kt.transaction_type='COLLECTION' AND DATE(kt.transaction_date) BETWEEN :from_date AND :to_date
+              UNION ALL
+              SELECT ac.id, am.member_id, CONCAT('AYUL-RCPT-',LPAD(ac.id,5,'0')), DATE(ac.collection_date),
+                     (ac.interest_amount+ac.principal_amount), COALESCE(ac.payment_mode,'CASH'),
+                     m.member_code, m.member_name, 'Interest / principal return', 'Ayul Santha'
+              FROM ayul_santha_collections ac INNER JOIN ayul_santha_master am ON am.id=ac.ayul_santha_id
+              INNER JOIN members m ON m.id=am.member_id
+              WHERE DATE(ac.collection_date) BETWEEN :from_date AND :to_date
+            ) consolidated
+            ORDER BY collection_date DESC, id DESC
+        """), {"from_date": from_date, "to_date": to_date}).mappings().all()
 
         result = []
 
@@ -2637,7 +2594,8 @@ def api_datewise_collection_list(from_date: str, to_date: str):
 
             item = dict(row)
 
-            item["amount"] = float(item["amount"])
+            item["amount"] = float(item["amount"] or 0)
+            item["collection_date"] = item["collection_date"].isoformat() if hasattr(item["collection_date"], "isoformat") else str(item["collection_date"])
 
             result.append(item)
 
@@ -2931,12 +2889,19 @@ def expenses_entry(request: Request):
 
         """)).mappings().all()
 
+        company_balance = db.execute(text("""
+            SELECT COALESCE(SUM(CASE WHEN transaction_type='CREDIT' THEN amount ELSE -amount END),0)
+            FROM accounts_transactions
+        """)).scalar()
+
         return templates.TemplateResponse(
             request=request,
             name="accounts/expenses.html",
             context={
                 "categories": categories,
                 "transactions": transactions,
+                "company_balance": float(company_balance or 0),
+                "today": date.today().isoformat(),
                 "active_page": "expenses",
             },
         )
@@ -5999,6 +5964,8 @@ def kanthu_issued_persons():
     db = SessionLocal()
 
     try:
+
+        _ensure_ayul_collection_table(db.connection())
 
         rows = db.execute(text("""
             SELECT

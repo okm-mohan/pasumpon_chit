@@ -19,7 +19,7 @@ document.addEventListener('DOMContentLoaded', () => {
   function renderDashboard(data) {
     const o = data.overview || {};
     const monthTotal = Number(o.pandu_month || 0) + Number(o.kanthu_month || 0) + Number(o.ayul_month || 0);
-    set('monthTotal', money(monthTotal)); set('companyBalance', money(o.company_balance));
+    set('monthTotal', money(monthTotal)); set('companyBalance', money(o.company_balance)); set('heroCompanyBalance', money(o.company_balance));
     set('memberCount', number(o.members)); set('panduPending', number(o.pandu_pending));
     set('panduHealth', `Monthly collection ${money(o.pandu_month)}`); set('panduHealthAmount', money(o.pandu_month));
     set('kanthuHealth', `${number(o.active_kanthu)} active loan${Number(o.active_kanthu) === 1 ? '' : 's'}`); set('kanthuHealthAmount', money(o.kanthu_balance));

@@ -1,30 +1,4 @@
-const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
-const money = amount => `₹${Number(amount || 0).toLocaleString('en-IN')}`;
-
-window.onload = () => {
-  const today = new Date();
-  document.getElementById('monthlyPeriod').textContent = `January ${today.getFullYear()} – ${monthNames[today.getMonth()]} ${today.getFullYear()}`;
-  loadMonthlyReport();
-};
-
-async function loadMonthlyReport() {
-  const response = await fetch('/api/monthly-collection-summary', { cache: 'no-store' });
-  const result = await response.json();
-  const data = result.rows || [];
-  let total = 0, cash = 0, upi = 0;
-  let html = '';
-
-  data.forEach((row, index) => {
-    total += Number(row.total_collection);
-    cash += Number(row.cash_collection);
-    upi += Number(row.upi_collection);
-    html += `<tr><td>${index + 1}</td><td><strong>${monthNames[row.month_number - 1]}</strong></td><td>${row.transactions}</td><td>${row.members}</td><td class="amount">${money(row.cash_collection)}</td><td class="amount">${money(row.upi_collection)}</td><td class="amount"><strong>${money(row.total_collection)}</strong></td></tr>`;
-  });
-
-  if (!data.length) html = '<tr><td colspan="7">No Collection Records Found</td></tr>';
-  document.getElementById('reportBody').innerHTML = html;
-  document.getElementById('totalCollection').textContent = money(total);
-  document.getElementById('cashCollection').textContent = money(cash);
-  document.getElementById('upiCollection').textContent = money(upi);
-  document.getElementById('totalMembers').textContent = result.total_members || 0;
-}
+const mcMonths=['January','February','March','April','May','June','July','August','September','October','November','December'];
+const mcMoney=value=>`₹${Number(value||0).toLocaleString('en-IN',{maximumFractionDigits:0})}`;
+document.addEventListener('DOMContentLoaded',()=>{document.getElementById('mcRefresh').addEventListener('click',loadMonthlyReport);loadMonthlyReport();});
+async function loadMonthlyReport(){const body=document.getElementById('reportBody');body.innerHTML='<tr><td colspan="9" class="mc-empty">Refreshing collection summary…</td></tr>';try{const data=await (await fetch('/api/monthly-collection-summary',{cache:'no-store'})).json(),rows=data.rows||[];const total=key=>rows.reduce((sum,row)=>sum+Number(row[key]||0),0);document.getElementById('monthlyPeriod').textContent=`January ${data.year} — ${mcMonths[Math.max(0,rows.length-1)]} ${data.year}`;document.getElementById('grandTotal').textContent=mcMoney(data.grand_total);document.getElementById('tableGrandTotal').textContent=mcMoney(data.grand_total);document.getElementById('panduTotal').textContent=mcMoney(total('pandu_collection'));document.getElementById('kanthuTotal').textContent=mcMoney(total('kanthu_collection'));document.getElementById('ayulTotal').textContent=mcMoney(total('ayul_collection'));body.innerHTML=rows.map(row=>`<tr><td><b>${mcMonths[row.month_no-1]}</b></td><td>${row.transactions}</td><td>${row.members}</td><td class="pandu-value">${mcMoney(row.pandu_collection)}</td><td class="kanthu-value">${mcMoney(row.kanthu_collection)}</td><td class="ayul-value">${mcMoney(row.ayul_collection)}</td><td>${mcMoney(row.cash_collection)}</td><td>${mcMoney(row.digital_collection)}</td><td class="right total-value">${mcMoney(row.total_collection)}</td></tr>`).join('')||'<tr><td colspan="9" class="mc-empty">No collections recorded for this year.</td></tr>';}catch(_){body.innerHTML='<tr><td colspan="9" class="mc-empty">Unable to load the monthly collection summary.</td></tr>';}}

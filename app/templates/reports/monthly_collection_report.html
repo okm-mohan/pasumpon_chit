@@ -1,13 +1,11 @@
-{% extends "pandu_base.html" %}
-{% block title %}Monthly Collection Report | Pasumpon{% endblock %}
+{% extends "base.html" %}
+{% block title %}Monthly Collection Summary | Pasumpon{% endblock %}
+{% block page_styles %}<link rel="stylesheet" href="/static/css/monthly_collection_report.css?v=1">{% endblock %}
 {% block content %}
-<link rel="stylesheet" href="/static/css/datewise_collection_list.css?v=1">
-<div class="report-container">
-  <div class="page-header"><div><h2><i class="fas fa-calendar-alt"></i> Monthly Collection Report</h2><p>Consolidated Pandu collections from January to the current month</p></div></div>
-  <div class="filter-card"><div class="filter-row"><div class="form-group"><label>Collection period</label><div class="monthly-period"><i class="fas fa-calendar-check"></i><span id="monthlyPeriod">January – Current Month</span></div></div><div class="form-group button-group"><button onclick="loadMonthlyReport()" class="btn-search"><i class="fas fa-sync-alt"></i> Refresh</button><button onclick="window.print()" class="btn-print"><i class="fas fa-print"></i> Print</button></div></div></div>
-  <div class="cards-grid"><div class="summary-card total"><h4>Total Collection</h4><h2 id="totalCollection">₹0</h2></div><div class="summary-card members"><h4>Total Members</h4><h2 id="totalMembers">0</h2></div><div class="summary-card cash"><h4>Cash Collection</h4><h2 id="cashCollection">₹0</h2></div><div class="summary-card upi"><h4>UPI Collection</h4><h2 id="upiCollection">₹0</h2></div></div>
-  <div class="table-card"><div class="table-title"><i class="fas fa-list"></i> Consolidated Monthly Collections</div><table><thead><tr><th>S.No</th><th>Month</th><th>Transactions</th><th>Members</th><th>Cash Collection</th><th>UPI Collection</th><th>Total Collection</th></tr></thead><tbody id="reportBody"><tr><td colspan="7">Loading monthly collections…</td></tr></tbody></table></div>
-</div>
-<style>.monthly-period{display:flex;align-items:center;gap:9px;min-width:260px;height:44px;padding:0 14px;border:1px solid #d4dde9;border-radius:8px;color:#263b59;background:#fbfdff;font-weight:700}.monthly-period i{color:#246bfd}@media(max-width:700px){.monthly-period{min-width:0;width:100%}}</style>
-<script src="/static/js/monthly_collection_report.js?v=1"></script>
+<main class="mc-page">
+  <header class="mc-hero"><div><span><i class="bi bi-calendar3-range-fill"></i> Common collection report</span><h1>Monthly Collection Summary</h1><p>Consolidated Pandu, Kanthu, and Ayul Santha collections from January to the current month.</p></div><div class="mc-period"><i class="bi bi-calendar-check"></i><small>Current period</small><strong id="monthlyPeriod">Jan — Current month</strong></div></header>
+  <section class="mc-kpis"><article class="grand"><span><i class="bi bi-cash-stack"></i> Grand total collection</span><strong id="grandTotal">₹0</strong><small>All module collections</small></article><article class="pandu"><span><i class="bi bi-piggy-bank-fill"></i> Pandu collections</span><strong id="panduTotal">₹0</strong><small>Monthly savings receipts</small></article><article class="kanthu"><span><i class="bi bi-cash-coin"></i> Kanthu collections</span><strong id="kanthuTotal">₹0</strong><small>Loan return receipts</small></article><article class="ayul"><span><i class="bi bi-heart-pulse-fill"></i> Ayul Santha collections</span><strong id="ayulTotal">₹0</strong><small>Interest & principal returns</small></article></section>
+  <section class="mc-table-card"><header><div><span>2026 collection register</span><h2>Month-wise consolidated collections</h2><p>Each month includes every payment received across the financial modules.</p></div><button id="mcRefresh" type="button"><i class="bi bi-arrow-clockwise"></i> Refresh</button></header><div class="mc-table-wrap"><table><thead><tr><th>Month</th><th>Receipts</th><th>Members paid</th><th>Pandu</th><th>Kanthu</th><th>Ayul Santha</th><th>Cash</th><th>Digital</th><th class="right">Monthly total</th></tr></thead><tbody id="reportBody"><tr><td colspan="9" class="mc-empty">Loading monthly summary…</td></tr></tbody><tfoot><tr><td colspan="8">Grand total — January to current month</td><td id="tableGrandTotal" class="right">₹0</td></tr></tfoot></table></div></section>
+</main>
 {% endblock %}
+{% block page_scripts %}<script src="/static/js/monthly_collection_report.js?v=2"></script>{% endblock %}

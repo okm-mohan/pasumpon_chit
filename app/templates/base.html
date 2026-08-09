@@ -56,7 +56,7 @@
 
             <div class="nav-section-label">Financial Modules</div>
 
-            <a class="nav-item {% if path.startswith('/pandu') or active_page|default('') in ['pandu_groups', 'pandu_settlement', 'pending_members', 'pandu-collection-summary', 'datewise_collection', 'dashboard-live'] %}active{% endif %}" href="/pandu">
+            <a class="nav-item {% if path.startswith('/pandu') or active_page|default('') in ['pandu_groups', 'pandu_settlement', 'pending_members', 'pandu-collection-summary', 'dashboard-live'] %}active{% endif %}" href="/pandu">
                 <span class="nav-icon module-pandu"><i class="bi bi-piggy-bank-fill"></i></span>
                 <span>Pandu</span>
                 <i class="bi bi-chevron-right nav-end"></i>
@@ -74,6 +74,12 @@
                 <i class="bi bi-chevron-right nav-end"></i>
             </a>
 
+            <a class="nav-item {% if path == '/accounts/expenses' %}active{% endif %}" href="/accounts/expenses">
+                <span class="nav-icon module-expenses"><i class="bi bi-receipt-cutoff"></i></span>
+                <span>Expense Entry</span>
+                <i class="bi bi-chevron-right nav-end"></i>
+            </a>
+
             <button class="nav-item nav-toggle {% if accounts_open %}active-parent{% endif %}" type="button"
                     data-bs-toggle="collapse" data-bs-target="#accountsMenu" aria-expanded="{{ 'true' if accounts_open else 'false' }}">
                 <span class="nav-icon module-accounts"><i class="bi bi-journal-check"></i></span>
@@ -83,16 +89,15 @@
             <div class="collapse nav-submenu {% if accounts_open %}show{% endif %}" id="accountsMenu">
                 <a href="/accounts/summary" class="{% if path == '/accounts/summary' %}active{% endif %}">Accounts Dashboard</a>
                 <a href="/accounts/credits" class="{% if path == '/accounts/credits' %}active{% endif %}">Credit Entry</a>
-                <a href="/accounts/expenses" class="{% if path == '/accounts/expenses' %}active{% endif %}">Expense Entry</a>
                 <a href="/accounts/datewise-report" class="{% if path == '/accounts/datewise-report' %}active{% endif %}">Ledger Report</a>
                 <a href="/accounts/monthly-summary" class="{% if path == '/accounts/monthly-summary' %}active{% endif %}">Monthly Summary</a>
                 <a href="/accounts/profit-summary" class="{% if path == '/accounts/profit-summary' %}active{% endif %}">Profit Summary</a>
             </div>
 
             <div class="nav-section-label">Reports</div>
-            <a class="nav-item {% if path == '/daily-report' %}active{% endif %}" href="/daily-report">
+            <a class="nav-item {% if path == '/datewise-collection-list' %}active{% endif %}" href="/datewise-collection-list">
                 <span class="nav-icon"><i class="bi bi-calendar2-check-fill"></i></span>
-                <span>Daily Collection</span>
+                <span>Date-wise Collections</span>
             </a>
             <a class="nav-item {% if path == '/monthly-report' %}active{% endif %}" href="/monthly-report">
                 <span class="nav-icon"><i class="bi bi-bar-chart-fill"></i></span>
