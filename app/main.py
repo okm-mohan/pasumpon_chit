@@ -79,6 +79,25 @@ def login_page(request: Request):
     return templates.TemplateResponse(request=request, name="home_v2.html")
 
 
+@app.get("/about")
+@app.get("/news")
+@app.get("/events")
+@app.get("/services")
+@app.get("/gallery")
+@app.get("/contact")
+def public_portal_page(request: Request):
+    page = request.url.path.strip("/") or "about"
+    page_content = {
+        "about": ("எங்களைப் பற்றி", "PASUMPON OKM", "ஒற்றுமை • வளர்ச்சி • சேவை", "குடும்பங்களை இணைத்து, கல்வி, வேலைவாய்ப்பு, சமூக நலன் மற்றும் உறுப்பினர் சேவைகளை எளிதாக்கும் நம்பிக்கையான தளம்."),
+        "news": ("செய்திகள்", "சமீபத்திய செய்திகள்", "உறுப்பினர்களுக்கான தகவல்கள்", "முக்கிய அறிவிப்புகள், ஊர் செய்திகள் மற்றும் சமூக நல தகவல்களை ஒரே இடத்தில் தெரிந்துகொள்ளுங்கள்."),
+        "events": ("நிகழ்வுகள்", "நமது நிகழ்வுகள்", "ஒன்றாகச் சேர்ந்து கொண்டாடுவோம்", "குடும்ப நிகழ்ச்சிகள், கல்வி முயற்சிகள், இரத்த தான முகாம்கள் மற்றும் சமூக சேவைகளின் தகவல்கள்."),
+        "services": ("உறுப்பினர் சேவைகள்", "உங்களுக்கான சேவைகள்", "தகவல், உதவி மற்றும் வாய்ப்புகள்", "உறுப்பினர்களுக்கான பயன்பாட்டு சேவைகள் பாதுகாப்பான முறையில் வழங்கப்படுகின்றன."),
+        "gallery": ("கேலரி", "நமது நினைவுகள்", "புகைப்படங்கள் & வீடியோக்கள்", "நிகழ்வுகளின் அழகான தருணங்களையும் சமூக செயல்பாடுகளையும் பாருங்கள்."),
+        "contact": ("தொடர்பு", "எங்களைத் தொடர்புகொள்ளுங்கள்", "உங்கள் கருத்து எங்களுக்கு முக்கியம்", "அலுவலகம், உதவி மையம் மற்றும் அங்கீகரிக்கப்பட்ட ஒருங்கிணைப்பாளர்களை தொடர்புகொள்ளலாம்."),
+    }
+    return templates.TemplateResponse(request=request, name="portal_page.html", context={"page_key": page, "content": page_content[page]})
+
+
 @app.get("/pandu", response_class=HTMLResponse)
 def pandu(request: Request):
 
@@ -1118,6 +1137,58 @@ def ayul_santha_member_search(q: str):
             LIMIT 20
         """), {"query": f"%{q}%", "aadhaar_query": f"%{normalized_q or q}%"}).mappings().all()
         return [dict(row) for row in rows]
+    finally:
+        db.close()
+
+
+@app.get("/api/executive-dashboard")
+def executive_dashboard_data():
+    """Consolidated live data for the main Executive Dashboard."""
+    db = SessionLocal()
+    try:
+        overview = db.execute(text("""
+            SELECT
+              (SELECT COUNT(*) FROM members WHERE COALESCE(status,'ACTIVE')='ACTIVE') AS members,
+              (SELECT COALESCE(SUM(amount),0) FROM collections
+                 WHERE YEAR(collection_date)=YEAR(CURDATE()) AND MONTH(collection_date)=MONTH(CURDATE())) AS pandu_month,
+              (SELECT COALESCE(SUM(amount),0) FROM kanthu_transactions
+                 WHERE transaction_type='COLLECTION' AND YEAR(transaction_date)=YEAR(CURDATE()) AND MONTH(transaction_date)=MONTH(CURDATE())) AS kanthu_month,
+              (SELECT COALESCE(SUM(interest_amount + principal_amount),0) FROM ayul_santha_collections
+                 WHERE YEAR(collection_date)=YEAR(CURDATE()) AND MONTH(collection_date)=MONTH(CURDATE())) AS ayul_month,
+              (SELECT COUNT(*) FROM pandu_assignments pa
+                 WHERE pa.status='ACTIVE' AND pa.balance_amount>0) AS pandu_pending,
+              (SELECT COUNT(*) FROM kanthu_master WHERE status='ACTIVE' AND balance_amount>0) AS active_kanthu,
+              (SELECT COALESCE(SUM(balance_amount),0) FROM kanthu_master WHERE status='ACTIVE') AS kanthu_balance,
+              (SELECT COUNT(*) FROM ayul_santha_master WHERE status='ACTIVE' AND balance_principal>0) AS active_ayul,
+              (SELECT COALESCE(SUM(balance_principal),0) FROM ayul_santha_master WHERE status='ACTIVE') AS ayul_balance,
+              (SELECT COALESCE(SUM(CASE WHEN transaction_type='CREDIT' THEN amount ELSE -amount END),0) FROM accounts_transactions) AS company_balance
+        """)).mappings().one()
+
+        monthly = db.execute(text("""
+            SELECT m.month_no, ELT(m.month_no,'Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec') AS month_name,
+              COALESCE(p.amount,0) AS pandu, COALESCE(k.amount,0) AS kanthu, COALESCE(a.amount,0) AS ayul
+            FROM (
+              SELECT 1 month_no UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4
+              UNION ALL SELECT 5 UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8
+              UNION ALL SELECT 9 UNION ALL SELECT 10 UNION ALL SELECT 11 UNION ALL SELECT 12
+            ) m
+            LEFT JOIN (SELECT MONTH(collection_date) month_no,SUM(amount) amount FROM collections WHERE YEAR(collection_date)=YEAR(CURDATE()) GROUP BY MONTH(collection_date)) p ON p.month_no=m.month_no
+            LEFT JOIN (SELECT MONTH(transaction_date) month_no,SUM(amount) amount FROM kanthu_transactions WHERE transaction_type='COLLECTION' AND YEAR(transaction_date)=YEAR(CURDATE()) GROUP BY MONTH(transaction_date)) k ON k.month_no=m.month_no
+            LEFT JOIN (SELECT MONTH(collection_date) month_no,SUM(interest_amount+principal_amount) amount FROM ayul_santha_collections WHERE YEAR(collection_date)=YEAR(CURDATE()) GROUP BY MONTH(collection_date)) a ON a.month_no=m.month_no
+            WHERE m.month_no<=MONTH(CURDATE()) ORDER BY m.month_no
+        """)).mappings().all()
+
+        recent = db.execute(text("""
+            SELECT transaction_date, transaction_type, category, amount, payment_mode, reference_module
+            FROM accounts_transactions
+            ORDER BY transaction_date DESC, id DESC LIMIT 6
+        """)).mappings().all()
+
+        return {
+            "overview": {key: float(value or 0) for key, value in dict(overview).items()},
+            "monthly": [dict(row) for row in monthly],
+            "recent": [dict(row) for row in recent],
+        }
     finally:
         db.close()
 
