@@ -143,7 +143,7 @@ def _portal_member(request: Request, db):
     member_id = request.session.get("member_portal_id")
     if not member_id:
         return None
-    return db.execute(text("SELECT id,member_code,member_name,mobile,village,address,photo FROM members WHERE id=:id"), {"id": member_id}).mappings().first()
+    return db.execute(text("SELECT id,member_code,member_name,mobile,village,address,photo,join_date FROM members WHERE id=:id"), {"id": member_id}).mappings().first()
 
 
 @app.get("/member/dashboard")
@@ -157,14 +157,20 @@ def member_dashboard(request: Request):
         pandu = db.execute(text("SELECT COALESCE(SUM(total_amount),0) total,COALESCE(SUM(paid_amount),0) paid,COALESCE(SUM(balance_amount),0) balance FROM pandu_assignments WHERE member_id=:id"), {"id": mid}).mappings().one()
         kanthu = db.execute(text("SELECT COALESCE(SUM(principal_amount),0) total,COALESCE(SUM(total_collected),0) paid,COALESCE(SUM(balance_amount),0) balance FROM kanthu_master WHERE member_id=:id"), {"id": mid}).mappings().one()
         ayul = db.execute(text("SELECT COALESCE(SUM(am.principal_amount),0) total,COALESCE(SUM(am.balance_principal),0) balance,COALESCE(SUM(ac.interest_amount),0) interest FROM ayul_santha_master am LEFT JOIN ayul_santha_collections ac ON ac.ayul_santha_id=am.id WHERE am.member_id=:id"), {"id": mid}).mappings().one()
-        company_balance = db.execute(text("SELECT COALESCE(SUM(CASE WHEN transaction_type='CREDIT' THEN amount ELSE -amount END),0) FROM accounts_transactions")).scalar()
-        company_recent = db.execute(text("SELECT transaction_date,transaction_type,category,amount FROM accounts_transactions ORDER BY transaction_date DESC,id DESC LIMIT 5")).mappings().all()
+        messages = _portal_messages(db, mid)[:3]
+        db.execute(text("""CREATE TABLE IF NOT EXISTS public_announcements (
+            id INT AUTO_INCREMENT PRIMARY KEY, title VARCHAR(255) NOT NULL, body TEXT NOT NULL,
+            category VARCHAR(30) NOT NULL DEFAULT 'GENERAL', published_on DATE NOT NULL,
+            is_active TINYINT(1) NOT NULL DEFAULT 1, created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        )"""))
+        db.commit()
+        announcements = db.execute(text("SELECT id,title,body,category,published_on FROM public_announcements WHERE is_active=1 ORDER BY published_on DESC,id DESC LIMIT 3")).mappings().all()
         notifications = [
           {"title":"Welcome to your Member Portal", "text":"Your personal savings, lending and payment information is ready to view.", "type":"info"},
           {"title":"Pandu balance update", "text":f"Your current Pandu balance is ₹{float(pandu['balance'] or 0):,.0f}.", "type":"pandu"},
           {"title":"Payment reminders", "text":"Pandu monthly dues are payable on or before the 10th.", "type":"alert"},
         ]
-        return templates.TemplateResponse(request=request, name="member_portal/dashboard.html", context={"member": member, "pandu": pandu, "kanthu": kanthu, "ayul": ayul, "company_balance": company_balance or 0, "company_recent": company_recent, "notifications": notifications, "active_member_page":"dashboard"})
+        return templates.TemplateResponse(request=request, name="member_portal/dashboard.html", context={"member": member, "pandu": pandu, "kanthu": kanthu, "ayul": ayul, "messages": messages, "announcements": announcements, "active_member_page":"dashboard"})
     finally:
         db.close()
 
@@ -180,13 +186,25 @@ def member_profile(request: Request):
 
 
 @app.post("/member/profile")
-def update_member_profile(request: Request, mobile: str = Form(...), village: str = Form(""), address: str = Form(""), photo: str = Form("")):
+def update_member_profile(request: Request, mobile: str = Form(...), village: str = Form(""), address: str = Form(""), photo_file: UploadFile | None = File(None), photo_file_camera: UploadFile | None = File(None)):
     db = SessionLocal()
     try:
         member = _portal_member(request, db)
         if not member:
             return RedirectResponse("/member/login", status_code=303)
-        db.execute(text("UPDATE members SET mobile=:mobile,village=:village,address=:address,photo=CASE WHEN :photo='' THEN photo ELSE :photo END WHERE id=:id"), {"id":member["id"],"mobile":mobile.strip(),"village":village.strip(),"address":address.strip(),"photo":photo.strip()})
+        photo_path = member["photo"]
+        selected_photo = photo_file if photo_file and photo_file.filename else photo_file_camera
+        if selected_photo and selected_photo.filename:
+            extension = os.path.splitext(selected_photo.filename)[1].lower()
+            if extension not in {".jpg", ".jpeg", ".png", ".webp"}:
+                return RedirectResponse("/member/profile?photo=invalid", status_code=303)
+            upload_dir = os.path.join("app", "static", "uploads", "members")
+            os.makedirs(upload_dir, exist_ok=True)
+            filename = f"portal_{member['member_code']}_{int(time.time())}{extension}"
+            with open(os.path.join(upload_dir, filename), "wb") as destination:
+                shutil.copyfileobj(selected_photo.file, destination)
+            photo_path = f"/static/uploads/members/{filename}"
+        db.execute(text("UPDATE members SET mobile=:mobile,village=:village,address=:address,photo=:photo WHERE id=:id"), {"id":member["id"],"mobile":mobile.strip(),"village":village.strip(),"address":address.strip(),"photo":photo_path})
         db.commit()
         return RedirectResponse("/member/profile?updated=1", status_code=303)
     finally:
@@ -200,14 +218,31 @@ def member_inbox(request: Request):
         member = _portal_member(request, db)
         if not member:
             return RedirectResponse("/member/login", status_code=303)
-        messages = _portal_messages()
+        messages = _portal_messages(db, member["id"])
         return templates.TemplateResponse(request=request, name="member_portal/inbox.html", context={"member":member,"messages":messages,"active_member_page":"inbox"})
     finally:
         db.close()
 
 
-def _portal_messages():
-    return [{"id":1,"sender":"Pasumpon Finance", "when":"Today", "title":"Your Member Portal is active", "text":"You can now review your personal balances, transactions and notices online.", "body":"Welcome to the Pasumpon Member Portal. This private space brings your Pandu, Kanthu and Ayul Santha information together. You can review your balances, collection history and notices at any time.", "new":True}, {"id":2,"sender":"Accounts Team", "when":"This month", "title":"Pandu due reminder", "text":"Please pay your monthly Pandu due on or before the 10th.", "body":"This is a friendly reminder from the Accounts Team. Please make your Pandu payment on or before the 10th of the month. If you have already paid, no further action is needed.", "new":False}, {"id":3,"sender":"System Notification", "when":"This year", "title":"Transaction receipts available", "text":"Your saved collections are visible in your personal finance summary.", "body":"Every verified collection is recorded in your personal payment history. You can use the Monthly Statement, Yearly Statement and Payment Summary reports to review your account.", "new":False}]
+def _portal_messages(db, member_id: int):
+    db.execute(text("""CREATE TABLE IF NOT EXISTS member_messages (
+        id INT AUTO_INCREMENT PRIMARY KEY, member_id INT NOT NULL,
+        sender_type VARCHAR(20) NOT NULL DEFAULT 'SYSTEM', sender_name VARCHAR(120) NOT NULL,
+        title VARCHAR(255) NOT NULL, message_text TEXT NOT NULL, is_read TINYINT(1) NOT NULL DEFAULT 0,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP, INDEX member_message_idx(member_id, created_at)
+    )"""))
+    existing = db.execute(text("SELECT COUNT(*) FROM member_messages WHERE member_id=:id"), {"id": member_id}).scalar()
+    if not existing:
+        defaults = [
+            ("ERP அறிவிப்பு", "உங்கள் உறுப்பினர் தளம் செயல்படுத்தப்பட்டுள்ளது", "உங்கள் பாண்டு, கந்து மற்றும் ஆயுள் சாந்தா விவரங்கள், பரிவர்த்தனைகள் மற்றும் தனிப்பட்ட அறிவிப்புகளை இங்கு பாதுகாப்பாகப் பார்க்கலாம்."),
+            ("கணக்குப் பிரிவு", "பாண்டு மாத தவணை நினைவூட்டல்", "ஒவ்வொரு மாதமும் 10-ஆம் தேதிக்குள் பாண்டு மாத தவணையை செலுத்தவும். ஏற்கனவே செலுத்தியிருந்தால் இந்த அறிவிப்பை பொருட்படுத்த வேண்டாம்."),
+            ("ERP அறிவிப்பு", "பரிவர்த்தனை ரசீதுகள் தயாராக உள்ளன", "நீங்கள் செலுத்திய தொகைகள் மற்றும் ரசீதுகளை மாதாந்திர அறிக்கை, வருடாந்திர அறிக்கை மற்றும் கட்டண சுருக்கத்தில் பார்க்கலாம்."),
+        ]
+        for sender, title, message in defaults:
+            db.execute(text("INSERT INTO member_messages(member_id,sender_type,sender_name,title,message_text) VALUES (:id,'SYSTEM',:sender,:title,:message)"), {"id":member_id,"sender":sender,"title":title,"message":message})
+        db.commit()
+    rows = db.execute(text("SELECT id,sender_name,title,message_text,is_read,created_at FROM member_messages WHERE member_id=:id ORDER BY created_at DESC,id DESC"), {"id":member_id}).mappings().all()
+    return [{"id":row["id"],"sender":row["sender_name"],"when":row["created_at"].strftime("%d-%m-%Y") if row["created_at"] else "", "title":row["title"], "text":row["message_text"], "body":row["message_text"], "new":not bool(row["is_read"])} for row in rows]
 
 
 @app.get("/member/inbox/{message_id}")
@@ -217,9 +252,11 @@ def member_message_detail(request: Request, message_id: int):
         member = _portal_member(request, db)
         if not member:
             return RedirectResponse("/member/login", status_code=303)
-        message = next((item for item in _portal_messages() if item["id"] == message_id), None)
+        message = next((item for item in _portal_messages(db, member["id"]) if item["id"] == message_id), None)
         if not message:
             return RedirectResponse("/member/inbox", status_code=303)
+        db.execute(text("UPDATE member_messages SET is_read=1 WHERE id=:id AND member_id=:member_id"), {"id":message_id,"member_id":member["id"]})
+        db.commit()
         return templates.TemplateResponse(request=request, name="member_portal/message_detail.html", context={"member":member,"message":message,"active_member_page":"inbox"})
     finally:
         db.close()
@@ -245,19 +282,249 @@ def member_password_change(request: Request, current_password: str = Form(...), 
         db.close()
 
 
+@app.get("/member/status")
+def member_status(request: Request, page: int = 1):
+    """Personal member status — only modules actually used by this member."""
+    db = SessionLocal()
+    try:
+        member = _portal_member(request, db)
+        if not member:
+            return RedirectResponse("/member/login", status_code=303)
+        year, through_month, member_id = datetime.now().year, datetime.now().month, member["id"]
+        months = [{"number": n, "name": datetime(year, n, 1).strftime("%b")} for n in range(1, through_month + 1)]
+        pandu = dict(db.execute(text("SELECT COUNT(*) assignments,COALESCE(SUM(total_amount),0) total,COALESCE(SUM(paid_amount),0) paid,COALESCE(SUM(balance_amount),0) pending,COALESCE(SUM(settlement_amount),0) maturity,COALESCE(SUM(group_monthly_due),0) monthly_due FROM pandu_assignments WHERE member_id=:id"), {"id": member_id}).mappings().one())
+        pandu_paid = {r["month"]: float(r["amount"] or 0) for r in db.execute(text("SELECT collection_month month,SUM(amount) amount FROM collections WHERE member_id=:id AND collection_year=:year GROUP BY collection_month"), {"id": member_id, "year": year}).mappings()}
+        pandu_rows = [{**m, "paid": pandu_paid.get(m["number"], 0), "due": float(pandu["monthly_due"] or 0)} for m in months]
+
+        kanthu = dict(db.execute(text("SELECT COUNT(*) loans,COALESCE(SUM(principal_amount),0) issued,COALESCE(SUM(total_collected),0) paid,COALESCE(SUM(balance_amount),0) pending FROM kanthu_master WHERE member_id=:id"), {"id": member_id}).mappings().one())
+        kanthu_loans = db.execute(text("SELECT kanthu_no,issue_date,principal_amount,total_collected,balance_amount,status FROM kanthu_master WHERE member_id=:id ORDER BY issue_date DESC,id DESC"), {"id": member_id}).mappings().all()
+        kanthu_collections = db.execute(text("""
+            SELECT kt.transaction_date,km.kanthu_no,kt.amount,km.interest_amount,kt.remarks
+            FROM kanthu_transactions kt JOIN kanthu_master km ON km.id=kt.kanthu_id
+            WHERE km.member_id=:id AND kt.transaction_type='COLLECTION'
+            ORDER BY kt.transaction_date DESC,kt.id DESC LIMIT 10
+        """), {"id": member_id}).mappings().all()
+
+        ayul = dict(db.execute(text("SELECT COUNT(*) loans,COALESCE(SUM(principal_amount),0) principal,COALESCE(SUM(balance_principal),0) pending,COALESCE(SUM(total_interest_received),0) interest FROM ayul_santha_master WHERE member_id=:id"), {"id": member_id}).mappings().one())
+        page = max(1, page)
+        interest_count = int(db.execute(text("SELECT COUNT(*) FROM ayul_santha_collections c JOIN ayul_santha_master a ON a.id=c.ayul_santha_id WHERE a.member_id=:id"), {"id": member_id}).scalar() or 0)
+        interest_pages = max(1, (interest_count + 9) // 10)
+        page = min(page, interest_pages)
+        interest_rows = db.execute(text("SELECT c.collection_date,c.interest_amount,c.principal_amount,c.payment_mode,CONCAT('AYUL-',LPAD(a.id,5,'0')) ayul_no FROM ayul_santha_collections c JOIN ayul_santha_master a ON a.id=c.ayul_santha_id WHERE a.member_id=:id ORDER BY c.collection_date DESC,c.id DESC LIMIT 10 OFFSET :offset"), {"id": member_id, "offset": (page - 1) * 10}).mappings().all()
+
+        def amount(value): return float(value or 0)
+        for bucket in (pandu, kanthu, ayul):
+            for key in list(bucket.keys()):
+                if key not in ("assignments", "loans"):
+                    bucket[key] = amount(bucket[key])
+        return templates.TemplateResponse(request=request, name="member_portal/status.html", context={"member":member,"months":months,"pandu":pandu,"pandu_rows":pandu_rows,"kanthu":kanthu,"kanthu_loans":kanthu_loans,"kanthu_collections":kanthu_collections,"ayul":ayul,"interest_rows":interest_rows,"page":page,"interest_pages":interest_pages,"year":year,"active_member_page":"status"})
+    finally:
+        db.close()
+
+
+@app.get("/member/calendar")
+def member_calendar(request: Request, month: str = ""):
+    """Tamil member calendar with personal module dates and reminders."""
+    import calendar as calendar_module
+    db = SessionLocal()
+    try:
+        member = _portal_member(request, db)
+        if not member:
+            return RedirectResponse("/member/login", status_code=303)
+        today = date.today()
+        try:
+            shown = datetime.strptime(month, "%Y-%m").date().replace(day=1) if month else today.replace(day=1)
+        except ValueError:
+            shown = today.replace(day=1)
+        member_id = member["id"]
+        tamil_months = ["ஜனவரி", "பிப்ரவரி", "மார்ச்", "ஏப்ரல்", "மே", "ஜூன்", "ஜூலை", "ஆகஸ்ட்", "செப்டம்பர்", "அக்டோபர்", "நவம்பர்", "டிசம்பர்"]
+        has_pandu = bool(db.execute(text("SELECT COUNT(*) FROM pandu_assignments WHERE member_id=:id"), {"id":member_id}).scalar())
+        pandu_due = float(db.execute(text("SELECT COALESCE(SUM(group_monthly_due),0) FROM pandu_assignments WHERE member_id=:id"), {"id":member_id}).scalar() or 0)
+        events = {}
+        def put_event(event_date, title, subtitle, kind, amount=0):
+            events.setdefault(event_date.isoformat(), []).append({"title": title, "subtitle": subtitle, "kind": kind, "amount": amount})
+        if has_pandu:
+            put_event(shown.replace(day=min(10, calendar_module.monthrange(shown.year, shown.month)[1])), "பாண்டு மாத தவணை", "10-ஆம் தேதிக்குள் செலுத்தவும்", "due", pandu_due)
+        records = db.execute(text("SELECT collection_date,amount FROM collections WHERE member_id=:id AND YEAR(collection_date)=:year AND MONTH(collection_date)=:month"), {"id":member_id,"year":shown.year,"month":shown.month}).mappings().all()
+        for row in records:
+            put_event(row["collection_date"], "பாண்டு கட்டணம் செலுத்தப்பட்டது", "ரசீது உங்கள் கணக்கில் உள்ளது", "paid", float(row["amount"] or 0))
+        records = db.execute(text("SELECT kt.transaction_date,kt.amount FROM kanthu_transactions kt JOIN kanthu_master km ON km.id=kt.kanthu_id WHERE km.member_id=:id AND kt.transaction_type='COLLECTION' AND YEAR(kt.transaction_date)=:year AND MONTH(kt.transaction_date)=:month"), {"id":member_id,"year":shown.year,"month":shown.month}).mappings().all()
+        for row in records:
+            put_event(row["transaction_date"], "கந்து வசூல் பதிவு", "திருப்பிச் செலுத்திய தொகை", "kanthu", float(row["amount"] or 0))
+        records = db.execute(text("SELECT c.collection_date,c.interest_amount FROM ayul_santha_collections c JOIN ayul_santha_master a ON a.id=c.ayul_santha_id WHERE a.member_id=:id AND YEAR(c.collection_date)=:year AND MONTH(c.collection_date)=:month"), {"id":member_id,"year":shown.year,"month":shown.month}).mappings().all()
+        for row in records:
+            put_event(row["collection_date"], "ஆயுள் சாந்தா வட்டி", "மாத வட்டி பெறப்பட்டது", "ayul", float(row["interest_amount"] or 0))
+        # 2026 Tamil festival reminders. Lunar observances are intentionally maintained year-wise.
+        festival_dates = [
+            (date(2026, 2, 1), "தைப்பூசம்", "முருகப் பெருமானுக்கான சிறப்பு திருவிழா", "festival"),
+            (date(2026, 4, 1), "பங்குனி உத்திரம்", "முருகன் திருக்கல்யாணத் திருவிழா", "festival"),
+            (date(2026, 9, 14), "விநாயகர் சதுர்த்தி", "விநாயகப் பெருமானுக்கான சிறப்பு வழிபாடு", "festival"),
+            (date(2026, 11, 10), "கந்த சஷ்டி தொடக்கம்", "முருகப் பெருமானின் கந்த சஷ்டி விரதம்", "festival"),
+        ]
+        for festival_date, title, subtitle, kind in festival_dates:
+            if festival_date.year == shown.year and festival_date.month == shown.month:
+                put_event(festival_date, title, subtitle, kind)
+        if shown.month == 10:
+            put_event(date(shown.year, 10, 30), "பசும்பொன் முத்துராமலிங்க தேவர் ஜெயந்தி", "தேவர் குருபூஜை நினைவு நாள்", "thevar")
+        # Useful community notices provide context even in a month without transactions.
+        for day_no, title, subtitle, kind in ((7, "உறுப்பினர் சந்திப்பு", "மாலை 5.00 மணி", "community"), (18, "மாத கூட்டம்", "உறுப்பினர்கள் கலந்து கொள்ளலாம்", "meeting")):
+            if day_no <= calendar_module.monthrange(shown.year, shown.month)[1]:
+                put_event(shown.replace(day=day_no), title, subtitle, kind)
+        first_offset = (shown.weekday() + 1) % 7
+        days_in_month = calendar_module.monthrange(shown.year, shown.month)[1]
+        previous_month = shown - relativedelta(months=1)
+        next_month = shown + relativedelta(months=1)
+        cells = []
+        for index in range(42):
+            cell_date = previous_month.replace(day=calendar_module.monthrange(previous_month.year, previous_month.month)[1] - first_offset + index + 1) if index < first_offset else shown.replace(day=index - first_offset + 1) if index < first_offset + days_in_month else next_month.replace(day=index - first_offset - days_in_month + 1)
+            cells.append({"date":cell_date, "current":cell_date.month == shown.month, "events":events.get(cell_date.isoformat(), [])})
+        selected_key = today.isoformat() if today.month == shown.month and today.year == shown.year else shown.replace(day=1).isoformat()
+        selected_events = events.get(selected_key, [])
+        return templates.TemplateResponse(request=request, name="member_portal/calendar.html", context={"member":member,"shown":shown,"month_name":tamil_months[shown.month-1],"cells":cells,"events":events,"selected_key":selected_key,"selected_events":selected_events,"previous_month":previous_month.strftime('%Y-%m'),"next_month":next_month.strftime('%Y-%m'),"active_member_page":"calendar"})
+    finally:
+        db.close()
+
+
+@app.post("/member/calendar/reminder")
+def save_member_calendar_reminder(request: Request, event_date: str = Form(...), title: str = Form(...)):
+    db = SessionLocal()
+    try:
+        member = _portal_member(request, db)
+        if not member:
+            return JSONResponse(status_code=401, content={"success": False, "message": "Please log in again."})
+        db.execute(text("""CREATE TABLE IF NOT EXISTS member_calendar_reminders (
+            id INT AUTO_INCREMENT PRIMARY KEY, member_id INT NOT NULL, event_date DATE NOT NULL,
+            title VARCHAR(255) NOT NULL, created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            INDEX member_calendar_reminder_idx(member_id, event_date)
+        )"""))
+        exists = db.execute(text("SELECT id FROM member_calendar_reminders WHERE member_id=:member_id AND event_date=:event_date AND title=:title LIMIT 1"), {"member_id":member["id"],"event_date":event_date,"title":title.strip()}).scalar()
+        if not exists:
+            db.execute(text("INSERT INTO member_calendar_reminders(member_id,event_date,title) VALUES (:member_id,:event_date,:title)"), {"member_id":member["id"],"event_date":event_date,"title":title.strip()})
+            db.commit()
+        return {"success": True, "message": "நினைவூட்டல் அமைக்கப்பட்டது."}
+    finally:
+        db.close()
+
+
+@app.get("/member/logout")
+def member_logout(request: Request):
+    request.session.pop("member_portal_id", None)
+    return RedirectResponse("/member/login", status_code=303)
+
+
+@app.get("/member/announcements")
+def member_announcements(request: Request):
+    db = SessionLocal()
+    try:
+        member = _portal_member(request, db)
+        if not member:
+            return RedirectResponse("/member/login", status_code=303)
+        db.execute(text("""CREATE TABLE IF NOT EXISTS public_announcements (
+            id INT AUTO_INCREMENT PRIMARY KEY, title VARCHAR(255) NOT NULL, body TEXT NOT NULL,
+            category VARCHAR(40) NOT NULL DEFAULT 'GENERAL', published_on DATE NOT NULL,
+            is_active TINYINT(1) NOT NULL DEFAULT 1, created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        )"""))
+        if not db.execute(text("SELECT COUNT(*) FROM public_announcements")).scalar():
+            notices = [
+                ("பசும்பொன் முத்துராமலிங்க தேவர் ஜெயந்தி", "அக்டோபர் 30 அன்று நடைபெறும் பசும்பொன் முத்துராமலிங்க தேவர் ஜெயந்தி மற்றும் குருபூஜை நிகழ்வில் உறுப்பினர்கள் அனைவரும் பங்கேற்க அன்புடன் அழைக்கப்படுகிறார்கள். நிகழ்ச்சி நேரம் மற்றும் பயண ஏற்பாடுகள் பின்னர் அறிவிக்கப்படும்.", "SPECIAL", "2026-10-30"),
+                ("பாண்டு மாத தவணை நினைவூட்டல்", "ஒவ்வொரு மாதமும் 10-ஆம் தேதிக்குள் பாண்டு மாத தவணையைச் செலுத்துமாறு உறுப்பினர்கள் கேட்டுக்கொள்ளப்படுகிறார்கள். உங்கள் தனிப்பட்ட நிலையை Status பகுதியில் பார்க்கலாம்.", "FINANCE", "2026-08-01"),
+                ("உறுப்பினர் பொதுக்கூட்டம்", "இந்த மாத உறுப்பினர் பொதுக்கூட்டம் மாலை 5.00 மணிக்கு சமூக மண்டபத்தில் நடைபெறும். உறுப்பினர்கள் தங்கள் ஆலோசனைகளுடன் தவறாமல் கலந்து கொள்ளவும்.", "COMMUNITY", "2026-08-18"),
+                ("விநாயகர் சதுர்த்தி வாழ்த்துகள்", "விநாயகர் சதுர்த்தியை முன்னிட்டு அனைத்து உறுப்பினர்களுக்கும் பசும்பொன் சமூக நிதியின் மனமார்ந்த வாழ்த்துகள். உங்கள் காலண்டரில் நினைவூட்டலை அமைத்துக் கொள்ளலாம்.", "FESTIVAL", "2026-09-14"),
+            ]
+            for title, body, category, published_on in notices:
+                db.execute(text("INSERT INTO public_announcements(title,body,category,published_on) VALUES (:title,:body,:category,:published_on)"), {"title":title,"body":body,"category":category,"published_on":published_on})
+            db.commit()
+        announcements = db.execute(text("SELECT id,title,body,category,published_on FROM public_announcements WHERE is_active=1 ORDER BY published_on DESC,id DESC")).mappings().all()
+        return templates.TemplateResponse(request=request, name="member_portal/announcements.html", context={"member":member,"announcements":announcements,"active_member_page":"announcements"})
+    finally:
+        db.close()
+
+
+@app.get("/member/documents")
+def member_documents(request: Request):
+    db = SessionLocal()
+    try:
+        member = _portal_member(request, db)
+        if not member:
+            return RedirectResponse("/member/login", status_code=303)
+        db.execute(text("""CREATE TABLE IF NOT EXISTS member_documents (
+            id INT AUTO_INCREMENT PRIMARY KEY, member_id INT NULL, title VARCHAR(255) NOT NULL,
+            description VARCHAR(500) NULL, document_type VARCHAR(30) NOT NULL DEFAULT 'PDF',
+            document_url VARCHAR(500) NOT NULL, source_name VARCHAR(100) NOT NULL DEFAULT 'ERP',
+            published_on DATE NOT NULL, is_active TINYINT(1) NOT NULL DEFAULT 1,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP, INDEX member_document_idx(member_id, published_on)
+        )"""))
+        # Sample rows demonstrate both a document and image preview; future ERP/Admin sends use this same table.
+        existing = db.execute(text("SELECT COUNT(*) FROM member_documents WHERE member_id=:id OR member_id IS NULL"), {"id":member["id"]}).scalar()
+        if not existing:
+            samples = [
+                (member["id"], "உறுப்பினர் அடையாள அட்டை", "உங்கள் Pasumpon உறுப்பினர் சுயவிவர அடையாள அட்டை.", "IMAGE", "/static/images/logo.png", "ERP", "2026-08-10"),
+                (member["id"], "பாண்டு கட்டண ரசீது", "உங்கள் சமீபத்திய பாண்டு தவணை கட்டணத்தின் ERP ரசீது.", "RECEIPT", "/static/images/logo.png", "ERP", "2026-08-09"),
+                (None, "விநாயகர் சதுர்த்தி அறிவிப்பு", "நிர்வாகம் வெளியிட்ட பொதுத் திருவிழா அறிவிப்பு.", "PDF", "/static/images/logo.png", "நிர்வாகம்", "2026-08-08"),
+            ]
+            for member_id, title, description, document_type, document_url, source_name, published_on in samples:
+                db.execute(text("INSERT INTO member_documents(member_id,title,description,document_type,document_url,source_name,published_on) VALUES (:member_id,:title,:description,:document_type,:document_url,:source_name,:published_on)"), {"member_id":member_id,"title":title,"description":description,"document_type":document_type,"document_url":document_url,"source_name":source_name,"published_on":published_on})
+            db.commit()
+        documents = db.execute(text("SELECT id,title,description,document_type,document_url,source_name,published_on FROM member_documents WHERE is_active=1 AND (member_id=:id OR member_id IS NULL) ORDER BY published_on DESC,id DESC"), {"id":member["id"]}).mappings().all()
+        return templates.TemplateResponse(request=request, name="member_portal/documents.html", context={"member":member,"documents":documents,"active_member_page":"documents"})
+    finally:
+        db.close()
+
+
+@app.get("/member/membership-card")
+def member_membership_card(request: Request, download: bool = False):
+    db = SessionLocal()
+    try:
+        member = _portal_member(request, db)
+        if not member:
+            return RedirectResponse("/member/login", status_code=303)
+        return templates.TemplateResponse(
+            request=request,
+            name="member_portal/membership_card.html",
+            context={"member": member, "download": download},
+        )
+    finally:
+        db.close()
+
+
+@app.get("/member/community")
+def member_community(request: Request, q: str = "", page: int = 1):
+    db = SessionLocal()
+    try:
+        member = _portal_member(request, db)
+        if not member:
+            return RedirectResponse("/member/login", status_code=303)
+        page_size, page = 25, max(1, page)
+        search = f"%{q.strip()}%"
+        total = int(db.execute(text("SELECT COUNT(*) FROM members WHERE status='ACTIVE' AND (member_name LIKE :search OR member_code LIKE :search)"), {"search":search}).scalar() or 0)
+        pages = max(1, (total + page_size - 1) // page_size)
+        page = min(page, pages)
+        members = db.execute(text("""
+            SELECT member_name,member_code,mobile,village,photo
+            FROM members WHERE status='ACTIVE' AND (member_name LIKE :search OR member_code LIKE :search)
+            ORDER BY member_name LIMIT :limit OFFSET :offset
+        """), {"search":search,"limit":page_size,"offset":(page-1)*page_size}).mappings().all()
+        return templates.TemplateResponse(request=request, name="member_portal/community.html", context={"member":member,"members":members,"q":q,"page":page,"pages":pages,"total":total,"active_member_page":"community"})
+    finally:
+        db.close()
+
+
+@app.get("/member/settings")
+def member_settings(request: Request):
+    db = SessionLocal()
+    try:
+        member = _portal_member(request, db)
+        if not member:
+            return RedirectResponse("/member/login", status_code=303)
+        return templates.TemplateResponse(request=request, name="member_portal/settings.html", context={"member": member, "active_member_page": "settings"})
+    finally:
+        db.close()
+
+
 @app.get("/member/{feature}")
 def member_feature(request: Request, feature: str):
     features = {
-      "maturity": ("Maturity", "Track your Pandu maturity amount and settlement readiness.", "bi-award-fill"),
-      "calendar": ("Calendar", "Review upcoming due dates, payments and community dates.", "bi-calendar3-event-fill"),
-      "announcements": ("Announcements", "Important notices from Pasumpon Community Finance.", "bi-megaphone-fill"),
-      "documents": ("Documents", "Download your available receipts and member documents.", "bi-folder2-open"),
-      "benefits": ("Member Benefits", "Discover exclusive community support and member benefits.", "bi-gift-fill"),
       "support": ("Help & Support", "Get assistance from the Pasumpon support team.", "bi-headset"),
-      "monthly-statement": ("Monthly Statement", "Your personal month-wise savings and payment statement.", "bi-calendar2-week-fill"),
-      "yearly-statement": ("Yearly Statement", "Your consolidated yearly finance statement.", "bi-journal-bookmark-fill"),
-      "payment-summary": ("Payment Summary", "A clear summary of your collections and pending balances.", "bi-receipt-cutoff"),
-      "community": ("Community", "Stay connected with Pasumpon community updates and events.", "bi-people-fill"),
       "settings": ("Settings", "Manage notification settings, language and display preferences.", "bi-gear-fill"),
     }
     if feature not in features:
@@ -271,12 +538,6 @@ def member_feature(request: Request, feature: str):
         return templates.TemplateResponse(request=request, name="member_portal/feature.html", context={"member":member,"title":title,"subtitle":subtitle,"icon":icon,"feature":feature,"active_member_page":feature})
     finally:
         db.close()
-
-
-@app.get("/member/logout")
-def member_logout(request: Request):
-    request.session.pop("member_portal_id", None)
-    return RedirectResponse("/member/login", status_code=303)
 
 
 @app.get("/pandu", response_class=HTMLResponse)
