@@ -5,3 +5,4 @@ sqlalchemy
 pymysql
 python-dateutil
 python-multipart
+itsdangerous
