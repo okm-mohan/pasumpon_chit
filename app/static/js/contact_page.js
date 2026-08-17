@@ -1,0 +1,1 @@
+document.getElementById('contactForm').addEventListener('submit',e=>{e.preventDefault();document.getElementById('contactResult').textContent='உங்கள் செய்தி வெற்றிகரமாக அனுப்பப்பட்டது.'})

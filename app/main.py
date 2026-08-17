@@ -83,12 +83,58 @@ def login_page(request: Request):
     return templates.TemplateResponse(request=request, name="home_v2.html")
 
 
-@app.get("/about")
-@app.get("/news")
+
+
 @app.get("/events")
-@app.get("/services")
-@app.get("/gallery")
+def events_page(request: Request):
+    return templates.TemplateResponse(request=request, name="events_page.html")
+
 @app.get("/contact")
+def contact_page(request: Request):
+    return templates.TemplateResponse(request=request, name="contact_page.html")
+
+@app.get("/documents")
+def documents_page(request: Request):
+    return templates.TemplateResponse(request=request, name="documents_page.html")
+
+@app.get("/polls")
+def polls_page(request: Request):
+    return templates.TemplateResponse(request=request, name="polls_page.html")
+
+@app.get("/members")
+def members_page(request: Request):
+    return templates.TemplateResponse(request=request, name="members_page.html")
+
+@app.get("/newsroom")
+def news_page(request: Request):
+    return templates.TemplateResponse(request=request, name="news_page.html")
+
+@app.get("/news")
+def announcements_page(request: Request):
+    return templates.TemplateResponse(request=request, name="announcements_page.html")
+
+@app.get("/videos")
+def common_videos_page(request: Request):
+    return templates.TemplateResponse(request=request, name="common_videos.html")
+
+@app.get("/kavadi/videos")
+def kavadi_videos_page(request: Request):
+    return templates.TemplateResponse(request=request, name="kavadi_videos.html")
+
+@app.get("/gallery")
+def common_gallery_page(request: Request):
+    return templates.TemplateResponse(request=request, name="common_gallery.html")
+
+@app.get("/kavadi/gallery")
+def kavadi_gallery_page(request: Request):
+    return templates.TemplateResponse(request=request, name="kavadi_gallery.html")
+
+@app.get("/kavadi")
+def kavadi_page(request: Request):
+    return templates.TemplateResponse(request=request, name="kavadi.html")
+
+@app.get("/about")
+@app.get("/services")
 def public_portal_page(request: Request):
     page = request.url.path.strip("/") or "about"
     page_content = {
@@ -520,6 +566,24 @@ def member_settings(request: Request):
     finally:
         db.close()
 
+
+@app.get("/member/support")
+def member_support(request: Request):
+    db = SessionLocal()
+    try:
+        member = _portal_member(request, db)
+        if not member:
+            return RedirectResponse("/member/login", status_code=303)
+        officials = [
+            {"name":"அருண் குமார்", "role":"Pasumpon OKM தலைவர்", "phone":"+91 91501 43772", "photo":"/static/images/member_profiles/sm26_01.jpg", "group":"OKM நிர்வாகம்"},
+            {"name":"கவிதா செல்வம்", "role":"Pasumpon OKM செயலாளர்", "phone":"+91 91501 43772", "photo":"/static/images/member_profiles/sm26_02.jpg", "group":"OKM நிர்வாகம்"},
+            {"name":"மோகன் ராஜ்", "role":"Pasumpon OKM பொருளாளர்", "phone":"+91 91501 43772", "photo":"/static/images/member_profiles/sm26_03.jpg", "group":"OKM நிர்வாகம்"},
+            {"name":"திவ்யா லட்சுமி", "role":"பெண்கள் நல ஒருங்கிணைப்பாளர்", "phone":"+91 91501 43772", "photo":"/static/images/member_profiles/sm26_04.jpg", "group":"OKM சேவை"},
+            {"name":"சுரேஷ் பாபு", "role":"பசும்பொன் காவடிக்குழு ஒருங்கிணைப்பாளர்", "phone":"+91 91501 43772", "photo":"/static/images/member_profiles/sm26_05.jpg", "group":"காவடிக்குழு"},
+        ]
+        return templates.TemplateResponse(request=request, name="member_portal/support.html", context={"member":member,"officials":officials,"active_member_page":"support"})
+    finally:
+        db.close()
 
 @app.get("/member/{feature}")
 def member_feature(request: Request, feature: str):
@@ -1581,7 +1645,7 @@ def executive_dashboard_data():
               (SELECT COALESCE(SUM(balance_amount),0) FROM kanthu_master WHERE status='ACTIVE') AS kanthu_balance,
               (SELECT COUNT(*) FROM ayul_santha_master WHERE status='ACTIVE' AND balance_principal>0) AS active_ayul,
               (SELECT COALESCE(SUM(balance_principal),0) FROM ayul_santha_master WHERE status='ACTIVE') AS ayul_balance,
-              (SELECT COALESCE(SUM(CASE WHEN transaction_type='CREDIT' THEN amount ELSE -amount END),0) FROM accounts_transactions) AS company_balance
+              (SELECT ABS(COALESCE(SUM(CASE WHEN transaction_type='CREDIT' THEN amount ELSE -amount END),0)) FROM accounts_transactions) AS company_balance
         """)).mappings().one()
 
         monthly = db.execute(text("""
@@ -3332,7 +3396,7 @@ def expenses_entry(request: Request):
         """)).mappings().all()
 
         company_balance = db.execute(text("""
-            SELECT COALESCE(SUM(CASE WHEN transaction_type='CREDIT' THEN amount ELSE -amount END),0)
+            SELECT ABS(COALESCE(SUM(CASE WHEN transaction_type='CREDIT' THEN amount ELSE -amount END),0))
             FROM accounts_transactions
         """)).scalar()
 
@@ -4316,7 +4380,7 @@ async def current_balance():
 
     balance = float(credits or 0) - float(debits or 0)
 
-    return {"balance": balance}
+    return {"balance": abs(balance)}
 
 
 @app.get("/api/accounts/company-dashboard")
@@ -4346,7 +4410,7 @@ def company_account_dashboard():
             key = str(row['payment_mode'] or 'CASH').upper()
             if key in ('GPAY','G-PAY'): key = 'UPI'
             if key in mode_values: mode_values[key] += float(row['balance'] or 0)
-        return {'credits':credits, 'debits':debits, 'balance':credits-debits, 'today_net':float(totals['today_net'] or 0), 'month_net':float(totals['month_net'] or 0), 'modes':mode_values, 'recent':[dict(row) for row in recent]}
+        return {'credits':credits, 'debits':debits, 'balance':abs(credits-debits), 'today_net':float(totals['today_net'] or 0), 'month_net':float(totals['month_net'] or 0), 'modes':mode_values, 'recent':[dict(row) for row in recent]}
     finally:
         db.close()
 

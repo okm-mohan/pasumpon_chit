@@ -1,0 +1,22 @@
+{% extends "member_portal/base.html" %}
+{% block title %}உதவி & ஆதரவு | Pasumpon{% endblock %}
+{% block content %}
+<header class="support-hero">
+  <span class="support-orb orb-one"></span><span class="support-orb orb-two"></span>
+  <div class="support-hero-icon"><i class="bi bi-headset"></i></div>
+  <div class="support-hero-copy"><span>MEMBER SERVICES</span><h1>உதவி & ஆதரவு</h1><p>Pasumpon OKM மற்றும் காவடிக்குழு உதவிக்காக எங்கள் நிர்வாகக் குழுவை நேரடியாகத் தொடர்புகொள்ளுங்கள்.</p></div>
+  <a class="support-hotline" href="tel:+919150143772"><i class="bi bi-telephone-fill"></i><span>முதன்மை உதவி எண்</span><strong>+91 91501 43772</strong><small>அழைக்க தொடவும்</small></a>
+</header>
+<section class="support-intro"><div><i class="bi bi-shield-check"></i><span><b>உறுப்பினர் உதவி மையம்</b><small>பணம், உறுப்பினர் சேவை, நிகழ்ச்சிகள் மற்றும் ஆவணங்கள் தொடர்பான உதவிக்கு.</small></span></div><span class="support-hours"><i class="bi bi-clock-history"></i> திங்கள்–சனி · காலை 9.30 – மாலை 6.30</span></section>
+<section class="support-desks">
+  <a class="support-desk okm" href="tel:+919150143772"><span class="support-desk-icon"><i class="bi bi-people-fill"></i></span><span><em>OKM MEMBER DESK</em><b>Pasumpon OKM உதவி</b><small>உறுப்பினர் விவரங்கள், Pandu மற்றும் பொதுச் சேவைகள்</small></span><strong>அழைக்க <i class="bi bi-arrow-up-right"></i></strong></a>
+  <a class="support-desk kavadi" href="tel:+919150143772"><span class="support-desk-icon"><i class="bi bi-stars"></i></span><span><em>KAVADI SUPPORT</em><b>பசும்பொன் காவடிக்குழு</b><small>காவடி நிகழ்ச்சிகள், பதிவு மற்றும் நிகழ்வு தகவல்கள்</small></span><strong>அழைக்க <i class="bi bi-arrow-up-right"></i></strong></a>
+</section>
+<section class="support-section-heading"><div><span>CONTACT DIRECTORY</span><h2>உதவிக்கு இருக்கும் முக்கிய நிர்வாகிகள்</h2><p>உங்கள் தேவைக்கேற்ற அதிகாரியைத் தேர்ந்தெடுத்து நேரடியாக அழைக்கலாம்.</p></div><span class="support-count"><i class="bi bi-person-check-fill"></i> 5 அதிகாரிகள்</span></section>
+<section class="official-grid">
+{% for official in officials %}
+  <article class="official-card"><div class="official-photo"><img src="{{ official.photo }}" alt="{{ official.name }}"><span><i class="bi bi-patch-check-fill"></i></span></div><div class="official-copy"><em>{{ official.group }}</em><h3>{{ official.name }}</h3><p>{{ official.role }}</p><a href="tel:+919150143772"><i class="bi bi-telephone-fill"></i><span>{{ official.phone }}</span></a></div></article>
+{% endfor %}
+</section>
+<section class="support-footer-card"><div class="support-footer-icon"><i class="bi bi-chat-heart-fill"></i></div><div><span>தேவையான தகவலுடன் அழைக்கவும்</span><h2>உறுப்பினர் எண், தொடர்புடைய தேதி அல்லது ரசீது எண் இருந்தால் உதவி விரைவாக கிடைக்கும்.</h2></div><a href="mailto:info@pasumponokm.com"><i class="bi bi-envelope-fill"></i> info@pasumponokm.com</a></section>
+{% endblock %}
